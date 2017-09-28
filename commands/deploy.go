@@ -50,7 +50,7 @@ func RawDeploy(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if msg.Success {
-			log.Infof("[RawDeploy] Success %s %s %s", msg.Id[:7], msg.Name, msg.Nodename)
+			log.Infof("[RawDeploy] Success %s %s %s", msg.Id[:12], msg.Name, msg.Nodename)
 		} else {
 			log.Errorf("[RawDeploy] Failed %v", msg.Error)
 		}
