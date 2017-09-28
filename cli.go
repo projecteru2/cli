@@ -45,8 +45,12 @@ func run(c *cli.Context) error {
 		setupLog("INFO")
 	}
 	conn := utils.ConnectEru(eru, timeout)
-	if subCommand(c, "raw") && c.Command.Name == "deploy" {
-		commands.RawDeploy(c, conn)
+	if subCommand(c, "raw") {
+		if c.Command.Name == "deploy" {
+			commands.RawDeploy(c, conn)
+		}
+	} else if c.Command.Name == "remove" {
+		commands.Remove(c, conn)
 	} else {
 		log.Fatal("Not support yet")
 	}
@@ -72,7 +76,7 @@ func main() {
 			{
 				Name:      "deploy",
 				Usage:     "deploy raw image by specs",
-				ArgsUsage: "a spec URL",
+				ArgsUsage: "a spec URL, remote or local",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "pod",
@@ -115,8 +119,15 @@ func main() {
 			},
 		},
 	}
+	removeCommand := &cli.Command{
+		Name:   "remove",
+		Usage:  "remove containers",
+		Action: run,
+	}
+
 	app.Commands = []*cli.Command{
 		rawCommand,
+		removeCommand,
 	}
 	app.Flags = []cli.Flag{
 		&cli.BoolFlag{

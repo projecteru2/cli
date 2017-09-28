@@ -34,7 +34,7 @@ func RawDeploy(c *cli.Context, conn *grpc.ClientConn) {
 		log.Fatalf("[RawDeploy] read spec failed %v", err)
 	}
 	client := pb.NewCoreRPCClient(conn)
-	opts := generateOpts(data, pod, entry, image, network, cpu, mem, envs, count)
+	opts := generateDeployOpts(data, pod, entry, image, network, cpu, mem, envs, count)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		log.Fatalf("[RawDeploy] send request failed %v", err)
@@ -50,14 +50,14 @@ func RawDeploy(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if msg.Success {
-			log.Infof("[RawDeploy] Success %s %s %s", msg.Id[:12], msg.Name, msg.Nodename)
+			log.Infof("[RawDeploy] Success %s %s %s", msg.Id, msg.Name, msg.Nodename)
 		} else {
 			log.Errorf("[RawDeploy] Failed %v", msg.Error)
 		}
 	}
 }
 
-func generateOpts(data []byte, pod, entry, image, network string, cpu float64, mem int64, envs []string, count int32) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, entry, image, network string, cpu float64, mem int64, envs []string, count int32) *pb.DeployOptions {
 	coreSpecs := &coretypes.Specs{}
 	if err := yaml.Unmarshal(data, &coreSpecs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
