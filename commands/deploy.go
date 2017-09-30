@@ -50,7 +50,10 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if msg.Success {
-			log.Infof("[RawDeploy] Success %s %s %s", msg.Id, msg.Name, msg.Nodename)
+			log.Infof("[RawDeploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
+			for name, ip := range msg.Ips {
+				log.Infof("[RawDeploy] Bound %s ip %s", name, ip)
+			}
 		} else {
 			log.Errorf("[RawDeploy] Failed %v", msg.Error)
 		}
