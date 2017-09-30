@@ -10,7 +10,15 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
-func Remove(c *cli.Context, conn *grpc.ClientConn) {
+func RemoveCommand() *cli.Command {
+	return &cli.Command{
+		Name:   "remove",
+		Usage:  "remove containers",
+		Action: run,
+	}
+}
+
+func remove(c *cli.Context, conn *grpc.ClientConn) {
 	if c.NArg() == 0 {
 		log.Fatal("[Remove] not specify containers")
 	}
