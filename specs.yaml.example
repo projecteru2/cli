@@ -1,0 +1,12 @@
+appname: "elb"
+entrypoints:
+  release:
+    cmd: "/usr/local/openresty/bin/openresty -p /elb/server -c /elb/conf/release.conf"
+    restart: always
+    working_dir: /elb
+    publish:
+      - "80/http"
+    healthcheck:
+      ports:
+        - "80/tcp"
+    privileged: true

@@ -10,6 +10,7 @@ import (
 	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
@@ -51,8 +52,8 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 
 		if msg.Success {
 			log.Infof("[RawDeploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
-			for name, ip := range msg.Ips {
-				log.Infof("[RawDeploy] Bound %s ip %s", name, ip)
+			for name, publish := range msg.Publish {
+				log.Infof("[RawDeploy] Bound %s ip %s", name, publish)
 			}
 		} else {
 			log.Errorf("[RawDeploy] Failed %v", msg.Error)
@@ -91,10 +92,6 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 		log.Fatal("[generateOpts] get entry failed")
 	}
 
-	ports := []string{}
-	for _, p := range entrypoint.Ports {
-		ports = append(ports, string(p))
-	}
 	hook := &pb.HookOptions{}
 	if entrypoint.Hook != nil {
 		hook.AfterStart = entrypoint.Hook.AfterStart
@@ -103,7 +100,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 
 	healthCheck := &pb.HealthCheckOptions{}
 	if entrypoint.HealthCheck != nil {
-		healthCheck.Port = int32(entrypoint.HealthCheck.Port)
+		healthCheck.Ports = coreutils.DecodePorts(entrypoint.HealthCheck.Ports)
 		healthCheck.Url = entrypoint.HealthCheck.URL
 		healthCheck.Code = int32(entrypoint.HealthCheck.Code)
 	}
@@ -116,7 +113,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 			Privileged:    entrypoint.Privileged,
 			WorkingDir:    entrypoint.WorkingDir,
 			LogConfig:     entrypoint.LogConfig,
-			Ports:         ports,
+			Publish:       coreutils.DecodePorts(entrypoint.Publish),
 			Healcheck:     healthCheck,
 			Hook:          hook,
 			RestartPolicy: entrypoint.RestartPolicy,
@@ -137,6 +134,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 	return opts
 }
 
+//DeployCommand for running deploy task
 func DeployCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "deploy",
