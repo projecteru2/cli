@@ -52,6 +52,9 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 
 		if msg.Success {
 			log.Infof("[RawDeploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
+			if len(msg.Hook) > 0 {
+				log.Infof("[RawDeploy] Hook output \n%s", msg.Hook)
+			}
 			for name, publish := range msg.Publish {
 				log.Infof("[RawDeploy] Bound %s ip %s", name, publish)
 			}
