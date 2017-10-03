@@ -11,7 +11,12 @@ entrypoints:
         - "80/tcp"
     privileged: "1"
     hook:
-      after_start: "ls -al /tmp/host"
+      after_start:
+        - "ls -al /"
+        - "env"
+      before_stop:
+        - "ls -al /tmp"
+        - "pwd"
       force: false
 volumes:
   - "/tmp:/tmp/host"
