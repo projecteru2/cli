@@ -48,5 +48,6 @@ func remove(c *cli.Context, conn *grpc.ClientConn) {
 		} else {
 			log.Errorf("[Remove] Failed %s", msg.Message)
 		}
+		log.Info(msg.Message)
 	}
 }
