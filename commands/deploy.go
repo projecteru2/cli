@@ -99,6 +99,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 	if entrypoint.Hook != nil {
 		hook.AfterStart = entrypoint.Hook.AfterStart
 		hook.BeforeStop = entrypoint.Hook.BeforeStop
+		hook.Force = entrypoint.Hook.Force
 	}
 
 	healthCheck := &pb.HealthCheckOptions{}
