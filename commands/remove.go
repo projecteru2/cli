@@ -15,6 +15,14 @@ func RemoveCommand() *cli.Command {
 		Name:   "remove",
 		Usage:  "remove containers",
 		Action: run,
+		Flags: []cli.Flag{
+			&cli.BoolFlag{
+				Name:    "force",
+				Usage:   "ignore or not before stop hook if it was setted and force check",
+				Aliases: []string{"f"},
+				Value:   false,
+			},
+		},
 	}
 }
 
@@ -23,13 +31,14 @@ func remove(c *cli.Context, conn *grpc.ClientConn) {
 		log.Fatal("[Remove] not specify containers")
 	}
 	client := pb.NewCoreRPCClient(conn)
-	ids := &pb.ContainerIDs{Ids: []*pb.ContainerID{}}
+	ids := []string{}
 	for _, id := range c.Args().Slice() {
 		log.Debugf("[Remove] remove %s", id)
-		ids.Ids = append(ids.Ids, &pb.ContainerID{Id: id})
+		ids = append(ids, id)
 	}
+	opts := &pb.RemoveContainerOptions{Ids: ids, Force: c.Bool("force")}
 
-	resp, err := client.RemoveContainer(context.Background(), ids)
+	resp, err := client.RemoveContainer(context.Background(), opts)
 	if err != nil {
 		log.Fatalf("[Remove] send request failed %v", err)
 	}

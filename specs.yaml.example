@@ -9,14 +9,12 @@ entrypoints:
     healthcheck:
       ports:
         - "80/tcp"
-    privileged: "1"
+    privileged: true
     hook:
       after_start:
-        - "ls -al /"
-        - "env"
-      before_stop:
         - "ls -al /tmp"
-        - "pwd"
-      force: false
+      before_stop:
+        - "abcd"
+      force: true
 volumes:
   - "/tmp:/tmp/host"
