@@ -20,10 +20,10 @@ import (
 func deploy(c *cli.Context, conn *grpc.ClientConn) {
 	pod, entry, image, network, cpu, mem, envs, count := getDeployParams(c)
 	if c.NArg() != 1 {
-		log.Fatal("[RawDeploy] no spec")
+		log.Fatal("[Deploy] no spec")
 	}
 	specURI := c.Args().First()
-	log.Debugf("[RawDeploy] Deploy %s", specURI)
+	log.Debugf("[Deploy] Deploy %s", specURI)
 	var data []byte
 	var err error
 	if strings.HasPrefix(specURI, "http") {
@@ -32,13 +32,13 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 		data, err = ioutil.ReadFile(specURI)
 	}
 	if err != nil {
-		log.Fatalf("[RawDeploy] read spec failed %v", err)
+		log.Fatalf("[Deploy] read spec failed %v", err)
 	}
 	client := pb.NewCoreRPCClient(conn)
 	opts := generateDeployOpts(data, pod, entry, image, network, cpu, mem, envs, count)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("[RawDeploy] send request failed %v", err)
+		log.Fatalf("[Deploy] send request failed %v", err)
 	}
 	for {
 		msg, err := resp.Recv()
@@ -47,19 +47,19 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if err != nil {
-			log.Fatalf("[RawDeploy] Message invalid %v", err)
+			log.Fatalf("[Deploy] Message invalid %v", err)
 		}
 
 		if msg.Success {
-			log.Infof("[RawDeploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
+			log.Infof("[Deploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
 			if len(msg.Hook) > 0 {
-				log.Infof("[RawDeploy] Hook output \n%s", msg.Hook)
+				log.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}
 			for name, publish := range msg.Publish {
-				log.Infof("[RawDeploy] Bound %s ip %s", name, publish)
+				log.Infof("[Deploy] Bound %s ip %s", name, publish)
 			}
 		} else {
-			log.Errorf("[RawDeploy] Failed %v", msg.Error)
+			log.Errorf("[Deploy] Failed %v", msg.Error)
 		}
 	}
 }
@@ -74,7 +74,7 @@ func getDeployParams(c *cli.Context) (string, string, string, string, float64, i
 	envs := c.StringSlice("env")
 	count := int32(c.Int("count"))
 	if pod == "" || entry == "" || image == "" {
-		log.Fatal("[RawDeploy] no pod or entry or image")
+		log.Fatal("[Deploy] no pod or entry or image")
 	}
 	return pod, entry, image, network, cpu, mem, envs, count
 }

@@ -3,3 +3,4 @@ erucli
 vendor/*
 test.yaml
 cli
+build.yaml

@@ -1,0 +1,21 @@
+stages:
+  - test
+  - build
+builds:
+  test:
+    base: alpine:3.6
+    repo: git@github.com:CMGS/cli.git
+    version: c9fa493eacae4288c6f226c79752ebc103e2ba62
+    commands:
+      - echo '1'
+      - ls -al
+      - touch /tmp/testbuild
+      - echo CMGS > /tmp/testbuild 
+    cache:
+      /tmp/testbuild: /testCMGS
+  build:
+    base: alpine:latest
+    commands:
+      - echo '2'
+      - cat /testCMGS
+    working_dir: /tmp

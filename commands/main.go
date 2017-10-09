@@ -67,6 +67,8 @@ func run(c *cli.Context) error {
 		remove(c, conn)
 	} else if c.Command.Name == "realloc" {
 		realloc(c, conn)
+	} else if c.Command.Name == "build" {
+		build(c, conn)
 	} else {
 		log.Fatal("Not support yet")
 	}
