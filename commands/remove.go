@@ -31,12 +31,7 @@ func remove(c *cli.Context, conn *grpc.ClientConn) {
 		log.Fatal("[Remove] not specify containers")
 	}
 	client := pb.NewCoreRPCClient(conn)
-	ids := []string{}
-	for _, id := range c.Args().Slice() {
-		log.Debugf("[Remove] remove %s", id)
-		ids = append(ids, id)
-	}
-	opts := &pb.RemoveContainerOptions{Ids: ids, Force: c.Bool("force")}
+	opts := &pb.RemoveContainerOptions{Ids: c.Args().Slice(), Force: c.Bool("force")}
 
 	resp, err := client.RemoveContainer(context.Background(), opts)
 	if err != nil {

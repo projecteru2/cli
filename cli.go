@@ -21,12 +21,10 @@ func main() {
 	app.Usage = "control eru in shell"
 	app.Version = versioninfo.VERSION
 
-	deployCommand := commands.DeployCommand()
-	removeCommand := commands.RemoveCommand()
-
 	app.Commands = []*cli.Command{
-		deployCommand,
-		removeCommand,
+		commands.DeployCommand(),
+		commands.RemoveCommand(),
+		commands.ReallocCommand(),
 	}
 
 	app.Flags = commands.GlobalFlags()

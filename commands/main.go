@@ -65,6 +65,8 @@ func run(c *cli.Context) error {
 		deploy(c, conn)
 	} else if c.Command.Name == "remove" {
 		remove(c, conn)
+	} else if c.Command.Name == "realloc" {
+		realloc(c, conn)
 	} else {
 		log.Fatal("Not support yet")
 	}
