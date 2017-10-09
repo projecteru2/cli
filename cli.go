@@ -26,6 +26,7 @@ func main() {
 		commands.RemoveCommand(),
 		commands.ReallocCommand(),
 		commands.BuildCommand(),
+		commands.LambdaCommand(),
 	}
 
 	app.Flags = commands.GlobalFlags()

@@ -10,6 +10,7 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
+//ReallocCommand for realloc containers resource
 func ReallocCommand() *cli.Command {
 	return &cli.Command{
 		Name:   "realloc",

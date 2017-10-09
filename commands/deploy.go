@@ -142,7 +142,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 func DeployCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "deploy",
-		Usage: "use it to deploy containers by from a image",
+		Usage: "deploy containers by a image",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "pod",

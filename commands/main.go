@@ -69,6 +69,11 @@ func run(c *cli.Context) error {
 		realloc(c, conn)
 	} else if c.Command.Name == "build" {
 		build(c, conn)
+	} else if c.Command.Name == "lambda" {
+		code := lambda(c, conn)
+		if code != 0 {
+			return cli.Exit("", code)
+		}
 	} else {
 		log.Fatal("Not support yet")
 	}

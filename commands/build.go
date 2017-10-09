@@ -14,6 +14,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+//BuildCommand for building image by multiple stages
 func BuildCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "build",

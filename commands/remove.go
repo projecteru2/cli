@@ -10,6 +10,7 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
+//RemoveCommand for remove containers
 func RemoveCommand() *cli.Command {
 	return &cli.Command{
 		Name:   "remove",
