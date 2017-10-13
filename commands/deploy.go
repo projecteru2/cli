@@ -18,12 +18,13 @@ import (
 )
 
 func deploy(c *cli.Context, conn *grpc.ClientConn) {
-	pod, entry, image, network, cpu, mem, envs, count := getDeployParams(c)
 	if c.NArg() != 1 {
 		log.Fatal("[Deploy] no spec")
 	}
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
+
+	pod, node, entry, image, network, cpu, mem, envs, count := getDeployParams(c)
 	var data []byte
 	var err error
 	if strings.HasPrefix(specURI, "http") {
@@ -35,7 +36,7 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 		log.Fatalf("[Deploy] read spec failed %v", err)
 	}
 	client := pb.NewCoreRPCClient(conn)
-	opts := generateDeployOpts(data, pod, entry, image, network, cpu, mem, envs, count)
+	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		log.Fatalf("[Deploy] send request failed %v", err)
@@ -64,8 +65,9 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 	}
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, float64, int64, []string, int32) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32) {
 	pod := c.String("pod")
+	node := c.String("node")
 	entry := c.String("entry")
 	image := c.String("image")
 	network := c.String("network")
@@ -76,10 +78,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, float64, i
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
-	return pod, entry, image, network, cpu, mem, envs, count
+	return pod, node, entry, image, network, cpu, mem, envs, count
 }
 
-func generateDeployOpts(data []byte, pod, entry, image, network string, cpu float64, mem int64, envs []string, count int32) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -124,6 +126,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 			ExtraHosts:    entrypoint.ExtraHosts,
 		},
 		Podname:     pod,
+		Nodename:    node,
 		Image:       image,
 		CpuQuota:    cpu,
 		Memory:      mem,
@@ -155,6 +158,11 @@ func DeployCommand() *cli.Command {
 			&cli.StringFlag{
 				Name:  "image",
 				Usage: "which to run",
+			},
+			&cli.StringFlag{
+				Name:  "node",
+				Usage: "which node to run",
+				Value: "",
 			},
 			&cli.IntFlag{
 				Name:  "count",
