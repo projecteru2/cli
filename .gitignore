@@ -4,3 +4,4 @@ vendor/*
 test.yaml
 cli
 build.yaml
+update_core.sh

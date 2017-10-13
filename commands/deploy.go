@@ -115,7 +115,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, cpu floa
 			Name:          entry,
 			Command:       entrypoint.Command,
 			Privileged:    entrypoint.Privileged,
-			WorkingDir:    entrypoint.WorkingDir,
+			Dir:           entrypoint.Dir,
 			LogConfig:     entrypoint.LogConfig,
 			Publish:       coreutils.DecodePorts(entrypoint.Publish),
 			Healcheck:     healthCheck,

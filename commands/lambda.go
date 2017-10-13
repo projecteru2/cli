@@ -99,7 +99,7 @@ func generateLambdaOpts(
 			Name:       name,
 			Command:    strings.Join(commands, " && "),
 			Privileged: false,
-			WorkingDir: workingDir,
+			Dir:        workingDir,
 		},
 		Podname:     pod,
 		Image:       image,

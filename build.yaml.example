@@ -10,12 +10,22 @@ builds:
       - echo '1'
       - ls -al
       - touch /tmp/testbuild
-      - echo CMGS > /tmp/testbuild 
+      - echo CMGS > /tmp/testbuild
     cache:
       /tmp/testbuild: /testCMGS
+    envs:
+      TEST: "abc"
+      NORMAL: "2"
+    dir: /var
   build:
+    labels:
+      TEST: "t"
+      ZZZZ: "XX"
+    args:
+      WTF: "123"
+      oOOO: "3245"
     base: alpine:latest
     commands:
       - echo '2'
       - cat /testCMGS
-    working_dir: /tmp
+    dir: /tmp
