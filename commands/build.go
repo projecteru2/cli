@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	"github.com/sethgrid/curse"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
@@ -46,6 +48,11 @@ func BuildCommand() *cli.Command {
 	}
 }
 
+type Pos struct {
+	Col  int
+	Line int
+}
+
 func build(c *cli.Context, conn *grpc.ClientConn) {
 	opts := generateBuildOpts(c)
 	client := pb.NewCoreRPCClient(conn)
@@ -53,6 +60,13 @@ func build(c *cli.Context, conn *grpc.ClientConn) {
 	if err != nil {
 		log.Fatalf("[Build] send request failed %v", err)
 	}
+
+	cursor, err := curse.New()
+	if err != nil {
+		log.Fatalf("[Build] get cursor failed %v", err)
+	}
+	newLine := cursor.StartingPosition.Y
+	progess := map[string]Pos{}
 	for {
 		msg, err := resp.Recv()
 		if err == io.EOF {
@@ -63,12 +77,32 @@ func build(c *cli.Context, conn *grpc.ClientConn) {
 			log.Fatalf("[Build] Message invalid %v", err)
 		}
 
+		cursor.Move(0, newLine).EraseCurrentLine()
 		if msg.Error != "" {
-			log.Errorf("[Build] Error %d %s", msg.ErrorDetail.Code, msg.ErrorDetail.Message)
-		} else {
-			log.Infof("[Build] %s %s %s", msg.Status, msg.Stream, msg.Progress)
-
+			fmt.Print(msg.ErrorDetail.Message)
+			newLine++
+		} else if msg.Stream != "" && msg.Progress == "" {
+			fmt.Print(msg.Stream)
+			newLine++
+		} else if msg.Status != "" {
+			if msg.Id == "" {
+				fmt.Printf("%s", msg.Status)
+				newLine++
+				continue
+			}
+			col, line, err := curse.GetCursorPosition()
+			if err != nil {
+				log.Fatalf("[Build] get cursor pos failed %v", err)
+			}
+			if pos, ok := progess[msg.Id]; !ok {
+				progess[msg.Id] = Pos{col, line}
+				newLine++
+			} else {
+				cursor.Move(pos.Col, pos.Line).EraseCurrentLine()
+			}
+			fmt.Printf("%s: %s %s", msg.Id, msg.Status, msg.Progress)
 		}
+		cursor.Move(0, newLine)
 	}
 }
 

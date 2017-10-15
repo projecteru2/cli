@@ -17,3 +17,4 @@ import:
   version: v17.05.0-ce-rc3
   subpackages:
   - api/types
+- package: github.com/sethgrid/curse
