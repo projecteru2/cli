@@ -48,7 +48,7 @@ func BuildCommand() *cli.Command {
 	}
 }
 
-func build(c *cli.Context, conn *grpc.ClientConn) {
+func build(c *cli.Context, conn *grpc.ClientConn) *pb.ErrorDetail {
 	opts := generateBuildOpts(c)
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.BuildImage(context.Background(), opts)
@@ -57,6 +57,7 @@ func build(c *cli.Context, conn *grpc.ClientConn) {
 	}
 
 	progess := map[string]int{}
+	p := 0
 	for {
 		msg, err := resp.Recv()
 		if err == io.EOF {
@@ -68,7 +69,7 @@ func build(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if msg.Error != "" {
-			fmt.Print(msg.ErrorDetail.Message)
+			return msg.ErrorDetail
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
 		} else if msg.Status != "" {
@@ -76,21 +77,23 @@ func build(c *cli.Context, conn *grpc.ClientConn) {
 				fmt.Println(msg.Status)
 			} else {
 				data := fmt.Sprintf("%s: %s %s", msg.Id, msg.Status, msg.Progress)
-				cursor, err := curse.New()
-				if err != nil {
-					log.Fatalf("[Build] get cursor failed %v", err)
-				}
 				if pos, ok := progess[msg.Id]; !ok {
+					progess[msg.Id] = p
 					fmt.Println(data)
-					progess[msg.Id] = cursor.Position.Y
+					p++
 				} else {
-					cursor.Move(0, pos).EraseCurrentLine()
-					fmt.Println(data)
+					cursor, err := curse.New()
+					if err != nil {
+						log.Fatalf("[Build] get cursor failed %v", err)
+					}
+					cursor.MoveUp(p - pos).EraseCurrentLine()
+					fmt.Print(data)
 					cursor.Reset()
 				}
 			}
 		}
 	}
+	return nil
 }
 
 func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {

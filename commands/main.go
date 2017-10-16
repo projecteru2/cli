@@ -68,7 +68,10 @@ func run(c *cli.Context) error {
 	} else if c.Command.Name == "realloc" {
 		realloc(c, conn)
 	} else if c.Command.Name == "build" {
-		build(c, conn)
+		errDetail := build(c, conn)
+		if errDetail != nil {
+			return cli.Exit(errDetail.Message, int(errDetail.Code))
+		}
 	} else if c.Command.Name == "lambda" {
 		code := lambda(c, conn)
 		if code != 0 {
