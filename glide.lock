@@ -1,5 +1,5 @@
-hash: df11d0093a99505b4315805345d38a72eea341098ed9685f38fd11a6c72927b2
-updated: 2017-10-15T20:37:19.725329561+08:00
+hash: 782ddf10e6d320f83d9c91e5d2b3bc92ac88110ee1225720ed7b61029030dbfe
+updated: 2017-10-16T13:23:19.881052014+08:00
 imports:
 - name: github.com/docker/distribution
   version: e18fe7d3f4573faac5a32a0df3322a4812969c92
@@ -48,6 +48,8 @@ imports:
   - ptypes/any
   - ptypes/duration
   - ptypes/timestamp
+- name: github.com/kless/term
+  version: e551c64f56c0ac0469b4db1b70918e05bfd3ab20
 - name: github.com/Microsoft/go-winio
   version: 7ff89941bcb93df2e962467fb073c6e997b13cf0
 - name: github.com/opencontainers/go-digest
@@ -55,7 +57,7 @@ imports:
 - name: github.com/pkg/errors
   version: c605e284fe17294bda444b34710735b29d1a9d90
 - name: github.com/projecteru2/core
-  version: 3805d113d9d075841bcb0c442ad17eb62e32640c
+  version: c7b5c1119f1703495dcef6f3b1b870f752cb178c
   subpackages:
   - rpc/gen
   - types
@@ -64,6 +66,10 @@ imports:
   version: 3378651548d4bda6a856c69719d593d902ec8b21
 - name: github.com/Sirupsen/logrus
   version: f006c2ac4710855cf0f916dd6b77acf6b048dc6e
+- name: github.com/tredoe/term
+  version: e551c64f56c0ac0469b4db1b70918e05bfd3ab20
+  subpackages:
+  - sys
 - name: golang.org/x/crypto
   version: b176d7def5d71bdd214203491f89843ed217f420
   subpackages:
@@ -114,7 +120,7 @@ imports:
   - tap
   - transport
 - name: gopkg.in/urfave/cli.v2
-  version: 61c3eb6ba1da1df17cd50f1456a9252d92bf5edd
+  version: 50a0fdeea6330854c7b05371cce1fac8c7e636d2
 - name: gopkg.in/yaml.v2
   version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 testImports: []

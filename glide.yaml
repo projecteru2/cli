@@ -18,3 +18,4 @@ import:
   subpackages:
   - api/types
 - package: github.com/sethgrid/curse
+- package: github.com/kless/term
