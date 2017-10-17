@@ -57,7 +57,7 @@ imports:
 - name: github.com/pkg/errors
   version: c605e284fe17294bda444b34710735b29d1a9d90
 - name: github.com/projecteru2/core
-  version: c7b5c1119f1703495dcef6f3b1b870f752cb178c
+  version: 7ea5d6f30b1d7a08ffa6bd7aabf9af65ebd7aeee
   subpackages:
   - rpc/gen
   - types

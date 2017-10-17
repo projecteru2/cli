@@ -203,6 +203,10 @@ func getNode(c *cli.Context) error {
 	}
 
 	log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+	for cno, part := range node.GetCpu() {
+		log.Infof("Cpu %s has %d capability", cno, part)
+	}
+	log.Infof("Memory: %d bytes", node.GetMemory())
 	return nil
 }
 
