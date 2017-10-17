@@ -7,12 +7,12 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
-// Container command
+//ContainerCommand for control containers
 func ContainerCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "container",
 		Usage: "container commands",
-		SubCommands: []*cli.Command{
+		Subcommands: []*cli.Command{
 			&cli.Command{
 				Name:   "get",
 				Usage:  "get container(s)",

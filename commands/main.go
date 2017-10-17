@@ -28,6 +28,7 @@ func setupLog(l string) error {
 	return nil
 }
 
+//GlobalFlags for global control
 func GlobalFlags() []cli.Flag {
 	return []cli.Flag{
 		&cli.BoolFlag{

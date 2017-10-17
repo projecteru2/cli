@@ -5,17 +5,17 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 )
 
-// Pod commands
-// list and add pod
+//PodCommand list and add pod
 func PodCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "pod",
 		Usage: "pod commands",
-		SubCommands: []*cli.Command{
+		Subcommands: []*cli.Command{
 			&cli.Command{
 				Name:   "list",
 				Usage:  "list all pods",
@@ -99,7 +99,7 @@ func addPod(c *cli.Context) error {
 	if name == "" {
 		log.Fatalf("[AddPod] bad name, got %s", name)
 	}
-	if favor != "MEM" || favor != "CPU" {
+	if favor != coretypes.MEMORY_PRIOR && favor != coretypes.CPU_PRIOR {
 		log.Fatalf("[AddPod] favor must be MEM/CPU, got %s", favor)
 	}
 
@@ -127,7 +127,7 @@ func listPodNodes(c *cli.Context) error {
 
 	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
-	resp, err := client.AddPod(context.Background(), &pb.ListNodesOptions{
+	resp, err := client.ListPodNodes(context.Background(), &pb.ListNodesOptions{
 		Podname: name,
 		All:     all,
 	})
@@ -146,7 +146,7 @@ func listPodNetworks(c *cli.Context) error {
 	if name == "" {
 		log.Fatalf("[listPodNetworks] bad podname, got %s", name)
 	}
-	driver := c.Bool("driver")
+	driver := c.String("driver")
 
 	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
@@ -159,17 +159,17 @@ func listPodNetworks(c *cli.Context) error {
 	}
 
 	for _, network := range resp.GetNetworks() {
-		log.Infof("Name: %s, Subnets: %s", node.GetName(), strings.Join(node.GetSubnets(), ","))
+		log.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
 	}
 	return nil
 }
 
-// Node commands
+//NodeCommand for node control
 func NodeCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "node",
 		Usage: "node commands",
-		SubCommands: []*cli.Command{
+		Subcommands: []*cli.Command{
 			&cli.Command{
 				Name:   "get",
 				Usage:  "get a node",
@@ -201,7 +201,7 @@ func NodeCommand() *cli.Command {
 						Name:  "nodename",
 						Usage: "name of node",
 					},
-					&cli.StringFlag{
+					&cli.BoolFlag{
 						Name:  "available",
 						Usage: "availability",
 						Value: true,
@@ -234,7 +234,7 @@ func getNode(c *cli.Context) error {
 
 func removeNode(c *cli.Context) error {
 	nodename := c.String("nodename")
-	if name == "" {
+	if nodename == "" {
 		log.Fatalf("[RemoveNode] bad nodename, got %s", nodename)
 	}
 
@@ -248,9 +248,9 @@ func removeNode(c *cli.Context) error {
 		log.Fatalf("[RemoveNode] send request failed %v", err)
 	}
 
-	_, err := client.RemoveNode(context.Background(), &pb.RemoveNodeOptions{
+	_, err = client.RemoveNode(context.Background(), &pb.RemoveNodeOptions{
 		Podname:  node.Podname,
-		Nodename: node.Nodename,
+		Nodename: node.Name,
 	})
 	if err != nil {
 		log.Fatalf("[RemoveNode] send request failed %v", err)
@@ -276,7 +276,7 @@ func setNodeAvailable(c *cli.Context) error {
 		log.Fatalf("[SetNodeAvailable] send request failed %v", err)
 	}
 
-	_, err := client.SetNodeAvailable(context.Background(), &pb.NodeAvailable{
+	_, err = client.SetNodeAvailable(context.Background(), &pb.NodeAvailable{
 		Podname:   node.Podname,
 		Nodename:  node.Name,
 		Available: available,
