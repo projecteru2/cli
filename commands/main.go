@@ -3,6 +3,7 @@ package commands
 import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
+	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 )
 
@@ -54,13 +55,16 @@ func GlobalFlags() []cli.Flag {
 	}
 }
 
-func run(c *cli.Context) error {
+func setupAndGetGRPCConnection() *grpc.ClientConn {
 	setupLog("INFO")
 	if debug {
 		setupLog("DEBUG")
 	}
+	return utils.ConnectEru(eru, timeout)
+}
 
-	conn := utils.ConnectEru(eru, timeout)
+func run(c *cli.Context) error {
+	conn := setupAndGetGRPCConnection()
 	if c.Command.Name == "deploy" {
 		deploy(c, conn)
 	} else if c.Command.Name == "remove" {
