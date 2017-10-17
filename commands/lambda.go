@@ -31,8 +31,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, timeout, count, stdin := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, timeout, count, stdin)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin)
 
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
@@ -94,7 +94,7 @@ func generateLambdaOpts(
 	commands []string, name string, network string,
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
-	mem int64, timeout, count int, stdin bool) *pb.RunAndWaitOptions {
+	mem int64, count int, stdin bool) *pb.RunAndWaitOptions {
 
 	networks := map[string]string{}
 	if network != "" {
@@ -123,11 +123,10 @@ func generateLambdaOpts(
 		Networkmode: network,
 		OpenStdin:   stdin,
 	}
-	opts.Timeout = int32(timeout)
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, int, bool) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands ")
 	}
@@ -141,10 +140,9 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	image := c.String("image")
 	cpu := c.Float64("cpu")
 	mem := c.Int64("mem")
-	timeout := c.Int("timeout")
 	count := c.Int("count")
 	stdin := c.Bool("stdin")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, timeout, count, stdin
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin
 }
 
 //LambdaCommand for run commands in a container
@@ -192,11 +190,6 @@ func LambdaCommand() *cli.Command {
 				Name:  "mem",
 				Usage: "how many memory in bytes",
 				Value: 536870912,
-			},
-			&cli.IntFlag{
-				Name:  "timeout",
-				Usage: "when to interrupt",
-				Value: 60,
 			},
 			&cli.IntFlag{
 				Name:  "count",
