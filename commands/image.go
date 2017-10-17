@@ -11,49 +11,56 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	"github.com/sethgrid/curse"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 	yaml "gopkg.in/yaml.v2"
 )
 
-//BuildCommand for building image by multiple stages
-func BuildCommand() *cli.Command {
+//ImageCommand for building image by multiple stages
+func ImageCommand() *cli.Command {
 	return &cli.Command{
-		Name:  "build",
-		Usage: "build a image",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "name",
-				Usage: "name of image",
-			},
-			&cli.StringFlag{
-				Name:  "tag",
-				Usage: "tag of image",
-				Value: "latest",
-			},
-			&cli.StringFlag{
-				Name:        "user",
-				Usage:       "user of image",
-				Value:       "",
-				DefaultText: "root",
-			},
-			&cli.IntFlag{
-				Name:        "uid",
-				Usage:       "uid of image",
-				Value:       0,
-				DefaultText: "1",
+		Name:  "image",
+		Usage: "image commands",
+		Subcommands: []*cli.Command{
+			&cli.Command{
+				Name:      "build",
+				Usage:     "build image",
+				ArgsUsage: specFileURI,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "name",
+						Usage: "name of image",
+					},
+					&cli.StringFlag{
+						Name:  "tag",
+						Usage: "tag of image",
+						Value: "latest",
+					},
+					&cli.StringFlag{
+						Name:        "user",
+						Usage:       "user of image",
+						Value:       "",
+						DefaultText: "root",
+					},
+					&cli.IntFlag{
+						Name:        "uid",
+						Usage:       "uid of image",
+						Value:       0,
+						DefaultText: "1",
+					},
+				},
+				Action: buildImage,
 			},
 		},
-		Action: run,
 	}
 }
 
-func build(c *cli.Context, conn *grpc.ClientConn) *pb.ErrorDetail {
+func buildImage(c *cli.Context) error {
 	opts := generateBuildOpts(c)
+	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.BuildImage(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("[Build] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	progess := map[string]int{}
@@ -65,11 +72,11 @@ func build(c *cli.Context, conn *grpc.ClientConn) *pb.ErrorDetail {
 		}
 
 		if err != nil {
-			log.Fatalf("[Build] Message invalid %v", err)
+			return cli.Exit(err, -1)
 		}
 
 		if msg.Error != "" {
-			return msg.ErrorDetail
+			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
 		} else if msg.Status != "" {

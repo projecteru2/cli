@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -22,14 +23,11 @@ func PodCommand() *cli.Command {
 				Action: listPods,
 			},
 			&cli.Command{
-				Name:   "add",
-				Usage:  "add new pod",
-				Action: addPod,
+				Name:      "add",
+				Usage:     "add new pod",
+				ArgsUsage: podArgsUsage,
+				Action:    addPod,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "name",
-						Usage: "name of pod",
-					},
 					&cli.StringFlag{
 						Name:  "favor",
 						Usage: "name of pod, default: MEM",
@@ -43,14 +41,11 @@ func PodCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
-				Name:   "nodes",
-				Usage:  "list all nodes in one pod",
-				Action: listPodNodes,
+				Name:      "nodes",
+				Usage:     "list all nodes in one pod",
+				ArgsUsage: podArgsUsage,
+				Action:    listPodNodes,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "podname",
-						Usage: "name of pod",
-					},
 					&cli.BoolFlag{
 						Name:  "all",
 						Usage: "list all nodes or just living nodes",
@@ -59,14 +54,11 @@ func PodCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
-				Name:   "networks",
-				Usage:  "list all networks in one pod",
-				Action: listPodNetworks,
+				Name:      "networks",
+				Usage:     "list all networks in one pod",
+				ArgsUsage: podArgsUsage,
+				Action:    listPodNetworks,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "podname",
-						Usage: "name of pod",
-					},
 					&cli.StringFlag{
 						Name:  "driver",
 						Usage: "filter driver",
@@ -92,26 +84,25 @@ func listPods(c *cli.Context) error {
 }
 
 func addPod(c *cli.Context) error {
-	name := c.String("name")
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	name := c.Args().First()
 	favor := c.String("favor")
 	desc := c.String("desc")
 
-	if name == "" {
-		log.Fatalf("[AddPod] bad name, got %s", name)
-	}
 	if favor != coretypes.MEMORY_PRIOR && favor != coretypes.CPU_PRIOR {
-		log.Fatalf("[AddPod] favor must be MEM/CPU, got %s", favor)
+		return fmt.Errorf("favor must be MEM/CPU, got %s", favor)
 	}
 
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
 	pod, err := client.AddPod(context.Background(), &pb.AddPodOptions{
 		Name:  name,
 		Favor: favor,
 		Desc:  desc,
 	})
 	if err != nil {
-		log.Fatalf("[AddPod] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	log.Infof("[AddPod] success, name: %s, desc: %s", pod.GetName(), pod.GetDesc())
@@ -119,20 +110,19 @@ func addPod(c *cli.Context) error {
 }
 
 func listPodNodes(c *cli.Context) error {
-	name := c.String("podname")
-	if name == "" {
-		log.Fatalf("[ListPodNodes] bad podname, got %s", name)
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
+	name := c.Args().First()
 	all := c.Bool("all")
 
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.ListPodNodes(context.Background(), &pb.ListNodesOptions{
 		Podname: name,
 		All:     all,
 	})
 	if err != nil {
-		log.Fatalf("[ListPodNodes] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	for _, node := range resp.GetNodes() {
@@ -142,20 +132,19 @@ func listPodNodes(c *cli.Context) error {
 }
 
 func listPodNetworks(c *cli.Context) error {
-	name := c.String("podname")
-	if name == "" {
-		log.Fatalf("[listPodNetworks] bad podname, got %s", name)
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
+	name := c.Args().First()
 	driver := c.String("driver")
 
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.ListNetworks(context.Background(), &pb.ListNetworkOptions{
 		Podname: name,
 		Driver:  driver,
 	})
 	if err != nil {
-		log.Fatalf("[listPodNetworks] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	for _, network := range resp.GetNetworks() {
@@ -171,36 +160,23 @@ func NodeCommand() *cli.Command {
 		Usage: "node commands",
 		Subcommands: []*cli.Command{
 			&cli.Command{
-				Name:   "get",
-				Usage:  "get a node",
-				Action: getNode,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "nodename",
-						Usage: "name of node",
-					},
-				},
+				Name:      "get",
+				Usage:     "get a node",
+				ArgsUsage: nodeArgsUsage,
+				Action:    getNode,
 			},
 			&cli.Command{
-				Name:   "remove",
-				Usage:  "remove a node",
-				Action: removeNode,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "nodename",
-						Usage: "name of node",
-					},
-				},
+				Name:      "remove",
+				Usage:     "remove a node",
+				ArgsUsage: nodeArgsUsage,
+				Action:    removeNode,
 			},
 			&cli.Command{
-				Name:   "available",
-				Usage:  "set availability for a node",
-				Action: setNodeAvailable,
+				Name:      "available",
+				Usage:     "set availability for a node",
+				ArgsUsage: nodeArgsUsage,
+				Action:    setNodeAvailable,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "nodename",
-						Usage: "name of node",
-					},
 					&cli.BoolFlag{
 						Name:  "available",
 						Usage: "availability",
@@ -213,19 +189,17 @@ func NodeCommand() *cli.Command {
 }
 
 func getNode(c *cli.Context) error {
-	name := c.String("nodename")
-	if name == "" {
-		log.Fatalf("[GetNode] bad nodename, got %s", name)
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
-
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	name := c.Args().First()
 	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
 		Podname:  "",
 		Nodename: name,
 	})
 	if err != nil {
-		log.Fatalf("[GetNode] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
@@ -233,19 +207,17 @@ func getNode(c *cli.Context) error {
 }
 
 func removeNode(c *cli.Context) error {
-	nodename := c.String("nodename")
-	if nodename == "" {
-		log.Fatalf("[RemoveNode] bad nodename, got %s", nodename)
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
-
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	name := c.Args().First()
 	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
 		Podname:  "",
-		Nodename: nodename,
+		Nodename: name,
 	})
 	if err != nil {
-		log.Fatalf("[RemoveNode] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	_, err = client.RemoveNode(context.Background(), &pb.RemoveNodeOptions{
@@ -253,27 +225,26 @@ func removeNode(c *cli.Context) error {
 		Nodename: node.Name,
 	})
 	if err != nil {
-		log.Fatalf("[RemoveNode] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 	log.Infof("[RemoveNode] success")
 	return nil
 }
 
 func setNodeAvailable(c *cli.Context) error {
-	name := c.String("nodename")
-	if name == "" {
-		log.Fatalf("[SetNodeAvailable] bad nodename, got %s", name)
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
+	name := c.Args().First()
 	available := c.Bool("available")
 
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
 	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
 		Podname:  "",
 		Nodename: name,
 	})
 	if err != nil {
-		log.Fatalf("[SetNodeAvailable] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 
 	_, err = client.SetNodeAvailable(context.Background(), &pb.NodeAvailable{
@@ -282,7 +253,7 @@ func setNodeAvailable(c *cli.Context) error {
 		Available: available,
 	})
 	if err != nil {
-		log.Fatalf("[SetNodeAvailable] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 	log.Infof("[SetNodeAvailable] success")
 	return nil

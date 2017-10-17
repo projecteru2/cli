@@ -21,18 +21,27 @@ var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
 var split = []byte{62, 32}
 
-func lambda(c *cli.Context, conn *grpc.ClientConn) (code int) {
+func runLambda(c *cli.Context) error {
+	conn := setupAndGetGRPCConnection()
+	code, err := lambda(c, conn)
+	if err != nil {
+		return cli.Exit(err, code)
+	}
+	return nil
+}
+
+func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
 	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, timeout, count, stdin := getLambdaParams(c)
 	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, timeout, count, stdin)
 
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
-		log.Fatalf("[Lambda] send request failed %v", err)
+		return -1, err
 	}
 
 	if resp.Send(opts) != nil {
-		log.Fatalf("[Lambda] send options failed %v", err)
+		return -1, err
 	}
 
 	if stdin {
@@ -48,7 +57,7 @@ func lambda(c *cli.Context, conn *grpc.ClientConn) (code int) {
 				}
 			}
 			if err := scanner.Err(); err != nil {
-				log.Errorf("[Lambda] Parse log failed, %v", err)
+				log.Errorf("[Lambda] Parse stdin failed, %v", err)
 			}
 		}()
 	}
@@ -60,14 +69,14 @@ func lambda(c *cli.Context, conn *grpc.ClientConn) (code int) {
 		}
 
 		if err != nil {
-			log.Fatalf("[Lambda] Message invalid %v", err)
+			return -1, err
 		}
 
 		if bytes.HasPrefix(msg.Data, exitCode) {
 			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
 			code, err = strconv.Atoi(ret)
 			if err != nil {
-				log.Fatalf("[Lambda] exit with %s", ret)
+				return code, err
 			}
 			continue
 		}
@@ -78,7 +87,7 @@ func lambda(c *cli.Context, conn *grpc.ClientConn) (code int) {
 		}
 		fmt.Printf("[%s]: %s", id, data)
 	}
-	return
+	return 0, nil
 }
 
 func generateLambdaOpts(
@@ -199,6 +208,6 @@ func LambdaCommand() *cli.Command {
 				Value:   false,
 			},
 		},
-		Action: run,
+		Action: runLambda,
 	}
 }

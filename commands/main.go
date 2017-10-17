@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"fmt"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
+	pb "github.com/projecteru2/core/rpc/gen"
 	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 )
@@ -11,6 +14,13 @@ var (
 	debug   bool
 	eru     string
 	timeout int
+)
+
+const (
+	containerArgsUsage = "containerID(s)"
+	podArgsUsage       = "podname"
+	nodeArgsUsage      = "nodename"
+	specFileURI        = "<spec file uri>"
 )
 
 func setupLog(l string) error {
@@ -64,26 +74,11 @@ func setupAndGetGRPCConnection() *grpc.ClientConn {
 	return utils.ConnectEru(eru, timeout)
 }
 
-func run(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
-	if c.Command.Name == "deploy" {
-		deploy(c, conn)
-	} else if c.Command.Name == "remove" {
-		remove(c, conn)
-	} else if c.Command.Name == "realloc" {
-		realloc(c, conn)
-	} else if c.Command.Name == "build" {
-		errDetail := build(c, conn)
-		if errDetail != nil {
-			return cli.Exit(errDetail.Message, int(errDetail.Code))
-		}
-	} else if c.Command.Name == "lambda" {
-		code := lambda(c, conn)
-		if code != 0 {
-			return cli.Exit("", code)
-		}
-	} else {
-		log.Fatal("Not support yet")
+func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
+	if c.NArg() == 0 {
+		return nil, fmt.Errorf("not specify containers")
 	}
-	return nil
+	conn := setupAndGetGRPCConnection()
+	client := pb.NewCoreRPCClient(conn)
+	return client, nil
 }

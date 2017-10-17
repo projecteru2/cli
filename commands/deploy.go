@@ -12,34 +12,32 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 	"gopkg.in/yaml.v2"
 )
 
-func deploy(c *cli.Context, conn *grpc.ClientConn) {
-	if c.NArg() != 1 {
-		log.Fatal("[Deploy] no spec")
+func deployContainers(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
 	pod, node, entry, image, network, cpu, mem, envs, count := getDeployParams(c)
 	var data []byte
-	var err error
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
 	} else {
 		data, err = ioutil.ReadFile(specURI)
 	}
 	if err != nil {
-		log.Fatalf("[Deploy] read spec failed %v", err)
+		return cli.Exit(err, -1)
 	}
-	client := pb.NewCoreRPCClient(conn)
 	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
-		log.Fatalf("[Deploy] send request failed %v", err)
+		return cli.Exit(err, -1)
 	}
 	for {
 		msg, err := resp.Recv()
@@ -48,7 +46,7 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 		}
 
 		if err != nil {
-			log.Fatalf("[Deploy] Message invalid %v", err)
+			return cli.Exit(err, -1)
 		}
 
 		if msg.Success {
@@ -63,6 +61,7 @@ func deploy(c *cli.Context, conn *grpc.ClientConn) {
 			log.Errorf("[Deploy] Failed %v", msg.Error)
 		}
 	}
+	return nil
 }
 
 func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32) {
@@ -139,56 +138,4 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		Dns:         specs.DNS,
 	}
 	return opts
-}
-
-//DeployCommand for running deploy task
-func DeployCommand() *cli.Command {
-	return &cli.Command{
-		Name:  "deploy",
-		Usage: "deploy containers by a image",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "pod",
-				Usage: "where to run",
-			},
-			&cli.StringFlag{
-				Name:  "entry",
-				Usage: "which entry",
-			},
-			&cli.StringFlag{
-				Name:  "image",
-				Usage: "which to run",
-			},
-			&cli.StringFlag{
-				Name:  "node",
-				Usage: "which node to run",
-				Value: "",
-			},
-			&cli.IntFlag{
-				Name:  "count",
-				Usage: "how many",
-				Value: 1,
-			},
-			&cli.StringFlag{
-				Name:  "network",
-				Usage: "SDN name or host mode",
-				Value: "host",
-			},
-			&cli.Float64Flag{
-				Name:  "cpu",
-				Usage: "how many cpu",
-				Value: 1.0,
-			},
-			&cli.Int64Flag{
-				Name:  "mem",
-				Usage: "how many memory in bytes",
-				Value: 536870912.0,
-			},
-			&cli.StringSliceFlag{
-				Name:  "env",
-				Usage: "set env can use multiple times",
-			},
-		},
-		Action: run,
-	}
 }

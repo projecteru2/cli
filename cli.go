@@ -22,14 +22,11 @@ func main() {
 	app.Version = versioninfo.VERSION
 
 	app.Commands = []*cli.Command{
-		commands.DeployCommand(),
-		commands.RemoveCommand(),
-		commands.ReallocCommand(),
-		commands.BuildCommand(),
-		commands.LambdaCommand(),
+		commands.ContainerCommand(),
 		commands.PodCommand(),
 		commands.NodeCommand(),
-		commands.ContainerCommand(),
+		commands.ImageCommand(),
+		commands.LambdaCommand(),
 	}
 
 	app.Flags = commands.GlobalFlags()
