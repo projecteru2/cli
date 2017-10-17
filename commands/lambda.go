@@ -96,10 +96,12 @@ func generateLambdaOpts(
 	workingDir string, image string, cpu float64,
 	mem int64, timeout, count int, stdin bool) *pb.RunAndWaitOptions {
 
-	networkmode := enginecontainer.NetworkMode(network)
 	networks := map[string]string{}
-	if networkmode.IsUserDefined() {
-		networks = map[string]string{network: ""}
+	if network != "" {
+		networkmode := enginecontainer.NetworkMode(network)
+		if networkmode.IsUserDefined() {
+			networks = map[string]string{network: ""}
+		}
 	}
 	opts := &pb.RunAndWaitOptions{}
 	opts.DeployOptions = &pb.DeployOptions{
