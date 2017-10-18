@@ -22,5 +22,3 @@ import:
 - package: github.com/projecteru2/agent
   subpackages:
   - types
-- package: gopkg.in/urfave/cli.v1
-  version: v1.20.0
