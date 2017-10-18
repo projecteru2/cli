@@ -11,9 +11,8 @@ import (
 )
 
 var (
-	debug   bool
-	eru     string
-	timeout int
+	debug bool
+	eru   string
 )
 
 const (
@@ -56,13 +55,6 @@ func GlobalFlags() []cli.Flag {
 			EnvVars:     []string{"ERU"},
 			Destination: &eru,
 		},
-		&cli.IntFlag{
-			Name:        "timeout",
-			Usage:       "timeout for conn",
-			Aliases:     []string{"t"},
-			Value:       2,
-			Destination: &timeout,
-		},
 	}
 }
 
@@ -71,7 +63,7 @@ func setupAndGetGRPCConnection() *grpc.ClientConn {
 	if debug {
 		setupLog("DEBUG")
 	}
-	return utils.ConnectEru(eru, timeout)
+	return utils.ConnectEru(eru)
 }
 
 func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
