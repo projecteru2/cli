@@ -8,11 +8,13 @@ GO_LDFLAGS ?= -s -X $(REPO_PATH)/versioninfo.REVISION=$(REVISION) \
 			  -X $(REPO_PATH)/versioninfo.BUILTAT=$(BUILTAT) \
 			  -X $(REPO_PATH)/versioninfo.VERSION=$(VERSION)
 
+binary:
+	go build -ldflags "$(GO_LDFLAGS)" -a -tags netgo -installsuffix netgo -o erucli
+
 deps:
 	glide i
 
-build: deps
-	go build -ldflags "$(GO_LDFLAGS)" -a -tags netgo -installsuffix netgo -o erucli
+build: deps binary
 
 test: deps
 	go vet `go list ./... | grep -v '/vendor/'`

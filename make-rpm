@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e
+ROOT="`pwd`/build"
+BIN="$ROOT/usr/bin"
+
+mkdir -p $BIN
+
+mv erucli $BIN/erucli
+
+OUTPUT=($($BIN/erucli -v 2>&1))
+VERSION=${OUTPUT[-1]%\"}
+echo $VERSION rpm build begin
+
+fpm -f -s dir -t rpm -n erucli --epoch 0 -v $VERSION --iteration 1.el7 -C $ROOT -p $PWD --verbose --category 'Development/App' --description 'cli for eru' --url 'https://github.com/projecteru2/cli' --license 'MIT'  --no-rpm-sign usr etc
+
+rm -rf $ROOT
