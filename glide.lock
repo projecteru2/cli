@@ -1,5 +1,5 @@
-hash: 782ddf10e6d320f83d9c91e5d2b3bc92ac88110ee1225720ed7b61029030dbfe
-updated: 2017-10-16T13:23:19.881052014+08:00
+hash: f45432c826563abb64bd91eada7db546c34f7b204c77bf26ce4f148f02ca4115
+updated: 2017-10-18T16:04:54.012676583+08:00
 imports:
 - name: github.com/docker/distribution
   version: e18fe7d3f4573faac5a32a0df3322a4812969c92
@@ -56,8 +56,12 @@ imports:
   version: 279bed98673dd5bef374d3b6e4b09e2af76183bf
 - name: github.com/pkg/errors
   version: c605e284fe17294bda444b34710735b29d1a9d90
+- name: github.com/projecteru2/agent
+  version: 7ff98503ff872b82649897a5ee4741031d7955cb
+  subpackages:
+  - types
 - name: github.com/projecteru2/core
-  version: 25d1fd8f1faebec8ad348196788f5d8cae8eccfd
+  version: 10f60798bb32aceb0884c5af1bacd2f6608ea5e4
   subpackages:
   - rpc/gen
   - types
@@ -119,8 +123,10 @@ imports:
   - status
   - tap
   - transport
+- name: gopkg.in/urfave/cli.v1
+  version: cfb38830724cc34fedffe9a2a29fb54fa9169cd1
 - name: gopkg.in/urfave/cli.v2
-  version: 50a0fdeea6330854c7b05371cce1fac8c7e636d2
+  version: b2bf3c5abeb90da407891aecd1df2c5a1f6170c1
 - name: gopkg.in/yaml.v2
   version: 25c4ec802a7d637f88d584ab26798e94ad14c13b
 testImports: []

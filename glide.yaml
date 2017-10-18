@@ -19,3 +19,8 @@ import:
   - api/types
 - package: github.com/sethgrid/curse
 - package: github.com/kless/term
+- package: github.com/projecteru2/agent
+  subpackages:
+  - types
+- package: gopkg.in/urfave/cli.v1
+  version: v1.20.0

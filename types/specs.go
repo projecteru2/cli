@@ -1,6 +1,9 @@
 package types
 
-import "github.com/projecteru2/core/types"
+import (
+	agenttypes "github.com/projecteru2/agent/types"
+	"github.com/projecteru2/core/types"
+)
 
 // correspond to app.yaml in repository
 type Specs struct {
@@ -9,4 +12,9 @@ type Specs struct {
 	Volumes     []string                    `yaml:"volumes,omitempty,flow"`
 	Meta        map[string]string           `yaml:"meta,omitempty,flow"`
 	DNS         []string                    `yaml:"dns,omitempty,flow"`
+}
+
+type Container struct {
+	agenttypes.Container
+	Nodename string
 }
