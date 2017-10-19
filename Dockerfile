@@ -3,7 +3,7 @@ FROM golang:1.9.1-alpine3.6 AS BUILD
 MAINTAINER CMGS <ilskdw@gmail.com>
 
 # make binary
-RUN apk add --no-cache git curl make \
+RUN apk add --no-cache git ca-certificates curl make \
     && curl https://glide.sh/get | sh \
     && go get -d github.com/projecteru2/cli
 WORKDIR /go/src/github.com/projecteru2/cli
