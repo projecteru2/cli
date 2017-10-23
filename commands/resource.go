@@ -2,6 +2,9 @@ package commands
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net"
+	"os"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
@@ -184,6 +187,59 @@ func NodeCommand() *cli.Command {
 					},
 				},
 			},
+			&cli.Command{
+				Name:      "add",
+				Usage:     "add node",
+				ArgsUsage: "podname",
+				Action:    addNode,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "nodename",
+						Usage: "name of this node",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "endpoint",
+						Usage: "endpoint of docker server",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "ca",
+						Usage: "ca file of docker server",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "cert",
+						Usage: "cert file of docker server",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "key",
+						Usage: "key file of docker server",
+						Value: "",
+					},
+					&cli.BoolFlag{
+						Name:  "public",
+						Usage: "set if this node is public",
+						Value: false,
+					},
+					&cli.IntFlag{
+						Name:  "cpu",
+						Usage: "cpu count",
+						Value: 0,
+					},
+					&cli.Int64Flag{
+						Name:  "share",
+						Usage: "share count",
+						Value: 0,
+					},
+					&cli.Int64Flag{
+						Name:  "memory",
+						Usage: "memory in kB",
+						Value: 0,
+					},
+				},
+			},
 		},
 	}
 }
@@ -260,5 +316,103 @@ func setNodeAvailable(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	log.Infof("[SetNodeAvailable] success")
+	return nil
+}
+
+func getLocalIP() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return ""
+	}
+	for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
+}
+
+func addNode(c *cli.Context) error {
+	podname := c.Args().First()
+	if podname == "" {
+		return cli.Exit(fmt.Errorf("podname must not be empty"), -1)
+	}
+
+	nodename := c.String("nodename")
+	if nodename == "" {
+		n, err := os.Hostname()
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		nodename = n
+	}
+
+	endpoint := c.String("endpoint")
+	if endpoint == "" {
+		ip := getLocalIP()
+		if ip == "" {
+			return cli.Exit(fmt.Errorf("unable to get local ip"), -1)
+		}
+		endpoint = fmt.Sprintf("tcp://%d:2376", ip)
+	}
+
+	ca := c.String("ca")
+	if ca == "" {
+		ca = "/etc/docker/tls/ca.crt"
+	}
+	caContent, err := ioutil.ReadFile(ca)
+	if err != nil {
+		return cli.Exit(fmt.Errorf("unable to read %s", ca), -1)
+	}
+
+	cert := c.String("cert")
+	if cert == "" {
+		cert = "/etc/docker/tls/client.crt"
+	}
+	certContent, err := ioutil.ReadFile(cert)
+	if err != nil {
+		return cli.Exit(fmt.Errorf("unable to read %s", cert), -1)
+	}
+
+	key := c.String("key")
+	if key == "" {
+		cert = "/etc/docker/tls/client.key"
+	}
+	keyContent, err := ioutil.ReadFile(key)
+	if err != nil {
+		return cli.Exit(fmt.Errorf("unable to read %s", key), -1)
+	}
+
+	share := c.Int64("share")
+	if share == 0 {
+		share = int64(100)
+	}
+
+	cpu := c.Int("cpu")
+	memory := c.Int64("memory")
+
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	_, err = client.AddNode(context.Background(), &pb.AddNodeOptions{
+		Nodename: nodename,
+		Endpoint: endpoint,
+		Podname:  podname,
+		Ca:       string(caContent),
+		Cert:     string(certContent),
+		Key:      string(keyContent),
+		Public:   c.Bool("public"),
+		Cpu:      int32(cpu),
+		Share:    share,
+		Memory:   memory,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	log.Infof("[AddNode] success")
 	return nil
 }
