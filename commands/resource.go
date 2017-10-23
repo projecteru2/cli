@@ -194,9 +194,10 @@ func NodeCommand() *cli.Command {
 				Action:    addNode,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "nodename",
-						Usage: "name of this node",
-						Value: "",
+						Name:    "nodename",
+						Usage:   "name of this node, use `hostname` as default",
+						EnvVars: []string{"HOSTNAME"},
+						Value:   "",
 					},
 					&cli.StringFlag{
 						Name:  "endpoint",
@@ -206,17 +207,17 @@ func NodeCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "ca",
 						Usage: "ca file of docker server",
-						Value: "",
+						Value: "/etc/docker/tls/ca.crt",
 					},
 					&cli.StringFlag{
 						Name:  "cert",
 						Usage: "cert file of docker server",
-						Value: "",
+						Value: "/etc/docker/tls/client.crt",
 					},
 					&cli.StringFlag{
 						Name:  "key",
 						Usage: "key file of docker server",
-						Value: "",
+						Value: "/etc/docker/tls/client.key",
 					},
 					&cli.BoolFlag{
 						Name:  "public",
@@ -235,7 +236,7 @@ func NodeCommand() *cli.Command {
 					},
 					&cli.Int64Flag{
 						Name:  "memory",
-						Usage: "memory in kB",
+						Usage: "memory in Bytes",
 						Value: 0,
 					},
 				},
@@ -359,27 +360,18 @@ func addNode(c *cli.Context) error {
 	}
 
 	ca := c.String("ca")
-	if ca == "" {
-		ca = "/etc/docker/tls/ca.crt"
-	}
 	caContent, err := ioutil.ReadFile(ca)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("unable to read %s", ca), -1)
 	}
 
 	cert := c.String("cert")
-	if cert == "" {
-		cert = "/etc/docker/tls/client.crt"
-	}
 	certContent, err := ioutil.ReadFile(cert)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("unable to read %s", cert), -1)
 	}
 
 	key := c.String("key")
-	if key == "" {
-		cert = "/etc/docker/tls/client.key"
-	}
 	keyContent, err := ioutil.ReadFile(key)
 	if err != nil {
 		return cli.Exit(fmt.Errorf("unable to read %s", key), -1)
