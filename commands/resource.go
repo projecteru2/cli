@@ -219,11 +219,6 @@ func NodeCommand() *cli.Command {
 						Usage: "key file of docker server",
 						Value: "/etc/docker/tls/client.key",
 					},
-					&cli.BoolFlag{
-						Name:  "public",
-						Usage: "set if this node is public",
-						Value: false,
-					},
 					&cli.IntFlag{
 						Name:  "cpu",
 						Usage: "cpu count",
@@ -238,6 +233,10 @@ func NodeCommand() *cli.Command {
 						Name:  "memory",
 						Usage: "memory in Bytes",
 						Value: 0,
+					},
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "add label for node, like a=1 b=2, can set multiple times",
 					},
 				},
 			},
@@ -260,6 +259,9 @@ func getNode(c *cli.Context) error {
 	}
 
 	log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+	for k, v := range node.GetLabels() {
+		log.Infof("%s: %s", k, v)
+	}
 	for cno, part := range node.GetCpu() {
 		log.Infof("Cpu %s has %d capability", cno, part)
 	}
@@ -385,26 +387,36 @@ func addNode(c *cli.Context) error {
 	cpu := c.Int("cpu")
 	memory := c.Int64("memory")
 
+	labels := map[string]string{}
+	for _, d := range c.StringSlice("label") {
+		parts := strings.Split(d, "=")
+		labels[parts[0]] = parts[1]
+	}
+
 	client, err := checkParamsAndGetClient(c)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 
-	_, err = client.AddNode(context.Background(), &pb.AddNodeOptions{
+	resp, err := client.AddNode(context.Background(), &pb.AddNodeOptions{
 		Nodename: nodename,
 		Endpoint: endpoint,
 		Podname:  podname,
 		Ca:       string(caContent),
 		Cert:     string(certContent),
 		Key:      string(keyContent),
-		Public:   c.Bool("public"),
 		Cpu:      int32(cpu),
 		Share:    share,
 		Memory:   memory,
+		Labels:   labels,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 	log.Infof("[AddNode] success")
+	log.Infof("%s add %s at %s", podname, nodename, resp.Endpoint)
+	for k, v := range resp.Labels {
+		log.Infof("%s: %s", k, v)
+	}
 	return nil
 }

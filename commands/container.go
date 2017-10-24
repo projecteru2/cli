@@ -102,6 +102,10 @@ func ContainerCommand() *cli.Command {
 						Name:  "env",
 						Usage: "set env can use multiple times",
 					},
+					&cli.StringSliceFlag{
+						Name:  "nodelabel",
+						Usage: "set node label can use multiple times",
+					},
 				},
 			},
 		},

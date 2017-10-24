@@ -68,7 +68,7 @@ func setupAndGetGRPCConnection() *grpc.ClientConn {
 
 func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
 	if c.NArg() == 0 {
-		return nil, fmt.Errorf("not specify containers")
+		return nil, fmt.Errorf("not specify arguments")
 	}
 	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
