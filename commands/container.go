@@ -24,7 +24,7 @@ func ContainerCommand() *cli.Command {
 			&cli.Command{
 				Name:      "list",
 				Usage:     "list container(s) by appname",
-				ArgsUsage: "appname",
+				ArgsUsage: "[appname]",
 				Action:    listContainers,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -178,10 +178,8 @@ func getContainers(c *cli.Context) error {
 }
 
 func listContainers(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
+	conn := setupAndGetGRPCConnection()
+	client := pb.NewCoreRPCClient(conn)
 
 	opts := &pb.DeployStatusOptions{
 		Appname:    c.Args().First(),
