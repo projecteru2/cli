@@ -61,7 +61,7 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: eb91918ad9b3bc3d9e14bd0d20fece103476863b
+  version: b1cfb228e5897997b8e43827a479f46c7426fa0a
   subpackages:
   - rpc/gen
   - types

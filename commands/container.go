@@ -22,6 +22,22 @@ func ContainerCommand() *cli.Command {
 				Action:    getContainers,
 			},
 			&cli.Command{
+				Name:      "list",
+				Usage:     "list container(s) by appname",
+				ArgsUsage: "appname",
+				Action:    listContainers,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "entry",
+						Usage: "filter by entry",
+					},
+					&cli.StringFlag{
+						Name:  "nodename",
+						Usage: "filter by nodename",
+					},
+				},
+			},
+			&cli.Command{
 				Name:      "remove",
 				Usage:     "remove container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -157,6 +173,28 @@ func getContainers(c *cli.Context) error {
 
 	for _, container := range resp.GetContainers() {
 		log.Infof("ID: %s, Name: %s, Pod: %s, Node: %s", container.GetId(), container.GetName(), container.GetPodname(), container.GetNodename())
+	}
+	return nil
+}
+
+func listContainers(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	opts := &pb.DeployStatusOptions{
+		Appname:    c.Args().First(),
+		Entrypoint: c.String("entry"),
+		Nodename:   c.String("nodename"),
+	}
+
+	resp, err := client.ListContainers(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	for _, container := range resp.Containers {
+		log.Infof("%s: %s", container.Name, container.Id)
 	}
 	return nil
 }
