@@ -389,7 +389,10 @@ func addNode(c *cli.Context) error {
 
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("label") {
-		parts := strings.Split(d, "=")
+		parts := strings.SplitN(d, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
 		labels[parts[0]] = parts[1]
 	}
 
