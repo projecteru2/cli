@@ -31,6 +31,14 @@ Modify resources for eru pods / nodes, manipulate containers and images.
 
 ### Develop
 
+Start developing:
+
+```
+go get github.com/projecteru2/cli
+cd $GOPATH/src/github.com/projecteru2/cli
+make deps
+```
+
 Commands' source code in `commands` dir, you can define your own commands inside. Use `make test` to test and `make build` to build. If you want to modify and build in local, you can use `make deps` to generate vendor dirs.
 
 ### Dockerized cli
