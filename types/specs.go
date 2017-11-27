@@ -12,7 +12,7 @@ type Specs struct {
 	Volumes     []string                    `yaml:"volumes,omitempty,flow"`
 	Meta        map[string]string           `yaml:"meta,omitempty,flow"`
 	DNS         []string                    `yaml:"dns,omitempty,flow"`
-	ExtraHosts  []string                    `yaml:"dns,omitempty,flow"`
+	ExtraHosts  []string                    `yaml:"extra_hosts,omitempty,flow"`
 }
 
 type Container struct {
