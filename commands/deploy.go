@@ -127,7 +127,6 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 			Healcheck:     healthCheck,
 			Hook:          hook,
 			RestartPolicy: entrypoint.RestartPolicy,
-			ExtraHosts:    entrypoint.ExtraHosts,
 		},
 		Podname:     pod,
 		Nodename:    node,
@@ -141,6 +140,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		Volumes:     specs.Volumes,
 		Meta:        specs.Meta,
 		Dns:         specs.DNS,
+		ExtraHosts:  specs.ExtraHosts,
 		Nodelabels:  nodeLabels,
 	}
 	return opts

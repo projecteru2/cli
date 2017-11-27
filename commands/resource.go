@@ -9,7 +9,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
+	corescheduler "github.com/projecteru2/core/scheduler"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 )
@@ -95,7 +95,7 @@ func addPod(c *cli.Context) error {
 	favor := c.String("favor")
 	desc := c.String("desc")
 
-	if favor != coretypes.MEMORY_PRIOR && favor != coretypes.CPU_PRIOR {
+	if favor != corescheduler.MEMORY_PRIOR && favor != corescheduler.CPU_PRIOR {
 		return fmt.Errorf("favor must be MEM/CPU, got %s", favor)
 	}
 
