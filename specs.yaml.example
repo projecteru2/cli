@@ -7,8 +7,11 @@ entrypoints:
     publish:
       - "80/http"
     healthcheck:
-      ports:
-        - "80/tcp"
+      tcp_ports:
+        - "80"
+      http_port: "90"
+      url: "/"
+      code: 200
     privileged: true
     hook:
       after_start:
