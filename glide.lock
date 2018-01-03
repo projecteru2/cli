@@ -61,11 +61,10 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 7d905429de33d6e61f12b7c5565cec2a0828488c
+  version: 7ce89d6e6b31224b38943a5b7ec3433e08c1ec9c
   subpackages:
   - rpc/gen
   - types
-  - utils
 - name: github.com/sethgrid/curse
   version: 3378651548d4bda6a856c69719d593d902ec8b21
 - name: github.com/Sirupsen/logrus
