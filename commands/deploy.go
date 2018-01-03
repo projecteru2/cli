@@ -10,7 +10,6 @@ import (
 	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 	"gopkg.in/yaml.v2"
@@ -110,9 +109,10 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 
 	healthCheck := &pb.HealthCheckOptions{}
 	if entrypoint.HealthCheck != nil {
-		healthCheck.Ports = coreutils.DecodePorts(entrypoint.HealthCheck.Ports)
-		healthCheck.Url = entrypoint.HealthCheck.URL
-		healthCheck.Code = int32(entrypoint.HealthCheck.Code)
+		healthCheck.TcpPorts = entrypoint.HealthCheck.TCPPorts
+		healthCheck.HttpPort = entrypoint.HealthCheck.HTTPPort
+		healthCheck.Url = entrypoint.HealthCheck.HTTPURL
+		healthCheck.Code = int32(entrypoint.HealthCheck.HTTPCode)
 	}
 
 	opts := &pb.DeployOptions{
@@ -123,8 +123,8 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 			Privileged:    entrypoint.Privileged,
 			Dir:           entrypoint.Dir,
 			LogConfig:     entrypoint.LogConfig,
-			Publish:       coreutils.DecodePorts(entrypoint.Publish),
-			Healcheck:     healthCheck,
+			Publish:       entrypoint.Publish,
+			Healthcheck:   healthCheck,
 			Hook:          hook,
 			RestartPolicy: entrypoint.RestartPolicy,
 		},
