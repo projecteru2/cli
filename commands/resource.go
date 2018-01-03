@@ -206,18 +206,18 @@ func NodeCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "ca",
-						Usage: "ca file of docker server",
-						Value: "/etc/docker/tls/ca.crt",
+						Usage: "ca file of docker server, default to /etc/docker/tls/ca.crt",
+						Value: "",
 					},
 					&cli.StringFlag{
 						Name:  "cert",
-						Usage: "cert file of docker server",
-						Value: "/etc/docker/tls/client.crt",
+						Usage: "cert file of docker server, default to /etc/docker/tls/client.crt",
+						Value: "",
 					},
 					&cli.StringFlag{
 						Name:  "key",
-						Usage: "key file of docker server",
-						Value: "/etc/docker/tls/client.key",
+						Usage: "key file of docker server, default to /etc/docker/tls/client.key",
+						Value: "",
 					},
 					&cli.IntFlag{
 						Name:  "cpu",
@@ -362,21 +362,51 @@ func addNode(c *cli.Context) error {
 	}
 
 	ca := c.String("ca")
-	caContent, err := ioutil.ReadFile(ca)
-	if err != nil {
-		return cli.Exit(fmt.Errorf("unable to read %s", ca), -1)
+	if ca == "" {
+		defaultPath := "/etc/docker/tls/ca.crt"
+		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+			ca = defaultPath
+		}
+	}
+	caContent := ""
+	if ca != "" {
+		f, err := ioutil.ReadFile(ca)
+		if err != nil {
+			return cli.Exit(fmt.Errorf("Error during reading %s: %v", ca, err), -1)
+		}
+		caContent = string(f)
 	}
 
 	cert := c.String("cert")
-	certContent, err := ioutil.ReadFile(cert)
-	if err != nil {
-		return cli.Exit(fmt.Errorf("unable to read %s", cert), -1)
+	if cert == "" {
+		defaultPath := "/etc/docker/tls/client.crt"
+		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+			cert = defaultPath
+		}
+	}
+	certContent := ""
+	if cert != "" {
+		f, err := ioutil.ReadFile(cert)
+		if err != nil {
+			return cli.Exit(fmt.Errorf("Error during reading %s: %v", cert, err), -1)
+		}
+		certContent = string(f)
 	}
 
 	key := c.String("key")
-	keyContent, err := ioutil.ReadFile(key)
-	if err != nil {
-		return cli.Exit(fmt.Errorf("unable to read %s", key), -1)
+	if key == "" {
+		defaultPath := "/etc/docker/tls/client.key"
+		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+			key = defaultPath
+		}
+	}
+	keyContent := ""
+	if key != "" {
+		f, err := ioutil.ReadFile(key)
+		if err != nil {
+			return cli.Exit(fmt.Errorf("Error during reading %s: %v", key, err), -1)
+		}
+		keyContent = string(f)
 	}
 
 	share := c.Int64("share")
@@ -405,9 +435,9 @@ func addNode(c *cli.Context) error {
 		Nodename: nodename,
 		Endpoint: endpoint,
 		Podname:  podname,
-		Ca:       string(caContent),
-		Cert:     string(certContent),
-		Key:      string(keyContent),
+		Ca:       caContent,
+		Cert:     certContent,
+		Key:      keyContent,
 		Cpu:      int32(cpu),
 		Share:    share,
 		Memory:   memory,
