@@ -364,7 +364,7 @@ func addNode(c *cli.Context) error {
 	ca := c.String("ca")
 	if ca == "" {
 		defaultPath := "/etc/docker/tls/ca.crt"
-		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+		if _, err := os.Stat(defaultPath); err == nil {
 			ca = defaultPath
 		}
 	}
@@ -380,7 +380,7 @@ func addNode(c *cli.Context) error {
 	cert := c.String("cert")
 	if cert == "" {
 		defaultPath := "/etc/docker/tls/client.crt"
-		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+		if _, err := os.Stat(defaultPath); err == nil {
 			cert = defaultPath
 		}
 	}
@@ -396,7 +396,7 @@ func addNode(c *cli.Context) error {
 	key := c.String("key")
 	if key == "" {
 		defaultPath := "/etc/docker/tls/client.key"
-		if _, err := os.Stat(defaultPath); os.IsNotExist(err) {
+		if _, err := os.Stat(defaultPath); err == nil {
 			key = defaultPath
 		}
 	}
