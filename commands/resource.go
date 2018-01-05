@@ -352,15 +352,6 @@ func addNode(c *cli.Context) error {
 		nodename = n
 	}
 
-	endpoint := c.String("endpoint")
-	if endpoint == "" {
-		ip := getLocalIP()
-		if ip == "" {
-			return cli.Exit(fmt.Errorf("unable to get local ip"), -1)
-		}
-		endpoint = fmt.Sprintf("tcp://%s:2376", ip)
-	}
-
 	ca := c.String("ca")
 	if ca == "" {
 		defaultPath := "/etc/docker/tls/ca.crt"
@@ -407,6 +398,19 @@ func addNode(c *cli.Context) error {
 			return cli.Exit(fmt.Errorf("Error during reading %s: %v", key, err), -1)
 		}
 		keyContent = string(f)
+	}
+
+	endpoint := c.String("endpoint")
+	if endpoint == "" {
+		ip := getLocalIP()
+		if ip == "" {
+			return cli.Exit(fmt.Errorf("unable to get local ip"), -1)
+		}
+		port := 2376
+		if caContent == "" {
+			port = 2375
+		}
+		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
 	share := c.Int64("share")
