@@ -44,6 +44,12 @@ func PodCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
+				Name:      "rm",
+				Usage:     "remove pod",
+				ArgsUsage: podArgsUsage,
+				Action:    removePod,
+			},
+			&cli.Command{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
 				ArgsUsage: podArgsUsage,
@@ -109,6 +115,24 @@ func addPod(c *cli.Context) error {
 	}
 
 	log.Infof("[AddPod] success, name: %s, desc: %s", pod.GetName(), pod.GetDesc())
+	return nil
+}
+
+func removePod(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	name := c.Args().First()
+
+	_, err = client.RemovePod(context.Background(), &pb.RemovePodOptions{
+		Name: name,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	log.Infof("[RemovePod] success, name: %s", name)
 	return nil
 }
 
