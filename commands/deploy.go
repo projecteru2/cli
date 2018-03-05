@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels := getDeployParams(c)
+	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource := getDeployParams(c)
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
@@ -33,7 +33,7 @@ func deployContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels)
+	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -49,7 +49,7 @@ func deployContainers(c *cli.Context) error {
 		}
 
 		if msg.Success {
-			log.Infof("[Deploy] Success %s %s %s %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Memory)
+			log.Infof("[Deploy] Success %s %s %s %v %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Quota, msg.Memory)
 			if len(msg.Hook) > 0 {
 				log.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}
@@ -63,7 +63,7 @@ func deployContainers(c *cli.Context) error {
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, bool) {
 	pod := c.String("pod")
 	node := c.String("node")
 	entry := c.String("entry")
@@ -73,6 +73,7 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	mem := c.Int64("mem")
 	envs := c.StringSlice("env")
 	count := int32(c.Int("count"))
+	resource := c.Bool("with-resource")
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -81,10 +82,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 		parts := strings.Split(d, "=")
 		labels[parts[0]] = parts[1]
 	}
-	return pod, node, entry, image, network, cpu, mem, envs, count, labels
+	return pod, node, entry, image, network, cpu, mem, envs, count, labels, resource
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, resource bool) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -142,6 +143,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		Dns:         specs.DNS,
 		ExtraHosts:  specs.ExtraHosts,
 		Nodelabels:  nodeLabels,
+		RawResource: resource,
 	}
 	return opts
 }

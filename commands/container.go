@@ -122,6 +122,11 @@ func ContainerCommand() *cli.Command {
 						Name:  "nodelabel",
 						Usage: "set node label can use multiple times",
 					},
+					&cli.BoolFlag{
+						Name:  "with-resource",
+						Usage: "resource out control",
+						Value: false,
+					},
 				},
 			},
 		},
