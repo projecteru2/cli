@@ -3,7 +3,7 @@ package commands
 import (
 	"io"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"

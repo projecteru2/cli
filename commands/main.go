@@ -3,7 +3,7 @@ package commands
 import (
 	"fmt"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"google.golang.org/grpc"

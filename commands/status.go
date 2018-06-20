@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"github.com/projecteru2/cli/types"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"golang.org/x/net/context"

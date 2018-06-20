@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	enginecontainer "github.com/docker/docker/api/types/container"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"golang.org/x/net/context"

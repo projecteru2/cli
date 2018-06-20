@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
 	corescheduler "github.com/projecteru2/core/scheduler"
 	"golang.org/x/net/context"

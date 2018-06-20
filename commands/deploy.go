@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"strings"
 
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	enginecontainer "github.com/docker/docker/api/types/container"
 	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
