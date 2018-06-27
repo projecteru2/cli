@@ -1,10 +1,15 @@
 package commands
 
 import (
+	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 
-	log "github.com/sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 )
@@ -48,6 +53,20 @@ func ContainerCommand() *cli.Command {
 						Usage:   "ignore or not before stop hook if it was setted and force check",
 						Aliases: []string{"f"},
 						Value:   false,
+					},
+				},
+			},
+			&cli.Command{
+				Name:      "copy",
+				Usage:     "copy container(s)",
+				ArgsUsage: copyArgsUsage,
+				Action:    copyContainers,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "dir",
+						Usage:   "where to store",
+						Aliases: []string{"d"},
+						Value:   "/tmp",
 					},
 				},
 			},
@@ -227,6 +246,72 @@ func reallocContainers(c *cli.Context) error {
 			log.Infof("[Realloc] Success %s", msg.Id[:12])
 		} else {
 			log.Errorf("[Realloc] Failed %s", msg.Id[:12])
+		}
+	}
+	return nil
+}
+
+func copyContainers(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	targets := map[string]*pb.CopyPaths{}
+	for _, idSrc := range c.Args().Slice() {
+		parts := strings.Split(idSrc, ":")
+		paths := strings.Split(parts[1], ",")
+		targets[parts[0]] = &pb.CopyPaths{Paths: paths}
+	}
+
+	opts := &pb.CopyOptions{Targets: targets}
+	resp, err := client.Copy(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	now := time.Now().Format("2006.01.02.15.04.05")
+	baseDir := filepath.Join(c.String("dir"))
+	err = os.MkdirAll(baseDir, os.FileMode(0700)) // drwx------
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	files := map[string]*os.File{}
+	defer func() {
+		//Close files
+		for _, f := range files {
+			f.Close()
+		}
+	}()
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Error != "" {
+			log.Errorf("[Copy] Failed %s %s", msg.Id[:12], msg.Error)
+			continue
+		}
+
+		filename := fmt.Sprintf("%s-%s-%s.tar.gz", msg.Id[:12], msg.Name, now)
+		storePath := filepath.Join(baseDir, filename)
+		if _, err := os.Stat(storePath); err != nil {
+			file, err := os.Create(storePath)
+			if err != nil {
+				log.Errorf("[Copy] Error during create backup file %s: %v", storePath, err)
+				continue
+			}
+			files[storePath] = file
+		}
+
+		_, err = files[storePath].Write(msg.Data)
+		if err != nil {
+			log.Errorf("[Copy] Write file error %v", err)
 		}
 	}
 	return nil

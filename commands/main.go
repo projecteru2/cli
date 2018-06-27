@@ -3,9 +3,9 @@ package commands
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 )
@@ -20,6 +20,7 @@ const (
 	podArgsUsage       = "podname"
 	nodeArgsUsage      = "nodename"
 	specFileURI        = "<spec file uri>"
+	copyArgsUsage      = "containerID:path1,path2,...,pathn"
 )
 
 func setupLog(l string) error {
