@@ -5,11 +5,11 @@ import (
 	"io/ioutil"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	enginecontainer "github.com/docker/docker/api/types/container"
 	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 	"gopkg.in/yaml.v2"
@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource := getDeployParams(c)
+	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource, each := getDeployParams(c)
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
@@ -33,7 +33,7 @@ func deployContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource)
+	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, resource, each)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -63,7 +63,7 @@ func deployContainers(c *cli.Context) error {
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, bool) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, bool, bool) {
 	pod := c.String("pod")
 	node := c.String("node")
 	entry := c.String("entry")
@@ -74,6 +74,7 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	envs := c.StringSlice("env")
 	count := int32(c.Int("count"))
 	resource := c.Bool("with-resource")
+	each := c.Bool("each-node")
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -82,10 +83,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 		parts := strings.Split(d, "=")
 		labels[parts[0]] = parts[1]
 	}
-	return pod, node, entry, image, network, cpu, mem, envs, count, labels, resource
+	return pod, node, entry, image, network, cpu, mem, envs, count, labels, resource, each
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, resource bool) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, resource, each bool) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -144,6 +145,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		ExtraHosts:  specs.ExtraHosts,
 		Nodelabels:  nodeLabels,
 		RawResource: resource,
+		Each:        each,
 	}
 	return opts
 }

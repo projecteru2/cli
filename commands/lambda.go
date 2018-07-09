@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	enginecontainer "github.com/docker/docker/api/types/container"
 	pb "github.com/projecteru2/core/rpc/gen"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
@@ -31,8 +31,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each)
 
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
@@ -94,7 +94,7 @@ func generateLambdaOpts(
 	commands []string, name string, network string,
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
-	mem int64, count int, stdin bool) *pb.RunAndWaitOptions {
+	mem int64, count int, stdin bool, each bool) *pb.RunAndWaitOptions {
 
 	networks := map[string]string{}
 	if network != "" {
@@ -122,11 +122,12 @@ func generateLambdaOpts(
 		Networks:    networks,
 		Networkmode: network,
 		OpenStdin:   stdin,
+		Each:        each,
 	}
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, bool) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands ")
 	}
@@ -142,7 +143,8 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	mem := c.Int64("mem")
 	count := c.Int("count")
 	stdin := c.Bool("stdin")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin
+	each := c.Bool("each-node")
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each
 }
 
 //LambdaCommand for run commands in a container
@@ -201,6 +203,11 @@ func LambdaCommand() *cli.Command {
 				Usage:   "open stdin for container",
 				Aliases: []string{"s"},
 				Value:   false,
+			},
+			&cli.BoolFlag{
+				Name:  "each-node",
+				Usage: "run on each node",
+				Value: false,
 			},
 		},
 		Action: runLambda,

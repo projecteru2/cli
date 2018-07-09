@@ -146,6 +146,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "resource out control",
 						Value: false,
 					},
+					&cli.BoolFlag{
+						Name:  "each-node",
+						Usage: "deploy to each node",
+						Value: false,
+					},
 				},
 			},
 		},

@@ -64,7 +64,7 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 58fce0440d5c6a37cbab1faeadf7effdad099b98
+  version: 533821c090904754995ea7ac94f7f5927d4fee39
   subpackages:
   - rpc/gen
   - scheduler
