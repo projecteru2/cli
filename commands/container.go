@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -146,10 +147,10 @@ func ContainerCommand() *cli.Command {
 						Usage: "resource out control",
 						Value: false,
 					},
-					&cli.BoolFlag{
-						Name:  "each-node",
-						Usage: "deploy to each node",
-						Value: false,
+					&cli.StringFlag{
+						Name:  "deploy-method",
+						Usage: "deploy method auto/fill/each",
+						Value: cluster.DeployAuto,
 					},
 				},
 			},

@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	enginecontainer "github.com/docker/docker/api/types/container"
+	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -31,8 +32,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods)
 
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
@@ -94,7 +95,7 @@ func generateLambdaOpts(
 	commands []string, name string, network string,
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
-	mem int64, count int, stdin bool, each bool) *pb.RunAndWaitOptions {
+	mem int64, count int, stdin bool, deployMethod string) *pb.RunAndWaitOptions {
 
 	networks := map[string]string{}
 	if network != "" {
@@ -112,22 +113,22 @@ func generateLambdaOpts(
 			Privileged: false,
 			Dir:        workingDir,
 		},
-		Podname:     pod,
-		Image:       image,
-		CpuQuota:    cpu,
-		Memory:      mem,
-		Count:       int32(count),
-		Env:         envs,
-		Volumes:     volumes,
-		Networks:    networks,
-		Networkmode: network,
-		OpenStdin:   stdin,
-		Each:        each,
+		Podname:      pod,
+		Image:        image,
+		CpuQuota:     cpu,
+		Memory:       mem,
+		Count:        int32(count),
+		Env:          envs,
+		Volumes:      volumes,
+		Networks:     networks,
+		Networkmode:  network,
+		OpenStdin:    stdin,
+		DeployMethod: deployMethod,
 	}
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, bool) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands ")
 	}
@@ -143,8 +144,8 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	mem := c.Int64("mem")
 	count := c.Int("count")
 	stdin := c.Bool("stdin")
-	each := c.Bool("each-node")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, each
+	deployMethod := c.String("deploy-method")
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod
 }
 
 //LambdaCommand for run commands in a container
@@ -204,10 +205,10 @@ func LambdaCommand() *cli.Command {
 				Aliases: []string{"s"},
 				Value:   false,
 			},
-			&cli.BoolFlag{
-				Name:  "each-node",
-				Usage: "run on each node",
-				Value: false,
+			&cli.StringFlag{
+				Name:  "deploy-method",
+				Usage: "deploy method auto/fill/each",
+				Value: cluster.DeployAuto,
 			},
 		},
 		Action: runLambda,

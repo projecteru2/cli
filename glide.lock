@@ -64,11 +64,12 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 533821c090904754995ea7ac94f7f5927d4fee39
+  version: 47bc3766a9a1b0b93c7bd46ad52959b097089af8
   subpackages:
   - rpc/gen
   - scheduler
   - types
+  - cluster
 - name: github.com/sethgrid/curse
   version: b3ce8a719db284afc287740e15c011b62900bd28
 - name: github.com/sirupsen/logrus
