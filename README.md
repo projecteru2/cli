@@ -50,5 +50,5 @@ docker run -it --rm \
   --net host \
   --name eru-cli \
   projecteru2/cli \
-  /usr/bin/erucli <PARAMS>
+  /usr/bin/eru-cli <PARAMS>
 ```

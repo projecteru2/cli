@@ -7,13 +7,20 @@ jobs:
     steps:
       - checkout
       - run: make build
-      - run: ./make-rpm
+      - run: ./make-release
       - run:
           name: Create artifacts
           command: |
-            mkdir -p /tmp/RPM
-            cp -r *.rpm /tmp/RPM
+            mkdir -p /tmp/release
+            cp -r eru*.rpm /tmp/release
+            cp -r eru*.deb /tmp/release
+            cp -r eru-cli /tmp/release/eru-cli_linux_x86_64
+      - run:
+          name: Check files
+          command: |
+            rpm -qlp eru*.rpm
+            dpkg -c eru*.deb
       - store_artifacts:
-          path: /tmp/RPM
-          destination: RPM
+          path: /tmp/release
+          destination: Release
 

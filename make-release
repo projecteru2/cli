@@ -1,0 +1,31 @@
+#!/bin/sh
+
+ROOT="`pwd`/build"
+mkdir -p $ROOT
+
+RPMROOT="$ROOT/rpmbuild"
+DEBROOT="$ROOT/debbuild"
+
+VERSION=$(cat VERSION)
+
+BIN="$RPMROOT/usr/bin"
+
+mkdir -p $BIN
+
+cp eru-cli $BIN/eru-cli
+
+echo $VERSION rpm build begin
+
+fpm -f -s dir -t rpm -n eru-cli --epoch 0 -v $VERSION --iteration 1.el7 -C $RPMROOT -p $PWD --verbose --category 'Development/App' --description 'cli for eru' --url 'https://github.com/projecteru2/cli' --license 'MIT' --no-rpm-sign usr
+
+BIN="$DEBROOT/usr/bin"
+
+mkdir -p $BIN
+
+cp eru-cli $BIN/eru-cli
+
+echo $VERSION deb build begin
+
+fpm -f -s dir -t deb -n eru-cli -v $VERSION --iteration 1.noarch -C $DEBROOT -p $PWD --verbose --category 'Development/App' --description 'cli for eru' --url 'https://github.com/projecteru2/cli' --license 'MIT' --deb-no-default-config-files usr
+
+rm -rf $ROOT
