@@ -7,9 +7,9 @@ import (
 	"os"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	pb "github.com/projecteru2/core/rpc/gen"
 	corescheduler "github.com/projecteru2/core/scheduler"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 )
@@ -199,6 +199,12 @@ func NodeCommand() *cli.Command {
 				Action:    removeNode,
 			},
 			&cli.Command{
+				Name:      "containers",
+				Usage:     "list node containers",
+				ArgsUsage: nodeArgsUsage,
+				Action:    listNodeContainers,
+			},
+			&cli.Command{
 				Name:      "available",
 				Usage:     "set availability for a node",
 				ArgsUsage: nodeArgsUsage,
@@ -266,6 +272,25 @@ func NodeCommand() *cli.Command {
 			},
 		},
 	}
+}
+
+func listNodeContainers(c *cli.Context) error {
+	conn := setupAndGetGRPCConnection()
+	client := pb.NewCoreRPCClient(conn)
+
+	opts := &pb.GetNodeOptions{
+		Nodename: c.Args().First(),
+	}
+
+	resp, err := client.ListNodeContainers(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	for _, container := range resp.Containers {
+		log.Infof("%s: %s", container.Name, container.Id)
+		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
+	}
+	return nil
 }
 
 func getNode(c *cli.Context) error {

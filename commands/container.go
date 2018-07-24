@@ -222,6 +222,7 @@ func listContainers(c *cli.Context) error {
 	}
 	for _, container := range resp.Containers {
 		log.Infof("%s: %s", container.Name, container.Id)
+		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
 	}
 	return nil
 }
