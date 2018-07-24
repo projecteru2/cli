@@ -278,8 +278,12 @@ func listNodeContainers(c *cli.Context) error {
 	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
 
+	nodename := c.Args().First()
+	if nodename == "" {
+		return cli.Exit("no node name", -1)
+	}
 	opts := &pb.GetNodeOptions{
-		Nodename: c.Args().First(),
+		Nodename: nodename,
 	}
 
 	resp, err := client.ListNodeContainers(context.Background(), opts)
