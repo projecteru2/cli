@@ -33,8 +33,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user)
 
 	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
@@ -97,7 +97,7 @@ func generateLambdaOpts(
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
 	mem int64, count int, stdin bool, deployMethod string,
-	files []string) *pb.RunAndWaitOptions {
+	files []string, user string) *pb.RunAndWaitOptions {
 
 	networks := map[string]string{}
 	if network != "" {
@@ -128,11 +128,12 @@ func generateLambdaOpts(
 		OpenStdin:    stdin,
 		DeployMethod: deployMethod,
 		Data:         fileData,
+		User:         user,
 	}
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands ")
 	}
@@ -150,7 +151,8 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	stdin := c.Bool("stdin")
 	files := c.StringSlice("file")
 	deployMethod := c.String("deploy-method")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files
+	user := c.String("user")
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user
 }
 
 //LambdaCommand for run commands in a container
@@ -214,6 +216,11 @@ func LambdaCommand() *cli.Command {
 				Name:  "deploy-method",
 				Usage: "deploy method auto/fill/each",
 				Value: cluster.DeployAuto,
+			},
+			&cli.StringFlag{
+				Name:  "user",
+				Usage: "which user",
+				Value: "root",
 			},
 			&cli.StringSliceFlag{
 				Name:  "file",

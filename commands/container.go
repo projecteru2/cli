@@ -147,6 +147,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "deploy method auto/fill/each",
 						Value: cluster.DeployAuto,
 					},
+					&cli.StringFlag{
+						Name:  "user",
+						Usage: "which user",
+						Value: "root",
+					},
 					&cli.StringSliceFlag{
 						Name:  "file",
 						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
