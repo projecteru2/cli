@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug := getDeployParams(c)
+	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit := getDeployParams(c)
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
@@ -33,7 +33,7 @@ func deployContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug)
+	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -63,7 +63,7 @@ func deployContainers(c *cli.Context) error {
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string, bool) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string, bool, bool) {
 	pod := c.String("pod")
 	node := c.String("node")
 	entry := c.String("entry")
@@ -77,6 +77,7 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	deployMethod := c.String("deploy-method")
 	user := c.String("user")
 	debug := c.Bool("debug")
+	softlimit := c.Bool("softlimit")
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -85,10 +86,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 		parts := strings.Split(d, "=")
 		labels[parts[0]] = parts[1]
 	}
-	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user, debug
+	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user, debug, softlimit
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string, debug bool) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string, debug, softlimit bool) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -158,6 +159,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		Data:         fileData,
 		User:         user,
 		Debug:        debug,
+		Softlimit:    softlimit,
 	}
 	return opts
 }

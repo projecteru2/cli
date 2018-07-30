@@ -160,6 +160,10 @@ func ContainerCommand() *cli.Command {
 						Name:  "debug",
 						Usage: "enable debug mode for container send their logs to default log driver",
 					},
+					&cli.BoolFlag{
+						Name:  "softlimit",
+						Usage: "enable softlmit memory",
+					},
 				},
 			},
 		},
