@@ -156,6 +156,10 @@ func ContainerCommand() *cli.Command {
 						Name:  "file",
 						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
 					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "enable debug mode for container send their logs to default log driver",
+					},
 				},
 			},
 		},

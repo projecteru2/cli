@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user := getDeployParams(c)
+	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug := getDeployParams(c)
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
@@ -33,7 +33,7 @@ func deployContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user)
+	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug)
 	resp, err := client.CreateContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -63,7 +63,7 @@ func deployContainers(c *cli.Context) error {
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string, bool) {
 	pod := c.String("pod")
 	node := c.String("node")
 	entry := c.String("entry")
@@ -76,6 +76,7 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	count := int32(c.Int("count"))
 	deployMethod := c.String("deploy-method")
 	user := c.String("user")
+	debug := c.Bool("debug")
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -84,10 +85,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 		parts := strings.Split(d, "=")
 		labels[parts[0]] = parts[1]
 	}
-	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user
+	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user, debug
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string, debug bool) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -118,6 +119,12 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		healthCheck.Code = int32(entrypoint.HealthCheck.HTTPCode)
 	}
 
+	logConfig := &pb.LogOptions{}
+	if entrypoint.Log != nil {
+		logConfig.Type = entrypoint.Log.Type
+		logConfig.Config = entrypoint.Log.Config
+	}
+
 	fileData := utils.GetFilesStream(files)
 
 	opts := &pb.DeployOptions{
@@ -127,7 +134,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 			Command:       entrypoint.Command,
 			Privileged:    entrypoint.Privileged,
 			Dir:           entrypoint.Dir,
-			LogConfig:     entrypoint.LogConfig,
+			Log:           logConfig,
 			Publish:       entrypoint.Publish,
 			Healthcheck:   healthCheck,
 			Hook:          hook,
@@ -150,6 +157,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		DeployMethod: deployMethod,
 		Data:         fileData,
 		User:         user,
+		Debug:        debug,
 	}
 	return opts
 }
