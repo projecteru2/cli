@@ -254,7 +254,7 @@ func NodeCommand() *cli.Command {
 						Usage: "cpu count",
 						Value: 0,
 					},
-					&cli.Int64Flag{
+					&cli.IntFlag{
 						Name:  "share",
 						Usage: "share count",
 						Value: 0,
@@ -466,9 +466,9 @@ func addNode(c *cli.Context) error {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	share := c.Int64("share")
+	share := c.Int("share")
 	if share == 0 {
-		share = int64(100)
+		share = 100
 	}
 
 	cpu := c.Int("cpu")
@@ -496,7 +496,7 @@ func addNode(c *cli.Context) error {
 		Cert:     certContent,
 		Key:      keyContent,
 		Cpu:      int32(cpu),
-		Share:    share,
+		Share:    int32(share),
 		Memory:   memory,
 		Labels:   labels,
 	})
