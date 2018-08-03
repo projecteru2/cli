@@ -5,8 +5,9 @@ import (
 	"google.golang.org/grpc"
 )
 
-func ConnectEru(server string) *grpc.ClientConn {
-	conn, err := grpc.Dial(server, grpc.WithInsecure())
+// ConnectEru connect to eru
+func ConnectEru(server string, opts []grpc.DialOption) *grpc.ClientConn {
+	conn, err := grpc.Dial(server, opts...)
 	if err != nil {
 		log.Fatalf("[ConnectEru] Can not connect %v", err)
 	}

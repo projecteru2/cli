@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// GetSpecFromRemote get spec from remote
 func GetSpecFromRemote(uri string) ([]byte, error) {
 	resp, err := http.Get(uri)
 	if err != nil {

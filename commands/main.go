@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/projecteru2/cli/utils"
@@ -11,8 +12,10 @@ import (
 )
 
 var (
-	debug bool
-	eru   string
+	debug    bool
+	eru      string
+	username string
+	password string
 )
 
 const (
@@ -56,6 +59,22 @@ func GlobalFlags() []cli.Flag {
 			EnvVars:     []string{"ERU"},
 			Destination: &eru,
 		},
+		&cli.StringFlag{
+			Name:        "username",
+			Usage:       "eru core username",
+			Aliases:     []string{"u"},
+			Value:       "",
+			EnvVars:     []string{"ERU_USERNAME"},
+			Destination: &username,
+		},
+		&cli.StringFlag{
+			Name:        "password",
+			Usage:       "eru core password",
+			Aliases:     []string{"p"},
+			Value:       "",
+			EnvVars:     []string{"ERU_PASSWORD"},
+			Destination: &password,
+		},
 	}
 }
 
@@ -64,7 +83,11 @@ func setupAndGetGRPCConnection() *grpc.ClientConn {
 	if debug {
 		setupLog("DEBUG")
 	}
-	return utils.ConnectEru(eru)
+	opts := []grpc.DialOption{grpc.WithInsecure()}
+	if username != "" {
+		opts = append(opts, grpc.WithPerRPCCredentials(new(basicCredential)))
+	}
+	return utils.ConnectEru(eru, opts)
 }
 
 func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
@@ -74,4 +97,17 @@ func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
 	conn := setupAndGetGRPCConnection()
 	client := pb.NewCoreRPCClient(conn)
 	return client, nil
+}
+
+// customCredential 自定义认证
+type basicCredential struct{}
+
+func (c basicCredential) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		username: password,
+	}, nil
+}
+
+func (c basicCredential) RequireTransportSecurity() bool {
+	return false
 }

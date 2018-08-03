@@ -7,6 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+// GetFilesStream get file from stream
 func GetFilesStream(files []string) map[string][]byte {
 	fileData := map[string][]byte{}
 	if len(files) > 0 {
