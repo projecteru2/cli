@@ -220,8 +220,7 @@ func getContainers(c *cli.Context) error {
 }
 
 func listContainers(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	client := setupAndGetGRPCConnection().GetRPCClient()
 
 	opts := &pb.DeployStatusOptions{
 		Appname:    c.Args().First(),

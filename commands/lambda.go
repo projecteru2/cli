@@ -15,7 +15,6 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 )
 
@@ -24,19 +23,18 @@ var enter = []byte{10}
 var split = []byte{62, 32}
 
 func runLambda(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
-	code, err := lambda(c, conn)
+	client := setupAndGetGRPCConnection().GetRPCClient()
+	code, err := lambda(c, client)
 	if err != nil {
 		return cli.Exit(err, code)
 	}
 	return nil
 }
 
-func lambda(c *cli.Context, conn *grpc.ClientConn) (code int, err error) {
+func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user := getLambdaParams(c)
 	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user)
 
-	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
 		return -1, err

@@ -5,22 +5,21 @@ import (
 	"io"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/projecteru2/cli/types"
 	pb "github.com/projecteru2/core/rpc/gen"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 )
 
 func status(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
+	client := setupAndGetGRPCConnection().GetRPCClient()
 	name := c.String("name")
 	entry := c.String("entry")
 	node := c.String("node")
 	version := c.String("version")
 	extend := c.StringSlice("extend")
 
-	client := pb.NewCoreRPCClient(conn)
 	resp, err := client.DeployStatus(
 		context.Background(),
 		&pb.DeployStatusOptions{

@@ -1,13 +1,12 @@
 package commands
 
 import (
-	"context"
 	"fmt"
 
-	"github.com/projecteru2/cli/utils"
+	"github.com/projecteru2/core/client"
 	pb "github.com/projecteru2/core/rpc/gen"
+	"github.com/projecteru2/core/types"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	cli "gopkg.in/urfave/cli.v2"
 )
 
@@ -78,36 +77,18 @@ func GlobalFlags() []cli.Flag {
 	}
 }
 
-func setupAndGetGRPCConnection() *grpc.ClientConn {
+func setupAndGetGRPCConnection() *client.Client {
 	setupLog("INFO")
 	if debug {
 		setupLog("DEBUG")
 	}
-	opts := []grpc.DialOption{grpc.WithInsecure()}
-	if username != "" {
-		opts = append(opts, grpc.WithPerRPCCredentials(new(basicCredential)))
-	}
-	return utils.ConnectEru(eru, opts)
+
+	return client.NewClient(eru, types.AuthConfig{Username: username, Password: password})
 }
 
 func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
 	if c.NArg() == 0 {
 		return nil, fmt.Errorf("not specify arguments")
 	}
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
-	return client, nil
-}
-
-// customCredential 自定义认证
-type basicCredential struct{}
-
-func (c basicCredential) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
-	return map[string]string{
-		username: password,
-	}, nil
-}
-
-func (c basicCredential) RequireTransportSecurity() bool {
-	return false
+	return setupAndGetGRPCConnection().GetRPCClient(), nil
 }

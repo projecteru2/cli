@@ -79,8 +79,7 @@ func PodCommand() *cli.Command {
 }
 
 func listPods(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	client := setupAndGetGRPCConnection().GetRPCClient()
 	resp, err := client.ListPods(context.Background(), &pb.Empty{})
 	if err != nil {
 		log.Fatalf("[ListPods] send request failed %v", err)
@@ -275,8 +274,7 @@ func NodeCommand() *cli.Command {
 }
 
 func listNodeContainers(c *cli.Context) error {
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	client := setupAndGetGRPCConnection().GetRPCClient()
 
 	nodename := c.Args().First()
 	if nodename == "" {

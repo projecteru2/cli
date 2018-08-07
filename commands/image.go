@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"github.com/sethgrid/curse"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
 	yaml "gopkg.in/yaml.v2"
@@ -56,8 +56,7 @@ func ImageCommand() *cli.Command {
 
 func buildImage(c *cli.Context) error {
 	opts := generateBuildOpts(c)
-	conn := setupAndGetGRPCConnection()
-	client := pb.NewCoreRPCClient(conn)
+	client := setupAndGetGRPCConnection().GetRPCClient()
 	resp, err := client.BuildImage(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
