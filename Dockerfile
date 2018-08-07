@@ -13,4 +13,5 @@ FROM alpine:3.8
 
 MAINTAINER CMGS <ilskdw@gmail.com>
 
+COPY --from=BUILD /etc/ssl/certs /etc/ssl/certs
 COPY --from=BUILD /go/src/github.com/projecteru2/cli/eru-cli /usr/bin/eru-cli
