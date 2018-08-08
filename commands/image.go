@@ -30,10 +30,9 @@ func ImageCommand() *cli.Command {
 						Name:  "name",
 						Usage: "name of image",
 					},
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name:  "tag",
 						Usage: "tag of image",
-						Value: "latest",
 					},
 					&cli.StringFlag{
 						Name:        "user",
@@ -78,6 +77,10 @@ func buildImage(c *cli.Context) error {
 			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
+			if msg.Status == "finished" {
+				progess = map[string]int{}
+				p = 0
+			}
 		} else if msg.Status != "" {
 			if msg.Id == "" {
 				fmt.Println(msg.Status)
@@ -124,15 +127,21 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 	}
 
 	name := c.String("name")
+	if name == "" {
+		log.Fatal("[Build] need name")
+	}
 	user := c.String("user")
 	uid := int32(c.Int("uid"))
-	tag := c.String("tag")
+	tags := c.StringSlice("tag")
+	if len(tags) == 0 {
+		tags = append(tags, "latest")
+	}
 
 	opts := &pb.BuildImageOptions{
 		Name:   name,
 		User:   user,
 		Uid:    uid,
-		Tag:    tag,
+		Tags:   tags,
 		Builds: specs,
 	}
 	return opts
