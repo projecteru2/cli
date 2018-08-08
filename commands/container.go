@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -8,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	enginetypes "github.com/docker/docker/api/types"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
@@ -233,8 +235,16 @@ func listContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	for _, container := range resp.Containers {
+		containerJSON := &enginetypes.ContainerJSON{}
+		if err := json.Unmarshal(container.Inspect, containerJSON); err != nil {
+			log.Error(err)
+			continue
+		}
 		log.Infof("%s: %s", container.Name, container.Id)
 		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
+		for nname, network := range containerJSON.NetworkSettings.Networks {
+			log.Infof("Network %s at %s", nname, network.IPAddress)
+		}
 	}
 	return nil
 }
