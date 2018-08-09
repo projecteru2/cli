@@ -245,6 +245,7 @@ func listContainers(c *cli.Context) error {
 		for nname, network := range containerJSON.NetworkSettings.Networks {
 			log.Infof("Network %s at %s", nname, network.IPAddress)
 		}
+		log.Infof("Image %s", containerJSON.Image)
 	}
 	return nil
 }
