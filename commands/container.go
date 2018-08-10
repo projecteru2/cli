@@ -94,8 +94,60 @@ func ContainerCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
+				Name:      "replace",
+				Usage:     "replace containers by params",
+				ArgsUsage: specFileURI,
+				Action:    replaceContainers,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "pod",
+						Usage: "where to replace",
+					},
+					&cli.StringFlag{
+						Name:  "entry",
+						Usage: "which entry",
+					},
+					&cli.StringFlag{
+						Name:  "image",
+						Usage: "which to replace",
+					},
+					&cli.StringFlag{
+						Name:  "node",
+						Usage: "which node to replace",
+						Value: "",
+					},
+					&cli.IntFlag{
+						Name:  "count",
+						Usage: "run simultaneously",
+						Value: 1,
+					},
+					&cli.StringFlag{
+						Name:  "network",
+						Usage: "SDN name or host mode",
+						Value: "host",
+					},
+					&cli.StringSliceFlag{
+						Name:  "env",
+						Usage: "set env can use multiple times",
+					},
+					&cli.StringFlag{
+						Name:  "user",
+						Usage: "which user",
+						Value: "root",
+					},
+					&cli.StringSliceFlag{
+						Name:  "file",
+						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+					},
+					&cli.BoolFlag{
+						Name:  "debug",
+						Usage: "enable debug mode for container send their logs to default log driver",
+					},
+				},
+			},
+			&cli.Command{
 				Name:      "deploy",
-				Usage:     "deploy containers by a image",
+				Usage:     "deploy containers by params",
 				ArgsUsage: specFileURI,
 				Action:    deployContainers,
 				Flags: []cli.Flag{
@@ -142,7 +194,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "nodelabel",
-						Usage: "set node label can use multiple times",
+						Usage: "filter nodes by labels",
 					},
 					&cli.StringFlag{
 						Name:  "deploy-method",
