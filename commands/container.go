@@ -252,12 +252,12 @@ func removeContainers(c *cli.Context) error {
 		}
 
 		if msg.Success {
-			log.Infof("[RemoveContainer] Success %s", msg.Id[:12])
-			if msg.Message != "" {
-				log.Info(msg.Message)
-			}
+			log.Infof("[RemoveContainer] %s Success", msg.Id[:12])
 		} else {
-			log.Errorf("[RemoveContainer] Failed %s", msg.Message)
+			log.Errorf("[RemoveContainer] %s Failed", msg.Id[:12])
+		}
+		if msg.Message != "" {
+			log.Info(msg.Message)
 		}
 	}
 	return nil

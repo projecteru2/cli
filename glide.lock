@@ -65,7 +65,7 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 9eeec0a6a25fe98ced4f524186124143272d600c
+  version: 593ed7cae40741e649ad3aeafc7f12ea72796abf
   subpackages:
   - auth
   - auth/simple
