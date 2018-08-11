@@ -143,6 +143,12 @@ func ContainerCommand() *cli.Command {
 						Name:  "debug",
 						Usage: "enable debug mode for container send their logs to default log driver",
 					},
+					&cli.BoolFlag{
+						Name:    "force",
+						Usage:   "ignore or not before stop hook if it was setted and force check",
+						Aliases: []string{"f"},
+						Value:   false,
+					},
 				},
 			},
 			&cli.Command{

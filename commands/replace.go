@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/projecteru2/cli/utils"
+	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -30,7 +31,8 @@ func replaceContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	opts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: c.Bool("force")}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -45,18 +47,29 @@ func replaceContainers(c *cli.Context) error {
 			return cli.Exit(err, -1)
 		}
 
-		if msg.Error == "" {
-			log.Infof("[Replace] Replace %s success", msg.Id)
-			createMsg := msg.Create
-			log.Infof("[Replace] New container %s, cpu %v, quota %v, mem %v", createMsg.Name, createMsg.Cpu, createMsg.Quota, createMsg.Memory)
-			if len(createMsg.Hook) > 0 {
-				log.Infof("[Replace] Hook output \n%s", createMsg.Hook)
+		log.Infof("[Replace] Replace %s", msg.Remove.Id)
+		if msg.Error != "" {
+			log.Errorf("[Replace] Replace %s failed %s message %s", msg.Remove.Id, msg.Error, msg.Remove.Message)
+			if msg.Create != nil && msg.Create.Success {
+				log.Errorf("[Replace] But create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
-			for name, publish := range createMsg.Publish {
-				log.Infof("[Replace] Bound %s ip %s", name, publish)
-			}
-		} else {
-			log.Infof("[Replace] Replace %s failed %s", msg.Id, msg.Error)
+			continue
+		} else if msg.Remove.Message != "" {
+			log.Infof("[Replace] Other output \n%s", msg.Remove.Message)
+		}
+
+		// 一定会保证有 removeMsg 返回，success 一定为真
+		removeMsg := msg.Remove
+		log.Infof("[Replace] Old container %s removed", removeMsg.Id)
+
+		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
+		createMsg := msg.Create
+		log.Infof("[Replace] New container %s, cpu %v, quota %v, mem %v", createMsg.Name, createMsg.Cpu, createMsg.Quota, createMsg.Memory)
+		if len(createMsg.Hook) > 0 {
+			log.Infof("[Replace] Other output \n%s", createMsg.Hook)
+		}
+		for name, publish := range createMsg.Publish {
+			log.Infof("[Replace] Bound %s ip %s", name, publish)
 		}
 	}
 	return nil

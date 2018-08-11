@@ -10,7 +10,7 @@ import:
 - package: google.golang.org/grpc
   version: master
 - package: github.com/projecteru2/core
-  version: master
+  version: dev
   subpackages:
   - rpc/gen
 - package: gopkg.in/yaml.v2

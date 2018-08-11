@@ -1,5 +1,5 @@
-hash: 449484e8f26d51e0ff55b736d6b4133f87d55def1348647a9ef8ca94c0442e2e
-updated: 2018-06-20T13:28:50.447716+08:00
+hash: dd7758d20fb749f353e32ce73f0b5f476e0c3214f55830e43dd066d73fa707ae
+updated: 2018-08-11T21:58:01.071287+08:00
 imports:
 - name: github.com/docker/distribution
   version: f4118485915abb8b163442717326597908eee6aa
@@ -7,7 +7,7 @@ imports:
   - digestset
   - reference
 - name: github.com/docker/docker
-  version: e2593239d949eee454935daea7a5fe025477322f
+  version: 4122eb1a43a42c4c8b827b4d0fb3d6543f9f2c91
   subpackages:
   - api
   - api/types
@@ -26,8 +26,9 @@ imports:
   - api/types/versions
   - api/types/volume
   - client
+  - errdefs
 - name: github.com/docker/go-connections
-  version: 3ede32e2033de7505e6500d6c868c2b9ed9f169d
+  version: 7395e3f8aa162843a74ed6d48e79627d9792ac55
   subpackages:
   - nat
   - sockets
@@ -64,12 +65,15 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 92c9dd1e052348abcf7f14d1faf593daf93423d8
+  version: 9eeec0a6a25fe98ced4f524186124143272d600c
   subpackages:
+  - auth
+  - auth/simple
+  - client
+  - cluster
   - rpc/gen
   - scheduler
   - types
-  - cluster
 - name: github.com/sethgrid/curse
   version: b3ce8a719db284afc287740e15c011b62900bd28
 - name: github.com/sirupsen/logrus
@@ -95,7 +99,7 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/sys
-  version: ebfc5b4631820b793c9010c87fd8fef0f39eb082
+  version: 98c5dad5d1a0e8a73845ecc8897d0bd56586511d
   subpackages:
   - unix
   - windows
@@ -111,7 +115,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: 2ab07fd5cb02cfc44fd49af17dd2356ed1647ed4
+  version: 07ef407d991f1004e6c3367c8f452ed9a02f17ff
   subpackages:
   - balancer
   - balancer/base
@@ -125,7 +129,9 @@ imports:
   - internal
   - internal/backoff
   - internal/channelz
+  - internal/envconfig
   - internal/grpcrand
+  - internal/transport
   - keepalive
   - metadata
   - naming
@@ -136,7 +142,6 @@ imports:
   - stats
   - status
   - tap
-  - transport
 - name: gopkg.in/urfave/cli.v2
   version: d3ae77c26ac8db90639677e4831a728d33c36111
 - name: gopkg.in/yaml.v2
