@@ -1,5 +1,5 @@
-hash: dd7758d20fb749f353e32ce73f0b5f476e0c3214f55830e43dd066d73fa707ae
-updated: 2018-08-11T21:58:01.071287+08:00
+hash: 69987e11495b9163f3fac4a4a37875af30f948ad640c77297a820bc0fefc9d5e
+updated: 2018-08-13T11:24:25.960675+08:00
 imports:
 - name: github.com/docker/distribution
   version: f4118485915abb8b163442717326597908eee6aa
@@ -7,7 +7,7 @@ imports:
   - digestset
   - reference
 - name: github.com/docker/docker
-  version: 4122eb1a43a42c4c8b827b4d0fb3d6543f9f2c91
+  version: 1fd7e4c28d3a4a21c3540f03a045f96a4190b527
   subpackages:
   - api
   - api/types
@@ -65,7 +65,7 @@ imports:
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 593ed7cae40741e649ad3aeafc7f12ea72796abf
+  version: 277aad04a21af3369a9a0be830678206b13b00f8
   subpackages:
   - auth
   - auth/simple
