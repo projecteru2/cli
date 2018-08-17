@@ -93,7 +93,9 @@ func buildImage(c *cli.Context) error {
 				} else {
 					cursor, err := curse.New()
 					if err != nil {
-						log.Fatalf("[Build] get cursor failed %v", err)
+						//log.Errorf("[Build] get cursor failed %v", err)
+						fmt.Print(data)
+						continue
 					}
 					cursor.MoveUp(p - pos).EraseCurrentLine()
 					fmt.Print(data)
