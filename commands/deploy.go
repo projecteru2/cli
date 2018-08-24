@@ -140,6 +140,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 			Healthcheck:   healthCheck,
 			Hook:          hook,
 			RestartPolicy: entrypoint.RestartPolicy,
+			Sysctls:       entrypoint.Sysctls,
 		},
 		Podname:      pod,
 		Nodename:     node,
