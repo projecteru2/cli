@@ -14,7 +14,7 @@ func GetFilesStream(files []string) map[string][]byte {
 		for i := range files {
 			paths := strings.Split(files[i], ":")
 			if stream, err := ioutil.ReadFile(paths[0]); err != nil {
-				log.Errorf("Get file %s failed %v", paths[0], err)
+				log.Fatalf("Get file %s failed %v", paths[0], err)
 				continue
 			} else {
 				fileData[paths[1]] = stream
