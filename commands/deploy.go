@@ -24,6 +24,10 @@ func deployContainers(c *cli.Context) error {
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
 	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit := getDeployParams(c)
+	if pod == "" || entry == "" || image == "" {
+		log.Fatal("[Deploy] no pod or entry or image")
+	}
+
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
@@ -78,9 +82,6 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	user := c.String("user")
 	debug := c.Bool("debug")
 	softlimit := c.Bool("softlimit")
-	if pod == "" || entry == "" || image == "" {
-		log.Fatal("[Deploy] no pod or entry or image")
-	}
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("nodelabel") {
 		parts := strings.Split(d, "=")

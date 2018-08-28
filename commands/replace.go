@@ -21,6 +21,10 @@ func replaceContainers(c *cli.Context) error {
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
 	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _ := getDeployParams(c)
+	if entry == "" || image == "" {
+		log.Fatalf("[Replace] no entry or image")
+	}
+
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(specURI)
