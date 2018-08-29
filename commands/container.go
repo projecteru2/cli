@@ -17,7 +17,7 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
-//ContainerCommand for control containers
+// ContainerCommand for control containers
 func ContainerCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "container",

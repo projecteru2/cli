@@ -28,6 +28,7 @@ func main() {
 		commands.ImageCommand(),
 		commands.LambdaCommand(),
 		commands.StatusCommand(),
+		commands.PublishCommand(),
 	}
 
 	app.Flags = commands.GlobalFlags()

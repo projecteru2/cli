@@ -15,7 +15,7 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-//ImageCommand for building image by multiple stages
+// ImageCommand for building image by multiple stages
 func ImageCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "image",

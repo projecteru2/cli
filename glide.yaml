@@ -23,3 +23,5 @@ import:
 - package: github.com/projecteru2/agent
   subpackages:
   - types
+- package: github.com/ghodss/yaml
+  version: v1.0.0
