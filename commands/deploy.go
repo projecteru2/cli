@@ -51,10 +51,11 @@ func deployContainers(c *cli.Context) error {
 		}
 		resp, err := client.ListContainers(context.Background(), lsOpts)
 		if err != nil {
-			return cli.Exit(err, -1)
-		}
-		if len(resp.Containers) > 0 {
-			return doReplaceContainer(client, deployOpts, true)
+			log.Errorf("[Deploy] check container failed %v", err)
+		} else {
+			if len(resp.Containers) > 0 {
+				return doReplaceContainer(client, deployOpts, true)
+			}
 		}
 	}
 
