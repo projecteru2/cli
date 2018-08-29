@@ -23,9 +23,13 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
+	autoReplace := c.Bool("auto_replace")
 	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
+	}
+	if strings.Contains(entry, "_") {
+		log.Fatal("[Deploy] entry can not contain _")
 	}
 
 	var data []byte
@@ -37,8 +41,28 @@ func deployContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit)
-	resp, err := client.CreateContainer(context.Background(), opts)
+
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit)
+	if autoReplace {
+		lsOpts := &pb.DeployStatusOptions{
+			Appname:    deployOpts.Name,
+			Entrypoint: deployOpts.Entrypoint.Name,
+			Nodename:   node,
+		}
+		resp, err := client.ListContainers(context.Background(), lsOpts)
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		if len(resp.Containers) > 0 {
+			return doReplaceContainer(client, deployOpts, true)
+		}
+	}
+
+	return doCreateContainer(client, deployOpts)
+}
+
+func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) error {
+	resp, err := client.CreateContainer(context.Background(), deployOpts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}

@@ -35,8 +35,13 @@ func replaceContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	force := c.Bool("force")
 	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: c.Bool("force")}
+	return doReplaceContainer(client, deployOpts, force)
+}
+
+func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool) error {
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)

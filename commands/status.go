@@ -93,6 +93,7 @@ func filterContainer(container *types.Container, version string, extend []string
 	return true
 }
 
+// StatusCommand show status
 func StatusCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "status",
