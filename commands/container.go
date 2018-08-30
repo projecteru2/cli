@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -9,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	enginetypes "github.com/docker/docker/api/types"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
@@ -42,6 +40,10 @@ func ContainerCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "nodename",
 						Usage: "filter by nodename",
+					},
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "label filter can set multiple times",
 					},
 				},
 			},
@@ -296,18 +298,24 @@ func listContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
+
+	labels := makeLabels(c.StringSlice("label"))
 	for _, container := range resp.Containers {
-		containerJSON := &enginetypes.ContainerJSON{}
-		if err := json.Unmarshal(container.Inspect, containerJSON); err != nil {
-			log.Error(err)
+		if !filterContainer(container.Labels, labels) {
+			log.Debugf("[listContainers] ignore container %s", container.Id)
 			continue
 		}
+
 		log.Infof("%s: %s", container.Name, container.Id)
 		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
-		for nname, network := range containerJSON.NetworkSettings.Networks {
-			log.Infof("Network %s at %s", nname, network.IPAddress)
+		if len(container.Publish) > 0 {
+			for nname, network := range container.Publish {
+				log.Infof("Network %s at %s", nname, network)
+			}
+		} else {
+			log.Infof("Container not published and deployed on %s", container.Nodename)
 		}
-		log.Infof("Image %s", containerJSON.Config.Image)
+		log.Infof("Image %s", container.Image)
 	}
 	return nil
 }

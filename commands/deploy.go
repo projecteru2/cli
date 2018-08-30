@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"strings"
 
-	enginecontainer "github.com/docker/docker/api/types/container"
 	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -121,11 +120,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		log.Fatalf("[generateOpts] get specs failed %v", err)
 	}
 
-	networkmode := enginecontainer.NetworkMode(network)
-	networks := map[string]string{network: ""}
-	if !networkmode.IsUserDefined() {
-		networks = map[string]string{}
-	}
+	networks := getNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
 		log.Fatal("[generateOpts] get entry failed")
