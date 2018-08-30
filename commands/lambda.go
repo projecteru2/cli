@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 
-	enginecontainer "github.com/docker/docker/api/types/container"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -97,13 +96,7 @@ func generateLambdaOpts(
 	mem int64, count int, stdin bool, deployMethod string,
 	files []string, user string) *pb.RunAndWaitOptions {
 
-	networks := map[string]string{}
-	if network != "" {
-		networkmode := enginecontainer.NetworkMode(network)
-		if networkmode.IsUserDefined() {
-			networks = map[string]string{network: ""}
-		}
-	}
+	networks := getNetworks(network)
 	opts := &pb.RunAndWaitOptions{}
 	fileData := utils.GetFilesStream(files)
 	opts.DeployOptions = &pb.DeployOptions{

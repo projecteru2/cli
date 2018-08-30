@@ -8,10 +8,10 @@ import (
 	"net/http"
 	"strings"
 
-	enginetypes "github.com/docker/docker/api/types"
 	"github.com/ghodss/yaml"
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -40,11 +40,6 @@ func PublishCommand() *cli.Command {
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "elb",
-						Usage: "elb url",
-						Value: "",
-					},
-					&cli.StringFlag{
 						Name:  "entry",
 						Usage: "entry name",
 						Value: "",
@@ -55,9 +50,13 @@ func PublishCommand() *cli.Command {
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "version",
-						Usage: "verison",
-						Value: "latest",
+						Name:  "elb",
+						Usage: "elb url",
+						Value: "",
+					},
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "label filter can set multiple times",
 					},
 					&cli.StringFlag{
 						Name:  "upstream_name",
@@ -107,13 +106,13 @@ func publishContainers(c *cli.Context) error {
 	elb := c.String("elb")
 	entry := c.String("entry")
 	node := c.String("node")
-	version := c.String("version")
+	labels := makeLabels(c.StringSlice("label"))
 	if app == "" || elb == "" {
 		log.Fatal("[Publish] need appname or elb url")
 	}
 	upstreamName := c.String("upstream_name")
 	if upstreamName == "" {
-		upstreamName = fmt.Sprintf("%s_%s_%s", app, version, entry)
+		upstreamName = fmt.Sprintf("%s_%s", app, entry)
 	}
 
 	lsOpts := &pb.DeployStatusOptions{
@@ -129,21 +128,8 @@ func publishContainers(c *cli.Context) error {
 
 	upstreams := map[string]map[string]string{}
 	for _, container := range resp.Containers {
-		containerJSON := &enginetypes.ContainerJSON{}
-		if err := json.Unmarshal(container.Inspect, containerJSON); err != nil {
-			log.Error(err)
-			continue
-		}
-
-		labels := containerJSON.Config.Labels
-		// 筛选
-		if v, ok := labels["version"]; version != "" && (!ok || v != version) {
-			log.Warnf("[Publish] version not fit %s", v)
-			continue
-		}
-
-		if err != nil {
-			log.Errorf("[Publish] parse container name failed %v", err)
+		if !filterContainer(container.Labels, labels) {
+			log.Debugf("[publish] ignore container %s", container.Id)
 			continue
 		}
 
@@ -153,19 +139,10 @@ func publishContainers(c *cli.Context) error {
 			upstream = upstreams[upstreamName]
 		}
 
-		for _, network := range containerJSON.NetworkSettings.Networks {
-			if network.IPAddress == "" {
-				log.Warnf("[Publish] can not get ip")
-				continue
-			}
-			portstr, ok := labels["publish"]
-			if !ok {
-				continue
-			}
-			ports := strings.Split(portstr, ",")
-			for _, port := range ports {
-				publish := fmt.Sprintf("%s:%s", network.IPAddress, port)
-				upstream[publish] = ""
+		pubinfo := coreutils.DecodePublishInfo(container.Publish)
+		for _, pub := range pubinfo {
+			for _, addr := range pub {
+				upstream[addr] = ""
 			}
 		}
 	}
