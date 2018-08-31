@@ -228,7 +228,7 @@ func ContainerCommand() *cli.Command {
 						Usage: "enable softlmit memory",
 					},
 					&cli.BoolFlag{
-						Name:  "auto_replace",
+						Name:  "auto-replace",
 						Usage: "create or replace automatically",
 					},
 				},

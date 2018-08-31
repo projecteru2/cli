@@ -22,7 +22,7 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	autoReplace := c.Bool("auto_replace")
+	autoReplace := c.Bool("auto-replace")
 	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
