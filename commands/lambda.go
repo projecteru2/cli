@@ -12,6 +12,7 @@ import (
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -80,7 +81,7 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 			continue
 		}
 		data := msg.Data
-		id := msg.ContainerId[:7]
+		id := coreutils.ShortID(msg.ContainerId)
 		if !bytes.HasSuffix(data, split) {
 			data = append(data, enter...)
 		}

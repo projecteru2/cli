@@ -10,6 +10,7 @@ import (
 
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -258,9 +259,9 @@ func removeContainers(c *cli.Context) error {
 		}
 
 		if msg.Success {
-			log.Infof("[RemoveContainer] %s Success", msg.Id[:12])
+			log.Infof("[RemoveContainer] %s Success", coreutils.ShortID(msg.Id))
 		} else {
-			log.Errorf("[RemoveContainer] %s Failed", msg.Id[:12])
+			log.Errorf("[RemoveContainer] %s Failed", coreutils.ShortID(msg.Id))
 		}
 		if msg.Message != "" {
 			log.Info(msg.Message)
@@ -342,9 +343,9 @@ func reallocContainers(c *cli.Context) error {
 		}
 
 		if msg.Success {
-			log.Infof("[Realloc] Success %s", msg.Id[:12])
+			log.Infof("[Realloc] Success %s", coreutils.ShortID(msg.Id))
 		} else {
-			log.Errorf("[Realloc] Failed %s", msg.Id[:12])
+			log.Errorf("[Realloc] Failed %s", coreutils.ShortID(msg.Id))
 		}
 	}
 	return nil
@@ -393,11 +394,11 @@ func copyContainers(c *cli.Context) error {
 		}
 
 		if msg.Error != "" {
-			log.Errorf("[Copy] Failed %s %s", msg.Id[:12], msg.Error)
+			log.Errorf("[Copy] Failed %s %s", coreutils.ShortID(msg.Id), msg.Error)
 			continue
 		}
 
-		filename := fmt.Sprintf("%s-%s-%s.tar.gz", msg.Id[:12], msg.Name, now)
+		filename := fmt.Sprintf("%s-%s-%s.tar.gz", coreutils.ShortID(msg.Id), msg.Name, now)
 		storePath := filepath.Join(baseDir, filename)
 		if _, err := os.Stat(storePath); err != nil {
 			file, err := os.Create(storePath)

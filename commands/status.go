@@ -6,6 +6,7 @@ import (
 
 	"github.com/projecteru2/cli/types"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -51,22 +52,22 @@ func status(c *cli.Context) error {
 		container.EntryPoint = msg.Entrypoint
 		container.Nodename = msg.Nodename
 
-		if !filterContainer(container.Extend, labels) {
+		if !filterContainer(container.Labels, labels) {
 			log.Debugf("[status] ignore container %s", container.ID)
 			continue
 		}
 
 		if msg.Action == "delete" {
-			log.Infof("[%s] %s_%s deleted", container.ID[:12], container.Name, container.EntryPoint)
+			log.Infof("[%s] %s_%s deleted", coreutils.ShortID(container.ID), container.Name, container.EntryPoint)
 		} else if msg.Action == "set" || msg.Action == "update" {
 			if container.Healthy {
-				log.Infof("[%s] %s_%s on %s back to life", container.ID[:12], container.Name, container.EntryPoint, container.Nodename)
+				log.Infof("[%s] %s_%s on %s back to life", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
 				for networkName, addrs := range container.Publish {
-					log.Infof("[%s] published at %s bind %v", container.ID[:12], networkName, addrs)
+					log.Infof("[%s] published at %s bind %v", coreutils.ShortID(container.ID), networkName, addrs)
 				}
 				continue
 			}
-			log.Warnf("[%s] %s_%s on %s is unhealthy", container.ID[:12], container.Name, container.EntryPoint, container.Nodename)
+			log.Warnf("[%s] %s_%s on %s is unhealthy", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
 		}
 	}
 	return nil
