@@ -50,7 +50,7 @@ func deployContainers(c *cli.Context) error {
 		}
 		resp, err := client.ListContainers(context.Background(), lsOpts)
 		if err != nil {
-			log.Errorf("[Deploy] check container failed %v", err)
+			log.Warnf("[Deploy] check container failed %v", err)
 		} else {
 			if len(resp.Containers) > 0 {
 				return doReplaceContainer(client, deployOpts, true)
@@ -126,23 +126,26 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		log.Fatal("[generateOpts] get entry failed")
 	}
 
-	hook := &pb.HookOptions{}
+	var hook *pb.HookOptions
 	if entrypoint.Hook != nil {
+		hook = &pb.HookOptions{}
 		hook.AfterStart = entrypoint.Hook.AfterStart
 		hook.BeforeStop = entrypoint.Hook.BeforeStop
 		hook.Force = entrypoint.Hook.Force
 	}
 
-	healthCheck := &pb.HealthCheckOptions{}
+	var healthCheck *pb.HealthCheckOptions
 	if entrypoint.HealthCheck != nil {
+		healthCheck = &pb.HealthCheckOptions{}
 		healthCheck.TcpPorts = entrypoint.HealthCheck.TCPPorts
 		healthCheck.HttpPort = entrypoint.HealthCheck.HTTPPort
 		healthCheck.Url = entrypoint.HealthCheck.HTTPURL
 		healthCheck.Code = int32(entrypoint.HealthCheck.HTTPCode)
 	}
 
-	logConfig := &pb.LogOptions{}
+	var logConfig *pb.LogOptions
 	if entrypoint.Log != nil {
+		logConfig = &pb.LogOptions{}
 		logConfig.Type = entrypoint.Log.Type
 		logConfig.Config = entrypoint.Log.Config
 	}
