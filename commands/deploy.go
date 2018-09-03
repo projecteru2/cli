@@ -43,17 +43,18 @@ func deployContainers(c *cli.Context) error {
 
 	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit)
 	if autoReplace {
-		lsOpts := &pb.DeployStatusOptions{
+		lsOpts := &pb.ListContainersOptions{
 			Appname:    deployOpts.Name,
 			Entrypoint: deployOpts.Entrypoint.Name,
 			Nodename:   node,
+			Labels:     nil,
 		}
 		resp, err := client.ListContainers(context.Background(), lsOpts)
 		if err != nil {
 			log.Warnf("[Deploy] check container failed %v", err)
 		} else {
 			if len(resp.Containers) > 0 {
-				return doReplaceContainer(client, deployOpts, true)
+				return doReplaceContainer(client, deployOpts, true, nil)
 			}
 		}
 	}

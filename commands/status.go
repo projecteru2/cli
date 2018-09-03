@@ -52,7 +52,7 @@ func status(c *cli.Context) error {
 		container.EntryPoint = msg.Entrypoint
 		container.Nodename = msg.Nodename
 
-		if !filterContainer(container.Labels, labels) {
+		if !coreutils.FilterContainer(container.Labels, labels) {
 			log.Debugf("[status] ignore container %s", container.ID)
 			continue
 		}

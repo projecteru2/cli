@@ -139,6 +139,10 @@ func ContainerCommand() *cli.Command {
 						Value: "root",
 					},
 					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "filter container by labels",
+					},
+					&cli.StringSliceFlag{
 						Name:  "file",
 						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
 					},
@@ -289,10 +293,11 @@ func getContainers(c *cli.Context) error {
 func listContainers(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
 
-	opts := &pb.DeployStatusOptions{
+	opts := &pb.ListContainersOptions{
 		Appname:    c.Args().First(),
 		Entrypoint: c.String("entry"),
 		Nodename:   c.String("nodename"),
+		Labels:     makeLabels(c.StringSlice("label")),
 	}
 
 	resp, err := client.ListContainers(context.Background(), opts)
@@ -300,13 +305,7 @@ func listContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	labels := makeLabels(c.StringSlice("label"))
 	for _, container := range resp.Containers {
-		if !filterContainer(container.Labels, labels) {
-			log.Debugf("[listContainers] ignore container %s", container.Id)
-			continue
-		}
-
 		log.Infof("%s: %s", container.Name, container.Id)
 		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
 		if len(container.Publish) > 0 {

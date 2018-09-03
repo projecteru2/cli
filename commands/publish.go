@@ -115,10 +115,11 @@ func publishContainers(c *cli.Context) error {
 		upstreamName = fmt.Sprintf("%s_%s", app, entry)
 	}
 
-	lsOpts := &pb.DeployStatusOptions{
+	lsOpts := &pb.ListContainersOptions{
 		Appname:    app,
 		Entrypoint: entry,
 		Nodename:   node,
+		Labels:     labels,
 	}
 
 	resp, err := client.ListContainers(context.Background(), lsOpts)
@@ -128,11 +129,6 @@ func publishContainers(c *cli.Context) error {
 
 	upstreams := map[string]map[string]string{}
 	for _, container := range resp.Containers {
-		if !filterContainer(container.Labels, labels) {
-			log.Debugf("[publish] ignore container %s", container.Id)
-			continue
-		}
-
 		upstream, ok := upstreams[upstreamName]
 		if !ok {
 			upstreams[upstreamName] = map[string]string{}

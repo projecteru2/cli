@@ -21,15 +21,6 @@ func makeLabels(labels []string) map[string]string {
 	return ext
 }
 
-func filterContainer(extend map[string]string, labels map[string]string) bool {
-	for k, v := range labels {
-		if n, ok := extend[k]; !ok || n != v {
-			return false
-		}
-	}
-	return true
-}
-
 func getNetworks(network string) map[string]string {
 	networkmode := enginecontainer.NetworkMode(network)
 	networks := map[string]string{}

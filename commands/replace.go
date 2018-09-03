@@ -36,12 +36,13 @@ func replaceContainers(c *cli.Context) error {
 	}
 
 	force := c.Bool("force")
+	labels := makeLabels(c.StringSlice("label"))
 	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
-	return doReplaceContainer(client, deployOpts, force)
+	return doReplaceContainer(client, deployOpts, force, labels)
 }
 
-func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool) error {
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force}
+func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool, labels map[string]string) error {
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, Labels: labels}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -58,7 +59,7 @@ func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, f
 
 		log.Infof("[Replace] Replace %s", msg.Remove.Id)
 		if msg.Error != "" {
-			log.Errorf("[Replace] Replace %s failed %s message %s", msg.Remove.Id, msg.Error, msg.Remove.Message)
+			log.Errorf("[Replace] Replace %s failed %s, message %s", msg.Remove.Id, msg.Error, msg.Remove.Message)
 			if msg.Create != nil && msg.Create.Success {
 				log.Errorf("[Replace] But create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
