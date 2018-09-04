@@ -177,7 +177,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		Networks:     networks,
 		Networkmode:  network,
 		Volumes:      specs.Volumes,
-		Meta:         specs.Meta,
+		Labels:       specs.Labels,
 		Dns:          specs.DNS,
 		ExtraHosts:   specs.ExtraHosts,
 		Nodelabels:   nodeLabels,

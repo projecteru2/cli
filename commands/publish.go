@@ -59,7 +59,7 @@ func PublishCommand() *cli.Command {
 						Usage: "label filter can set multiple times",
 					},
 					&cli.StringFlag{
-						Name:  "upstream_name",
+						Name:  "upstream-name",
 						Usage: "custom upstream name, if not set, will use app_verison_entry",
 						Value: "",
 					},
@@ -110,7 +110,7 @@ func publishContainers(c *cli.Context) error {
 	if app == "" || elb == "" {
 		log.Fatal("[Publish] need appname or elb url")
 	}
-	upstreamName := c.String("upstream_name")
+	upstreamName := c.String("upstream-name")
 	if upstreamName == "" {
 		upstreamName = fmt.Sprintf("%s_%s", app, entry)
 	}

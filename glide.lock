@@ -63,11 +63,11 @@ imports:
 - name: github.com/pkg/errors
   version: 8842a6e0cc595d1cc9d931f6c875883967280e32
 - name: github.com/projecteru2/agent
-  version: ae1f18e376d4c5d5e5b133d194ae052133b59edb
+  version: 394977dd0c71055cd4978d873a624a9c3c383adf
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: a1459d9b2b75e4d628e2d91e29b070cf448cd8d0
+  version: 00af33c80009ab6fb2ba01b966e2557e4501c135
   subpackages:
   - auth
   - auth/simple

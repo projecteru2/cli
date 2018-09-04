@@ -42,7 +42,7 @@ func replaceContainers(c *cli.Context) error {
 }
 
 func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool, labels map[string]string) error {
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, Labels: labels}
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, FilterLabels: labels}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
