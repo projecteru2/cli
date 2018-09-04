@@ -80,36 +80,42 @@ func dumpELB(c *cli.Context) error {
 }
 
 func publishContainers(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
+	client := setupAndGetGRPCConnection().GetRPCClient()
 	specURI := c.Args().First()
-	log.Debugf("[Publish] Publish %s", specURI)
-
-	var data []byte
-	domain := []byte{}
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(specURI)
-	} else {
-		data, err = ioutil.ReadFile(specURI)
-	}
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	if domain, err = yaml.YAMLToJSON(data); err != nil {
-		log.Fatalf("[Publish] wrong spec file %v", err)
-	}
 
 	app := c.String("app")
 	elb := c.String("elb")
 	entry := c.String("entry")
 	node := c.String("node")
 	labels := makeLabels(c.StringSlice("label"))
+
 	if app == "" || elb == "" {
 		log.Fatal("[Publish] need appname or elb url")
 	}
+
+	if specURI != "" {
+		log.Debugf("[Publish] Publish %s", specURI)
+
+		var data []byte
+		var err error
+		domain := []byte{}
+		if strings.HasPrefix(specURI, "http") {
+			data, err = utils.GetSpecFromRemote(specURI)
+		} else {
+			data, err = ioutil.ReadFile(specURI)
+		}
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		if domain, err = yaml.YAMLToJSON(data); err != nil {
+			log.Fatalf("[Publish] wrong spec file %v", err)
+		}
+
+		if err = doUpdateDomain(elb, domain); err != nil {
+			log.Fatal("[Publish] update domain failed %v", err)
+		}
+	}
+
 	upstreamName := c.String("upstream-name")
 	if upstreamName == "" {
 		upstreamName = fmt.Sprintf("%s_%s", app, entry)
@@ -143,10 +149,7 @@ func publishContainers(c *cli.Context) error {
 		}
 	}
 
-	if err := doUpdateUpstream(elb, upstreams); err != nil {
-		return err
-	}
-	return doUpdateDomain(elb, domain)
+	return doUpdateUpstream(elb, upstreams)
 }
 
 func doUpdateUpstream(elb string, upstreams map[string]map[string]string) error {
