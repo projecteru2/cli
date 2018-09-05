@@ -81,7 +81,6 @@ func dumpELB(c *cli.Context) error {
 
 func publishContainers(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
-	specURI := c.Args().First()
 
 	app := c.String("app")
 	elb := c.String("elb")
@@ -93,6 +92,7 @@ func publishContainers(c *cli.Context) error {
 		log.Fatal("[Publish] need appname or elb url")
 	}
 
+	specURI := c.Args().First()
 	if specURI != "" {
 		log.Debugf("[Publish] Publish %s", specURI)
 

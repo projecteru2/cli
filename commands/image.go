@@ -128,6 +128,14 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		log.Fatalf("[Build] unmarshal specs failed %v", err)
 	}
 
+	// Set value from env
+	for s := range specs.Builds {
+		b := specs.Builds[s]
+		for k, v := range b.Envs {
+			b.Envs[k] = utils.ParseEnvValue(v)
+		}
+	}
+
 	name := c.String("name")
 	if name == "" {
 		log.Fatal("[Build] need name")
