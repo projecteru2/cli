@@ -49,6 +49,24 @@ func ContainerCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
+				Name:      "stop",
+				Usage:     "stop container(s)",
+				ArgsUsage: containerArgsUsage,
+				Action:    stopContainers,
+			},
+			&cli.Command{
+				Name:      "start",
+				Usage:     "start container(s)",
+				ArgsUsage: containerArgsUsage,
+				Action:    startContainers,
+			},
+			&cli.Command{
+				Name:      "restart",
+				Usage:     "restart container(s)",
+				ArgsUsage: containerArgsUsage,
+				Action:    restartContainers,
+			},
+			&cli.Command{
 				Name:      "remove",
 				Usage:     "remove container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -411,6 +429,46 @@ func copyContainers(c *cli.Context) error {
 		_, err = files[storePath].Write(msg.Data)
 		if err != nil {
 			log.Errorf("[Copy] Write file error %v", err)
+		}
+	}
+	return nil
+}
+
+func startContainers(c *cli.Context) error {
+	return doControlContainers(c, cluster.ContainerStart)
+}
+
+func stopContainers(c *cli.Context) error {
+	return doControlContainers(c, cluster.ContainerStop)
+}
+
+func restartContainers(c *cli.Context) error {
+	return doControlContainers(c, cluster.ContainerRestart)
+}
+
+func doControlContainers(c *cli.Context, t string) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	opts := &pb.ControlContainerOptions{Ids: c.Args().Slice(), Type: t}
+	resp, err := client.ControlContainer(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		log.Infof("[ControlContainer] %s", coreutils.ShortID(msg.Id))
+		if msg.Error != "" {
+			log.Errorf("Failed %s", msg.Error)
 		}
 	}
 	return nil

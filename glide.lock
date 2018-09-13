@@ -1,5 +1,5 @@
-hash: 3a184f1e705ffaf406e05c61e7d4ec0100e867e967be5efb02b27447110fd750
-updated: 2018-08-29T15:56:31.572261+08:00
+hash: 5d186020a41ca357493826955fc62a4b75ac3d137c1f95807d2799c4a3a874f8
+updated: 2018-09-12T14:40:46.03327+08:00
 imports:
 - name: github.com/docker/distribution
   version: f4118485915abb8b163442717326597908eee6aa
@@ -7,7 +7,7 @@ imports:
   - digestset
   - reference
 - name: github.com/docker/docker
-  version: 64b7575802d4cab61fd339f14427b1d881c3b6c4
+  version: 738994f77d0c0332455ebfeec0858c3feb6d6994
   subpackages:
   - api
   - api/types
@@ -27,6 +27,7 @@ imports:
   - api/types/volume
   - client
   - errdefs
+  - pkg/stdcopy
 - name: github.com/docker/go-connections
   version: 7395e3f8aa162843a74ed6d48e79627d9792ac55
   subpackages:
@@ -63,11 +64,11 @@ imports:
 - name: github.com/pkg/errors
   version: 8842a6e0cc595d1cc9d931f6c875883967280e32
 - name: github.com/projecteru2/agent
-  version: 394977dd0c71055cd4978d873a624a9c3c383adf
+  version: 56cec752dfe702c2ec46108db7be2d5d101a4fae
   subpackages:
   - types
 - name: github.com/projecteru2/core
-  version: 00af33c80009ab6fb2ba01b966e2557e4501c135
+  version: 71fc0e0c3b54eb9492538c1aa13bf78770a479ae
   subpackages:
   - auth
   - auth/simple
@@ -76,6 +77,7 @@ imports:
   - rpc/gen
   - scheduler
   - types
+  - utils
 - name: github.com/sethgrid/curse
   version: b3ce8a719db284afc287740e15c011b62900bd28
 - name: github.com/sirupsen/logrus
@@ -101,7 +103,7 @@ imports:
   - proxy
   - trace
 - name: golang.org/x/sys
-  version: 98c5dad5d1a0e8a73845ecc8897d0bd56586511d
+  version: d0be0721c37eeb5299f245a996a483160fc36940
   subpackages:
   - unix
   - windows
@@ -117,7 +119,7 @@ imports:
   subpackages:
   - googleapis/rpc/status
 - name: google.golang.org/grpc
-  version: a91fb537b19866e5d1791fa1c6fb0530df26aadc
+  version: 9cc4fdbde2304827ffdbc7896f49db40c5536600
   subpackages:
   - balancer
   - balancer/base
