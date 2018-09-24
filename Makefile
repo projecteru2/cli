@@ -9,7 +9,7 @@ GO_LDFLAGS ?= -s -X $(REPO_PATH)/versioninfo.REVISION=$(REVISION) \
 			  -X $(REPO_PATH)/versioninfo.VERSION=$(VERSION)
 
 binary:
-	go build -ldflags "$(GO_LDFLAGS)" -a -tags netgo -installsuffix netgo -o eru-cli
+	go build -ldflags "$(GO_LDFLAGS)" -a -tags "netgo osusergo" -installsuffix netgo -o eru-cli
 
 deps:
 	glide i
