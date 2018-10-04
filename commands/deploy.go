@@ -54,7 +54,7 @@ func deployContainers(c *cli.Context) error {
 			log.Warnf("[Deploy] check container failed %v", err)
 		} else {
 			if len(resp.Containers) > 0 {
-				return doReplaceContainer(client, deployOpts, true, nil)
+				return doReplaceContainer(client, deployOpts, true, nil, nil)
 			}
 		}
 	}

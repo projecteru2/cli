@@ -24,6 +24,7 @@ func replaceContainers(c *cli.Context) error {
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}
+	copys := utils.SplitFiles(c.StringSlice("copy"))
 
 	var data []byte
 	if strings.HasPrefix(specURI, "http") {
@@ -38,11 +39,11 @@ func replaceContainers(c *cli.Context) error {
 	force := c.Bool("force")
 	labels := makeLabels(c.StringSlice("label"))
 	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
-	return doReplaceContainer(client, deployOpts, force, labels)
+	return doReplaceContainer(client, deployOpts, force, labels, copys)
 }
 
-func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool, labels map[string]string) error {
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, FilterLabels: labels}
+func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool, labels map[string]string, copys map[string]string) error {
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, FilterLabels: labels, Copy: copys}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)

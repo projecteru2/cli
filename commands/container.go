@@ -162,7 +162,11 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+						Usage: "copy local files to container, can use multiple times. src_path:dst_path",
+					},
+					&cli.StringSliceFlag{
+						Name:  "copy",
+						Usage: "copy old container files to new container, can use multiple times. src_path:dst_path",
 					},
 					&cli.BoolFlag{
 						Name:  "debug",
