@@ -253,6 +253,11 @@ func ContainerCommand() *cli.Command {
 						Name:  "softlimit",
 						Usage: "enable softlmit memory",
 					},
+					&cli.IntFlag{
+						Name:  "nodes-limit",
+						Usage: "Limit nodes count in fill and each mode",
+						Value: 0,
+					},
 					&cli.BoolFlag{
 						Name:  "auto-replace",
 						Usage: "create or replace automatically",

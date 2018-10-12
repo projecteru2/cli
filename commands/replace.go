@@ -20,7 +20,7 @@ func replaceContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
-	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _ := getDeployParams(c)
+	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _, _ := getDeployParams(c)
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}
@@ -38,7 +38,7 @@ func replaceContainers(c *cli.Context) error {
 
 	force := c.Bool("force")
 	labels := makeLabels(c.StringSlice("label"))
-	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false)
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, 0)
 	return doReplaceContainer(client, deployOpts, force, labels, copys)
 }
 
