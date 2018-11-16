@@ -6,6 +6,7 @@ import (
 
 	"github.com/projecteru2/cli/types"
 	pb "github.com/projecteru2/core/rpc/gen"
+	"github.com/projecteru2/core/store"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -57,9 +58,9 @@ func status(c *cli.Context) error {
 			continue
 		}
 
-		if msg.Action == "delete" {
+		if msg.Action == store.DELETEEVENT {
 			log.Infof("[%s] %s_%s deleted", coreutils.ShortID(container.ID), container.Name, container.EntryPoint)
-		} else if msg.Action == "set" || msg.Action == "update" {
+		} else if msg.Action == store.PUTEVENT {
 			if container.Healthy {
 				log.Infof("[%s] %s_%s on %s back to life", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
 				for networkName, addrs := range container.Publish {
