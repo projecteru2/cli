@@ -34,7 +34,7 @@ func PodCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "favor",
-						Usage: "name of pod, default: MEM",
+						Usage: "favor of pod, CPU | MEM",
 						Value: "MEM",
 					},
 					&cli.StringFlag{
@@ -107,7 +107,7 @@ func listPods(c *cli.Context) error {
 	}
 
 	for _, pod := range resp.GetPods() {
-		log.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
+		log.Infof("Name: %s, Desc: %s, Favor: %s", pod.GetName(), pod.GetDesc(), pod.GetFavor())
 	}
 	return nil
 }
