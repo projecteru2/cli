@@ -112,7 +112,7 @@ func publishContainers(c *cli.Context) error {
 		}
 
 		if err = doUpdateDomain(elb, domain); err != nil {
-			log.Fatal("[Publish] update domain failed %v", err)
+			log.Fatalf("[Publish] update domain failed %v", err)
 		}
 	}
 

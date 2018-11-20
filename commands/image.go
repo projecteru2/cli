@@ -8,6 +8,7 @@ import (
 
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	"github.com/sethgrid/curse"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -33,6 +34,10 @@ func ImageCommand() *cli.Command {
 					&cli.StringSliceFlag{
 						Name:  "tag",
 						Usage: "tag of image",
+					},
+					&cli.BoolFlag{
+						Name:  "raw",
+						Usage: "build image from dir",
 					},
 					&cli.StringFlag{
 						Name:        "user",
@@ -111,28 +116,42 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 	if c.NArg() != 1 {
 		log.Fatal("[Build] no spec")
 	}
-	specURI := c.Args().First()
-	log.Debugf("[Build] Deploy %s", specURI)
-	var data []byte
-	var err error
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(specURI)
+	raw := c.Bool("raw")
+	var specs *pb.Builds
+	var tar []byte
+	if !raw {
+		specURI := c.Args().First()
+		log.Debugf("[Build] Deploy %s", specURI)
+		var data []byte
+		var err error
+		if strings.HasPrefix(specURI, "http") {
+			data, err = utils.GetSpecFromRemote(specURI)
+		} else {
+			data, err = ioutil.ReadFile(specURI)
+		}
+		if err != nil {
+			log.Fatalf("[Build] read spec failed %v", err)
+		}
+		specs = &pb.Builds{}
+		if err = yaml.Unmarshal(data, specs); err != nil {
+			log.Fatalf("[Build] unmarshal specs failed %v", err)
+		}
+		// Set value from env
+		for s := range specs.Builds {
+			b := specs.Builds[s]
+			for k, v := range b.Envs {
+				b.Envs[k] = utils.ParseEnvValue(v)
+			}
+		}
 	} else {
-		data, err = ioutil.ReadFile(specURI)
-	}
-	if err != nil {
-		log.Fatalf("[Build] read spec failed %v", err)
-	}
-	specs := &pb.Builds{}
-	if err = yaml.Unmarshal(data, specs); err != nil {
-		log.Fatalf("[Build] unmarshal specs failed %v", err)
-	}
-
-	// Set value from env
-	for s := range specs.Builds {
-		b := specs.Builds[s]
-		for k, v := range b.Envs {
-			b.Envs[k] = utils.ParseEnvValue(v)
+		path := c.Args().First()
+		data, err := coreutils.CreateTarStream(path)
+		if err != nil {
+			log.Fatal("[Build] no path")
+		}
+		tar, err = ioutil.ReadAll(data)
+		if err != nil {
+			log.Fatal("[Build] create tar stream failed")
 		}
 	}
 
@@ -153,6 +172,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		Uid:    uid,
 		Tags:   tags,
 		Builds: specs,
+		Tar:    tar,
 	}
 	return opts
 }
