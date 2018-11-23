@@ -58,9 +58,9 @@ func status(c *cli.Context) error {
 			continue
 		}
 
-		if msg.Action == store.DELETEEVENT {
+		if msg.Action == store.DeleteEvent {
 			log.Infof("[%s] %s_%s deleted", coreutils.ShortID(container.ID), container.Name, container.EntryPoint)
-		} else if msg.Action == store.PUTEVENT {
+		} else if msg.Action == store.PutEvent {
 			if container.Healthy {
 				log.Infof("[%s] %s_%s on %s back to life", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
 				for networkName, addrs := range container.Publish {
