@@ -71,6 +71,12 @@ func PodCommand() *cli.Command {
 				Action:    removePod,
 			},
 			&cli.Command{
+				Name:      "resource",
+				Usage:     "pod resource usage",
+				ArgsUsage: podArgsUsage,
+				Action:    podResource,
+			},
+			&cli.Command{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
 				ArgsUsage: podArgsUsage,
@@ -197,6 +203,32 @@ func removePod(c *cli.Context) error {
 	}
 
 	log.Infof("[RemovePod] success, name: %s", name)
+	return nil
+}
+
+func podResource(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	name := c.Args().First()
+
+	r, err := client.GetPodResource(context.Background(), &pb.GetPodOptions{
+		Name: name,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	log.Infof("[PodResource] Pod %s", r.Name)
+	for nodename, percent := range r.Cpu {
+		log.Infof("[PodResource] Node %s Cpu %f%% Memory %f%%", nodename, percent*100, r.Memory[nodename]*100)
+	}
+	for nodename, diff := range r.Diff {
+		if diff {
+			continue
+		}
+		log.Warnf("[PodResource] Node %s resource diff %s", nodename, r.Detail[nodename])
+	}
 	return nil
 }
 
