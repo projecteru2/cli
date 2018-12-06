@@ -127,7 +127,7 @@ func addPod(c *cli.Context) error {
 	favor := c.String("favor")
 	desc := c.String("desc")
 
-	if favor != corescheduler.MEMORY_PRIOR && favor != corescheduler.CPU_PRIOR {
+	if favor != corescheduler.MemoryPrior && favor != corescheduler.CPUPrior {
 		return fmt.Errorf("favor must be MEM/CPU, got %s", favor)
 	}
 
@@ -410,10 +410,8 @@ func getNode(c *cli.Context) error {
 	for k, v := range node.GetLabels() {
 		log.Infof("%s: %s", k, v)
 	}
-	for cno, part := range node.GetCpu() {
-		log.Infof("Cpu %s has %d capability", cno, part)
-	}
-	log.Infof("Memory: %d bytes", node.GetMemory())
+	log.Infof("CPU Used: %f", node.GetCpuUsed())
+	log.Infof("Memory Used: %d bytes", node.GetMemoryUsed())
 	return nil
 }
 

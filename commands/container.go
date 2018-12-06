@@ -233,7 +233,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "deploy-method",
-						Usage: "deploy method auto/fill/each",
+						Usage: "deploy method auto/fill/each/global",
 						Value: cluster.DeployAuto,
 					},
 					&cli.StringFlag{
