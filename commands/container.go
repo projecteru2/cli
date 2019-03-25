@@ -294,8 +294,8 @@ func removeContainers(c *cli.Context) error {
 		} else {
 			log.Errorf("[RemoveContainer] %s Failed", coreutils.ShortID(msg.Id))
 		}
-		if msg.Message != "" {
-			log.Info(msg.Message)
+		if msg.Hook != "" {
+			log.Info(msg.Hook)
 		}
 	}
 	return nil
@@ -476,6 +476,9 @@ func doControlContainers(c *cli.Context, t string) error {
 		}
 
 		log.Infof("[ControlContainer] %s", coreutils.ShortID(msg.Id))
+		if msg.Hook != nil {
+			log.Infof("[ControlContainer] HookOutput %s", string(msg.Hook))
+		}
 		if msg.Error != "" {
 			log.Errorf("Failed %s", msg.Error)
 		}

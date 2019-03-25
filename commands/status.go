@@ -27,7 +27,7 @@ func status(c *cli.Context) error {
 			Entrypoint: entry,
 			Nodename:   node,
 		})
-	if err != nil {
+	if err != nil || resp == nil {
 		cli.Exit("", -1)
 	}
 

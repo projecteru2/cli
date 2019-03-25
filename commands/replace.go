@@ -60,18 +60,18 @@ func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, f
 
 		log.Infof("[Replace] Replace %s", msg.Remove.Id)
 		if msg.Error != "" {
-			log.Errorf("[Replace] Replace %s failed %s, message %s", msg.Remove.Id, msg.Error, msg.Remove.Message)
+			log.Errorf("[Replace] Replace %s failed %s, hook %s", msg.Remove.Id, msg.Error, msg.Remove.Hook)
 			if msg.Create != nil && msg.Create.Success {
 				log.Errorf("[Replace] But create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
 			continue
-		} else if msg.Remove.Message != "" {
-			log.Infof("[Replace] Other output \n%s", msg.Remove.Message)
+		} else if msg.Remove.Hook != "" {
+			log.Infof("[Replace] Hook output \n%s", msg.Remove.Hook)
 		}
 
 		// 一定会保证有 removeMsg 返回，success 一定为真
 		removeMsg := msg.Remove
-		log.Infof("[Replace] Old container %s removed", removeMsg.Id)
+		log.Infof("[Replace] Hook container %s removed", removeMsg.Id)
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
