@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/projecteru2/cli/utils"
+	dockerengine "github.com/projecteru2/core/engine/docker"
 	pb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	"github.com/sethgrid/curse"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -53,6 +53,53 @@ func ImageCommand() *cli.Command {
 					},
 				},
 				Action: buildImage,
+			},
+			&cli.Command{
+				Name:      "cache",
+				Usage:     "cache image",
+				ArgsUsage: "name of images",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "nodename",
+						Usage: "nodename if you just want to cache on one node",
+					},
+					&cli.StringFlag{
+						Name:  "podname",
+						Usage: "name of pod, if you want to cache on all nodes in one pod",
+					},
+					&cli.IntFlag{
+						Name:  "concurrent",
+						Usage: "how many workers to pull images",
+						Value: 10,
+					},
+				},
+				Action: cacheImage,
+			},
+			&cli.Command{
+				Name:      "remove",
+				Usage:     "remove image",
+				ArgsUsage: "name of images",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "nodename",
+						Usage: "nodename if you just want to cache on one node",
+					},
+					&cli.StringFlag{
+						Name:  "podname",
+						Usage: "name of pod, if you want to cache on all nodes in one pod",
+					},
+					&cli.IntFlag{
+						Name:  "concurrent",
+						Usage: "how many workers to pull images",
+						Value: 10,
+					},
+					&cli.BoolFlag{
+						Name:  "prune",
+						Usage: "prune node",
+						Value: false,
+					},
+				},
+				Action: cleanImage,
 			},
 		},
 	}
@@ -112,6 +159,72 @@ func buildImage(c *cli.Context) error {
 	return nil
 }
 
+func cacheImage(c *cli.Context) error {
+	opts := &pb.CacheImageOptions{
+		Images:   c.Args().Slice(),
+		Step:     int32(c.Int("concurrent")),
+		Podname:  c.String("podname"),
+		Nodename: c.String("nodename"),
+	}
+
+	client := setupAndGetGRPCConnection().GetRPCClient()
+	resp, err := client.CacheImage(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Success {
+			log.Infof("[CacheImage] cache image %s on %s success", msg.Image, msg.Nodename)
+		} else {
+			log.Warnf("[CacheImage] cache image %s on %s failed", msg.Image, msg.Nodename)
+		}
+	}
+	return nil
+}
+
+func cleanImage(c *cli.Context) error {
+	opts := &pb.RemoveImageOptions{
+		Images:   c.Args().Slice(),
+		Step:     int32(c.Int("concurrent")),
+		Podname:  c.String("podname"),
+		Nodename: c.String("nodename"),
+		Prune:    c.Bool("prune"),
+	}
+	client := setupAndGetGRPCConnection().GetRPCClient()
+	resp, err := client.RemoveImage(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Success {
+			log.Infof("[CleanImage] Success remove %s", msg.Image)
+		} else {
+			log.Errorf("[Cleanimage] Failed remove %s", msg.Image)
+		}
+		for _, m := range msg.Messages {
+			log.Infof(m)
+		}
+	}
+
+	return nil
+}
+
 func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 	if c.NArg() != 1 {
 		log.Fatal("[Build] no spec")
@@ -145,7 +258,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		}
 	} else {
 		path := c.Args().First()
-		data, err := coreutils.CreateTarStream(path)
+		data, err := dockerengine.CreateTarStream(path)
 		if err != nil {
 			log.Fatal("[Build] no path")
 		}

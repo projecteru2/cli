@@ -12,10 +12,11 @@ binary:
 	go build -ldflags "$(GO_LDFLAGS)" -a -tags "netgo osusergo" -installsuffix netgo -o eru-cli
 
 deps:
-	glide i
+	env GO111MODULE=on go mod download
+	env GO111MODULE=on go mod vendor
 
 build: deps binary
 
 test: deps
 	go vet `go list ./... | grep -v '/vendor/'`
-	go test -v `glide nv`
+	go test -v `go list ./... | grep -v '/vendor/'`

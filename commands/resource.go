@@ -2,7 +2,6 @@ package commands
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net"
 	"os"
@@ -41,26 +40,6 @@ func PodCommand() *cli.Command {
 						Name:  "desc",
 						Usage: "description of pod",
 						Value: "",
-					},
-				},
-			},
-			&cli.Command{
-				Name:      "clean",
-				Usage:     "clean pod images",
-				ArgsUsage: podArgsUsage,
-				Action:    cleanPod,
-				Flags: []cli.Flag{
-					&cli.StringSliceFlag{
-						Name:  "image",
-						Usage: "name of a image, can set multiple times",
-					},
-					&cli.StringFlag{
-						Name:  "nodename",
-						Usage: "specify a node",
-					},
-					&cli.BoolFlag{
-						Name:  "prune",
-						Usage: "prune node",
 					},
 				},
 			},
@@ -141,50 +120,6 @@ func addPod(c *cli.Context) error {
 	}
 
 	log.Infof("[AddPod] success, name: %s, desc: %s", pod.GetName(), pod.GetDesc())
-	return nil
-}
-
-func cleanPod(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	podname := c.Args().First()
-	nodename := c.String("nodename")
-	images := c.StringSlice("image")
-	prune := c.Bool("prune")
-
-	resp, err := client.RemoveImage(context.Background(), &pb.RemoveImageOptions{
-		Podname:  podname,
-		Nodename: nodename,
-		Images:   images,
-		Prune:    prune,
-	})
-
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	for {
-		msg, err := resp.Recv()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return cli.Exit(err, -1)
-		}
-
-		if msg.Success {
-			log.Infof("[CleanPod] Success remove %s", msg.Image)
-		} else {
-			log.Errorf("[CleanPod] Failed remove %s", msg.Image)
-		}
-		for _, m := range msg.Messages {
-			log.Infof(m)
-		}
-	}
-
 	return nil
 }
 
