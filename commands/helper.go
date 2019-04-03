@@ -22,10 +22,16 @@ func makeLabels(labels []string) map[string]string {
 }
 
 func getNetworks(network string) map[string]string {
+	var ip string
+	networkInfo := strings.Split(network, "=")
+	if len(networkInfo) == 2 {
+		network = networkInfo[0]
+		ip = networkInfo[1]
+	}
 	networkmode := enginecontainer.NetworkMode(network)
 	networks := map[string]string{}
 	if network != "" && networkmode.IsUserDefined() {
-		networks[network] = ""
+		networks[network] = ip
 	}
 	return networks
 }

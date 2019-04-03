@@ -38,12 +38,16 @@ func replaceContainers(c *cli.Context) error {
 
 	force := c.Bool("force")
 	labels := makeLabels(c.StringSlice("label"))
+	networkInherit := c.Bool("network-inherit")
+	if network != "" {
+		networkInherit = false
+	}
 	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, 0)
-	return doReplaceContainer(client, deployOpts, force, labels, copys)
+	return doReplaceContainer(client, deployOpts, force, networkInherit, labels, copys)
 }
 
-func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force bool, labels map[string]string, copys map[string]string) error {
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, FilterLabels: labels, Copy: copys}
+func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force, networkInherit bool, labels map[string]string, copys map[string]string) error {
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, Networkinherit: networkInherit, FilterLabels: labels, Copy: copys}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)

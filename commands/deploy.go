@@ -52,10 +52,13 @@ func deployContainers(c *cli.Context) error {
 		resp, err := client.ListContainers(context.Background(), lsOpts)
 		if err != nil {
 			log.Warnf("[Deploy] check container failed %v", err)
-		} else {
-			if len(resp.Containers) > 0 {
-				return doReplaceContainer(client, deployOpts, true, nil, nil)
+		} else if len(resp.Containers) > 0 {
+			// 强制继承网络
+			networkInherit := true
+			if network != "" {
+				networkInherit = false
 			}
+			return doReplaceContainer(client, deployOpts, true, networkInherit, nil, nil)
 		}
 	}
 

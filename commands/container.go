@@ -142,6 +142,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "run simultaneously",
 						Value: 1,
 					},
+					&cli.BoolFlag{
+						Name:  "network-inherit",
+						Usage: "use old container network configuration",
+						Value: false,
+					},
 					&cli.StringFlag{
 						Name:  "network",
 						Usage: "SDN name or host mode",
@@ -313,6 +318,9 @@ func getContainers(c *cli.Context) error {
 
 	for _, container := range resp.GetContainers() {
 		log.Infof("ID: %s, Name: %s, Pod: %s, Node: %s", container.GetId(), container.GetName(), container.GetPodname(), container.GetNodename())
+		for networkName, IP := range container.Publish {
+			log.Infof("Publish at %s ip %s", networkName, IP)
+		}
 	}
 	return nil
 }
