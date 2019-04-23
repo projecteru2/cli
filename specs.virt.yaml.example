@@ -1,0 +1,4 @@
+appname: "rds"
+entrypoints:
+  devel:
+    name: "devel"

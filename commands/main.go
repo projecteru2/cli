@@ -15,6 +15,7 @@ var (
 	eru      string
 	username string
 	password string
+	virt     bool
 )
 
 const (
@@ -73,6 +74,13 @@ func GlobalFlags() []cli.Flag {
 			Value:       "",
 			EnvVars:     []string{"ERU_PASSWORD"},
 			Destination: &password,
+		},
+		&cli.BoolFlag{
+			Name: "virt",
+			Usage: "virt. mode",
+			Aliases: []string{"r"},
+			Value: false,
+			Destination: &virt,
 		},
 	}
 }
