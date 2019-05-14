@@ -23,6 +23,7 @@ const (
 	nodeArgsUsage      = "nodename"
 	specFileURI        = "<spec file uri>"
 	copyArgsUsage      = "containerID:path1,path2,...,pathn"
+	sendArgsUsage      = "path1,path2,...pathn"
 )
 
 func setupLog(l string) error {

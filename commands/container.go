@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
@@ -82,7 +83,7 @@ func ContainerCommand() *cli.Command {
 			},
 			&cli.Command{
 				Name:      "copy",
-				Usage:     "copy container(s)",
+				Usage:     "copy file(s) from container(s)",
 				ArgsUsage: copyArgsUsage,
 				Action:    copyContainers,
 				Flags: []cli.Flag{
@@ -91,6 +92,18 @@ func ContainerCommand() *cli.Command {
 						Usage:   "where to store",
 						Aliases: []string{"d"},
 						Value:   "/tmp",
+					},
+				},
+			},
+			&cli.Command{
+				Name:      "send",
+				Usage:     "send file(s) to container(s)",
+				ArgsUsage: sendArgsUsage,
+				Action:    sendContainers,
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "file",
+						Usage: "copy local files to container, can use multiple times. src_path:dst_path",
 					},
 				},
 			},
@@ -448,6 +461,40 @@ func copyContainers(c *cli.Context) error {
 			log.Errorf("[Copy] Write file error %v", err)
 		}
 	}
+	return nil
+}
+
+func sendContainers(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	fileData := utils.GetFilesStream(c.StringSlice("file"))
+	containerIDs := c.Args().Slice()
+	opts := &pb.SendOptions{Ids: containerIDs, Data: fileData}
+	resp, err := client.Send(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Err != "" {
+			log.Errorf("[Send] Failed send %s to %s", msg.Path, msg.Id)
+		} else {
+			log.Infof("[Send] Send %s to %s success", msg.Path, msg.Id)
+		}
+	}
+
 	return nil
 }
 
