@@ -163,7 +163,7 @@ func ContainerCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "network",
 						Usage: "SDN name or host mode",
-						Value: "host",
+						//						Value: "host",
 					},
 					&cli.StringSliceFlag{
 						Name:  "env",
@@ -308,9 +308,9 @@ func removeContainers(c *cli.Context) error {
 		}
 
 		if msg.Success {
-			log.Infof("[RemoveContainer] %s Success", coreutils.ShortID(msg.Id))
+			log.Infof("[RemoveContainer] %s Success", msg.Id)
 		} else {
-			log.Errorf("[RemoveContainer] %s Failed", coreutils.ShortID(msg.Id))
+			log.Errorf("[RemoveContainer] %s Failed", msg.Id)
 		}
 		if msg.Hook != "" {
 			log.Info(msg.Hook)
