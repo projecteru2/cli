@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	pb "github.com/projecteru2/core/rpc/gen"
-	corescheduler "github.com/projecteru2/core/scheduler"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -31,11 +30,6 @@ func PodCommand() *cli.Command {
 				ArgsUsage: podArgsUsage,
 				Action:    addPod,
 				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "favor",
-						Usage: "favor of pod, CPU | MEM",
-						Value: "MEM",
-					},
 					&cli.StringFlag{
 						Name:  "desc",
 						Usage: "description of pod",
@@ -92,7 +86,7 @@ func listPods(c *cli.Context) error {
 	}
 
 	for _, pod := range resp.GetPods() {
-		log.Infof("Name: %s, Desc: %s, Favor: %s", pod.GetName(), pod.GetDesc(), pod.GetFavor())
+		log.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
 	}
 	return nil
 }
@@ -103,17 +97,11 @@ func addPod(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	favor := c.String("favor")
 	desc := c.String("desc")
 
-	if favor != corescheduler.MemoryPrior && favor != corescheduler.CPUPrior {
-		return fmt.Errorf("favor must be MEM/CPU, got %s", favor)
-	}
-
 	pod, err := client.AddPod(context.Background(), &pb.AddPodOptions{
-		Name:  name,
-		Favor: favor,
-		Desc:  desc,
+		Name: name,
+		Desc: desc,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)

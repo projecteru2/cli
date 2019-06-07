@@ -10,12 +10,11 @@ require (
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/projecteru2/agent v0.0.0-20180924035053-5829aad062c6
-	github.com/projecteru2/core v0.0.0-20190403035719-e2ec551d8427
+	github.com/projecteru2/core v0.0.0-20190403035719-d3beafa7dc25
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
-	github.com/sirupsen/logrus v1.2.0
-	github.com/stretchr/testify v1.3.0 // indirect
+	github.com/sirupsen/logrus v1.4.2
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
-	golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+	golang.org/x/net v0.0.0-20190503192946-f4e77d36d62c
 	gopkg.in/urfave/cli.v2 v2.0.0-20180128182452-d3ae77c26ac8
-	gopkg.in/yaml.v2 v2.2.1
+	gopkg.in/yaml.v2 v2.2.2
 )

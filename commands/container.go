@@ -79,6 +79,12 @@ func ContainerCommand() *cli.Command {
 						Aliases: []string{"f"},
 						Value:   false,
 					},
+					&cli.IntFlag{
+						Name:    "step",
+						Usage:   "concurrent remove step",
+						Aliases: []string{"s"},
+						Value:   1,
+					},
 				},
 			},
 			&cli.Command{
@@ -280,6 +286,11 @@ func ContainerCommand() *cli.Command {
 						Name:  "auto-replace",
 						Usage: "create or replace automatically",
 					},
+					&cli.BoolFlag{
+						Name:  "cpu-bind",
+						Usage: "bind cpu or not",
+						Value: false,
+					},
 				},
 			},
 		},
@@ -291,7 +302,7 @@ func removeContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.RemoveContainerOptions{Ids: c.Args().Slice(), Force: c.Bool("force")}
+	opts := &pb.RemoveContainerOptions{Ids: c.Args().Slice(), Force: c.Bool("force"), Step: int32(c.Int("step"))}
 
 	resp, err := client.RemoveContainer(context.Background(), opts)
 	if err != nil {
@@ -355,6 +366,11 @@ func listContainers(c *cli.Context) error {
 
 	for _, container := range resp.Containers {
 		log.Infof("%s: %s", container.Name, container.Id)
+		if !container.Verification {
+			log.Errorf("Container not exists on node %s", container.Nodename)
+			log.Error("Use `fix container <CONTAINER_ID>` to fix it")
+			continue
+		}
 		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
 		if len(container.Publish) > 0 {
 			for nname, network := range container.Publish {
