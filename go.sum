@@ -106,6 +106,10 @@ github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZN
 github.com/pquerna/ffjson v0.0.0-20181028064349-e517b90714f7/go.mod h1:YARuvh7BUWHNhzDq2OM5tzR2RiCcN2D7sapiKyCel/M=
 github.com/projecteru2/agent v0.0.0-20180924035053-5829aad062c6 h1:uqT2xVlovAEtibzClDlysVn5fldJbZnjAe3/QzRzEXQ=
 github.com/projecteru2/agent v0.0.0-20180924035053-5829aad062c6/go.mod h1:5/W/ozBtjWqLfjLNJEC+PfT4ZHjm96b3UdE2zRPfY88=
+github.com/projecteru2/core v0.0.0-20190403035719-15e43a6b8af1 h1:vH7vGyfkUkfiLd850vgpW7bk6HUt0IODIt52pGsn43s=
+github.com/projecteru2/core v0.0.0-20190403035719-15e43a6b8af1/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
+github.com/projecteru2/core v0.0.0-20190403035719-c1bb6e35126c h1:qQWMBPNvbcp9lkY3dL6E72w3FsgZID3rYgVtAzC/ua0=
+github.com/projecteru2/core v0.0.0-20190403035719-c1bb6e35126c/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
 github.com/projecteru2/core v0.0.0-20190403035719-d3beafa7dc25 h1:pGhfw5rHzOnjxCryLjKAXE4JmemgotqWBrxD+5SC4cs=
 github.com/projecteru2/core v0.0.0-20190403035719-d3beafa7dc25/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
 github.com/projecteru2/core v0.0.0-20190403035719-e2ec551d8427 h1:4cxrvuPG3tIL0GZ/Tp6iCiekOpMYCtByXPjuixPAfdU=

@@ -255,37 +255,45 @@ func NodeCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "ca",
-						Usage: "ca file of docker server, default to /etc/docker/tls/ca.crt",
+						Usage: "ca file of docker server, like /etc/docker/tls/ca.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
 						Name:  "cert",
-						Usage: "cert file of docker server, default to /etc/docker/tls/client.crt",
+						Usage: "cert file of docker server, like /etc/docker/tls/client.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
 						Name:  "key",
-						Usage: "key file of docker server, default to /etc/docker/tls/client.key",
+						Usage: "key file of docker server, like /etc/docker/tls/client.key",
 						Value: "",
 					},
 					&cli.IntFlag{
-						Name:  "cpu",
-						Usage: "cpu count",
-						Value: 0,
+						Name:        "cpu",
+						Usage:       "cpu count",
+						DefaultText: "total cpu",
 					},
 					&cli.IntFlag{
-						Name:  "share",
-						Usage: "share count",
-						Value: 0,
+						Name:        "share",
+						Usage:       "share count",
+						DefaultText: "defined in core",
 					},
 					&cli.Int64Flag{
-						Name:  "memory",
-						Usage: "memory in Bytes",
-						Value: 0,
+						Name:        "memory",
+						Usage:       "memory in bytes",
+						DefaultText: "total memory * 0.8",
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
 						Usage: "add label for node, like a=1 b=2, can set multiple times",
+					},
+					&cli.StringSliceFlag{
+						Name:  "numa-cpu",
+						Usage: "numa cpu list, can set multiple times, use comma separated",
+					},
+					&cli.Int64SliceFlag{
+						Name:  "numa-memory",
+						Usage: "numa memory, can set multiple times. if not set, it will count numa-cpu groups, and divided by total memory",
 					},
 				},
 			},
@@ -335,6 +343,9 @@ func getNode(c *cli.Context) error {
 	}
 	log.Infof("CPU Used: %f", node.GetCpuUsed())
 	log.Infof("Memory Used: %d bytes", node.GetMemoryUsed())
+	for nodeID, memory := range node.GetNumaMemory() {
+		log.Infof("Memory Node: %s Capacity %d bytes", nodeID, memory)
+	}
 	return nil
 }
 
@@ -489,6 +500,23 @@ func addNode(c *cli.Context) error {
 
 	cpu := c.Int("cpu")
 	memory := c.Int64("memory")
+	numaList := c.StringSlice("numa-cpu")
+	numaMemoryList := c.Int64Slice("numa-memory")
+
+	numa := map[string]string{}
+	numaMemory := map[string]int64{}
+
+	for index, cpuList := range numaList {
+		nodeID := fmt.Sprintf("%d", index)
+		for _, cpuID := range strings.Split(cpuList, ",") {
+			numa[cpuID] = nodeID
+		}
+	}
+
+	for index, memory := range numaMemoryList {
+		nodeID := fmt.Sprintf("%d", index)
+		numaMemory[nodeID] = memory
+	}
 
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("label") {
@@ -505,16 +533,18 @@ func addNode(c *cli.Context) error {
 	}
 
 	resp, err := client.AddNode(context.Background(), &pb.AddNodeOptions{
-		Nodename: nodename,
-		Endpoint: endpoint,
-		Podname:  podname,
-		Ca:       caContent,
-		Cert:     certContent,
-		Key:      keyContent,
-		Cpu:      int32(cpu),
-		Share:    int32(share),
-		Memory:   memory,
-		Labels:   labels,
+		Nodename:   nodename,
+		Endpoint:   endpoint,
+		Podname:    podname,
+		Ca:         caContent,
+		Cert:       certContent,
+		Key:        keyContent,
+		Cpu:        int32(cpu),
+		Share:      int32(share),
+		Memory:     memory,
+		Labels:     labels,
+		Numa:       numa,
+		NumaMemory: numaMemory,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
