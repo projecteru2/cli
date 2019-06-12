@@ -114,6 +114,12 @@ func ContainerCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
+				Name:      "dissociate",
+				Usage:     "Dissociate container(s) from eru, return it resource but not remove it",
+				ArgsUsage: containerArgsUsage,
+				Action:    dissociateContainers,
+			},
+			&cli.Command{
 				Name:      "realloc",
 				Usage:     "realloc containers resource",
 				ArgsUsage: containerArgsUsage,
@@ -508,6 +514,40 @@ func sendContainers(c *cli.Context) error {
 			log.Errorf("[Send] Failed send %s to %s", msg.Path, msg.Id)
 		} else {
 			log.Infof("[Send] Send %s to %s success", msg.Path, msg.Id)
+		}
+	}
+
+	return nil
+}
+
+func dissociateContainers(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	containerIDs := c.Args().Slice()
+
+	opts := &pb.DissociateContainerOptions{Ids: containerIDs}
+	resp, err := client.DissociateContainer(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Success {
+			log.Infof("[Dissociate] Dissociate container %s from eru success", msg.Id)
+		} else {
+			log.Infof("[Dissociate] Dissociate container %s from eru failed", msg.Id)
 		}
 	}
 

@@ -110,6 +110,8 @@ github.com/projecteru2/core v0.0.0-20190403035719-15e43a6b8af1 h1:vH7vGyfkUkfiLd
 github.com/projecteru2/core v0.0.0-20190403035719-15e43a6b8af1/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
 github.com/projecteru2/core v0.0.0-20190403035719-6e2d86c4db98 h1:Pyd3ip88XwU6nqguCqMwX6DLY3JCZbpn8b54uCbK4nY=
 github.com/projecteru2/core v0.0.0-20190403035719-6e2d86c4db98/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
+github.com/projecteru2/core v0.0.0-20190403035719-be460dd44421 h1:iaAyCYjVROHPaPtgG2DvvdLePaaCD+cvdA9ln1D/nbU=
+github.com/projecteru2/core v0.0.0-20190403035719-be460dd44421/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
 github.com/projecteru2/core v0.0.0-20190403035719-c1bb6e35126c h1:qQWMBPNvbcp9lkY3dL6E72w3FsgZID3rYgVtAzC/ua0=
 github.com/projecteru2/core v0.0.0-20190403035719-c1bb6e35126c/go.mod h1:X3zaHnn6gOUgARldS85FTHoQh6rVO+9wpcJ4ZHHF7DY=
 github.com/projecteru2/core v0.0.0-20190403035719-c6b56e0d0b22 h1:YFhjq3ai0ECN16N5G8tkegmaupy3h6qmZFwbgnHKw5A=
