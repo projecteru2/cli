@@ -143,14 +143,14 @@ func podResource(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	log.Infof("[PodResource] Pod %s", r.Name)
-	for nodename, percent := range r.Cpu {
-		log.Infof("[PodResource] Node %s Cpu %f%% Memory %f%%", nodename, percent*100, r.Memory[nodename]*100)
+	for nodename, percent := range r.CpuPercents {
+		log.Infof("[PodResource] Node %s Cpu %f%% Memory %f%%", nodename, percent*100, r.MemoryPercents[nodename]*100)
 	}
-	for nodename, diff := range r.Diff {
-		if diff {
+	for nodename, verification := range r.Verifications {
+		if verification {
 			continue
 		}
-		log.Warnf("[PodResource] Node %s resource diff %s", nodename, r.Detail[nodename])
+		log.Warnf("[PodResource] Node %s resource diff %s", nodename, r.Details[nodename])
 	}
 	return nil
 }
@@ -233,6 +233,18 @@ func NodeCommand() *cli.Command {
 						Name:  "available",
 						Usage: "availability",
 						Value: true,
+					},
+				},
+			},
+			&cli.Command{
+				Name:      "resource",
+				Usage:     "check node resource",
+				ArgsUsage: nodeArgsUsage,
+				Action:    nodeResource,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "podname",
+						Usage: "pod name",
 					},
 				},
 			},
@@ -553,6 +565,34 @@ func addNode(c *cli.Context) error {
 	log.Infof("%s add %s at %s", podname, nodename, resp.Endpoint)
 	for k, v := range resp.Labels {
 		log.Infof("%s: %s", k, v)
+	}
+	return nil
+}
+
+func nodeResource(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	nodename := c.Args().First()
+	podname := c.String("podname")
+	if podname == "" {
+		log.Fatal("[NodeResource] no pod name")
+	}
+
+	r, err := client.GetNodeResource(context.Background(), &pb.GetNodeOptions{
+		Podname: podname, Nodename: nodename,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	log.Infof("[NodeResource] Node %s", r.Name)
+	log.Infof("[NodeResource] Cpu %f%% Memory %f%%", r.CpuPercent*100, r.MemoryPercent*100)
+	if !r.Verification {
+		for _, detail := range r.Details {
+			log.Warnf("[PodResource] Resource diff %s", detail)
+		}
 	}
 	return nil
 }

@@ -389,7 +389,7 @@ func reallocContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Mem: c.Int64("mem")}
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: c.Int64("mem")}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
