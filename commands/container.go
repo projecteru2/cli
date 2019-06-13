@@ -544,10 +544,10 @@ func dissociateContainers(c *cli.Context) error {
 			return cli.Exit(err, -1)
 		}
 
-		if msg.Success {
+		if msg.Error == "" {
 			log.Infof("[Dissociate] Dissociate container %s from eru success", msg.Id)
 		} else {
-			log.Infof("[Dissociate] Dissociate container %s from eru failed", msg.Id)
+			log.Errorf("[Dissociate] Dissociate container %s from eru failed %v", msg.Id, msg.Error)
 		}
 	}
 
