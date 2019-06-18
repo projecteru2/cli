@@ -45,6 +45,10 @@ func ImageCommand() *cli.Command {
 						Value:       "",
 						DefaultText: "root",
 					},
+					&cli.StringFlag{
+						Name:  "stop-signal",
+						Usage: "customize stop signal",
+					},
 					&cli.IntFlag{
 						Name:        "uid",
 						Usage:       "uid of image",
@@ -230,6 +234,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		log.Fatal("[Build] no spec")
 	}
 	raw := c.Bool("raw")
+	stopSignal := c.String("stop-signal")
 	var specs *pb.Builds
 	var tar []byte
 	if !raw {
@@ -255,6 +260,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 			for k, v := range b.Envs {
 				b.Envs[k] = utils.ParseEnvValue(v)
 			}
+			b.StopSignal = stopSignal
 		}
 	} else {
 		path := c.Args().First()
