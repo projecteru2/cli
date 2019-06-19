@@ -144,7 +144,7 @@ func podResource(c *cli.Context) error {
 	}
 	log.Infof("[PodResource] Pod %s", r.Name)
 	for nodename, percent := range r.CpuPercents {
-		log.Infof("[PodResource] Node %s Cpu %f%% Memory %f%%", nodename, percent*100, r.MemoryPercents[nodename]*100)
+		log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%%", nodename, percent*100, r.MemoryPercents[nodename]*100, r.StoragePercents[nodename]*100)
 	}
 	for nodename, verification := range r.Verifications {
 		if verification {
@@ -298,7 +298,10 @@ func NodeCommand() *cli.Command {
 					&cli.Int64Flag{
 						Name:        "memory",
 						Usage:       "memory in bytes",
-						DefaultText: "total memory * 0.8",
+					},
+					&cli.Int64Flag{
+						Name:        "storage",
+						Usage:       "storage in bytes",
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
@@ -362,10 +365,16 @@ func getNode(c *cli.Context) error {
 	for k, v := range node.GetLabels() {
 		log.Infof("%s: %s", k, v)
 	}
-	log.Infof("CPU Used: %f", node.GetCpuUsed())
+	log.Infof("CPU Used: %.2f", node.GetCpuUsed())
 	log.Infof("Memory Used: %d bytes", node.GetMemoryUsed())
 	for nodeID, memory := range node.GetNumaMemory() {
 		log.Infof("Memory Node: %s Capacity %d bytes", nodeID, memory)
+	}
+
+	if node.GetInitStorage() > 0 {
+		log.Infof("Storage Used: %d bytes", node.GetStorageUsed())
+	} else {
+		log.Infof("Storage Used: %d bytes (unlimited)", node.GetStorageUsed())
 	}
 	return nil
 }
@@ -521,6 +530,7 @@ func addNode(c *cli.Context) error {
 
 	cpu := c.Int("cpu")
 	memory := c.Int64("memory")
+	storage := c.Int64("storage")
 	numaList := c.StringSlice("numa-cpu")
 	numaMemoryList := c.Int64Slice("numa-memory")
 
@@ -563,6 +573,7 @@ func addNode(c *cli.Context) error {
 		Cpu:        int32(cpu),
 		Share:      int32(share),
 		Memory:     memory,
+		Storage:    storage,
 		Labels:     labels,
 		Numa:       numa,
 		NumaMemory: numaMemory,
@@ -597,7 +608,7 @@ func nodeResource(c *cli.Context) error {
 	}
 
 	log.Infof("[NodeResource] Node %s", r.Name)
-	log.Infof("[NodeResource] Cpu %f%% Memory %f%%", r.CpuPercent*100, r.MemoryPercent*100)
+	log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100)
 	if !r.Verification {
 		for _, detail := range r.Details {
 			log.Warnf("[PodResource] Resource diff %s", detail)
