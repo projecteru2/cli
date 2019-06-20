@@ -210,6 +210,12 @@ func NodeCommand() *cli.Command {
 				Usage:     "get a node",
 				ArgsUsage: nodeArgsUsage,
 				Action:    getNode,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "podname",
+						Usage: "which podname",
+					},
+				},
 			},
 			&cli.Command{
 				Name:      "remove",
@@ -340,8 +346,12 @@ func getNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Podname:  "",
+	podname := c.String("podname")
+	if podname == "" {
+		log.Fatal("[GetNode] need a podname")
+	}
+	node, err := client.GetNode(context.Background(), &pb.GetNodeOptions{
+		Podname:  podname,
 		Nodename: name,
 	})
 	if err != nil {
