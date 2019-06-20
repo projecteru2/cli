@@ -30,6 +30,12 @@ func ContainerCommand() *cli.Command {
 				Action:    getContainers,
 			},
 			&cli.Command{
+				Name:      "log",
+				Usage:     "get container log",
+				ArgsUsage: "containerID",
+				Action:    getContainerLog,
+			},
+			&cli.Command{
 				Name:      "list",
 				Usage:     "list container(s) by appname",
 				ArgsUsage: "[appname]",
@@ -420,6 +426,37 @@ func reallocContainers(c *cli.Context) error {
 	return nil
 }
 
+func getContainerLog(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	opts := &pb.ContainerID{Id: c.Args().First()}
+	resp, err := client.LogStream(context.Background(), opts)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	for {
+		msg, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+
+		if msg.Error != "" {
+			log.Errorf("[GetContainerLog] Failed %s %s", coreutils.ShortID(msg.Id), msg.Error)
+			continue
+		}
+
+		log.Infof("[GetContainerLog] %s", string(msg.Data))
+	}
+	return nil
+}
+
 func copyContainers(c *cli.Context) error {
 	client, err := checkParamsAndGetClient(c)
 	if err != nil {
@@ -510,7 +547,7 @@ func sendContainers(c *cli.Context) error {
 			return cli.Exit(err, -1)
 		}
 
-		if msg.Err != "" {
+		if msg.Error != "" {
 			log.Errorf("[Send] Failed send %s to %s", msg.Path, msg.Id)
 		} else {
 			log.Infof("[Send] Send %s to %s success", msg.Path, msg.Id)

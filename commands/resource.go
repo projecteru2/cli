@@ -232,7 +232,6 @@ func NodeCommand() *cli.Command {
 					&cli.BoolFlag{
 						Name:  "available",
 						Usage: "availability",
-						Value: true,
 					},
 				},
 			},
