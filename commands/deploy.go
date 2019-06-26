@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
 	autoReplace := c.Bool("auto-replace")
-	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit, nodesLimit, cpubind := getDeployParams(c)
+	pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -41,7 +41,7 @@ func deployContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit, cpubind, nodesLimit)
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, envs, count, nodeLabels, deployMethod, files, user, debug, softlimit, cpubind, ignoreHook, nodesLimit)
 	if autoReplace {
 		lsOpts := &pb.ListContainersOptions{
 			Appname:    deployOpts.Name,
@@ -95,7 +95,7 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string, bool, bool, int, bool) {
+func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, []string, int32, map[string]string, string, []string, string, bool, bool, int, bool, bool) {
 	pod := c.String("pod")
 	node := c.String("node")
 	entry := c.String("entry")
@@ -117,10 +117,11 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	}
 	nodesLimit := c.Int("nodes-limit")
 	cpubind := c.Bool("cpu-bind")
-	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user, debug, softlimit, nodesLimit, cpubind
+	ignoreHook := c.Bool("ignore-hook")
+	return pod, node, entry, image, network, cpu, mem, envs, count, labels, deployMethod, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string, debug, softlimit, cpubind bool, nodesLimit int) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem int64, envs []string, count int32, nodeLabels map[string]string, deployMethod string, files []string, user string, debug, softlimit, cpubind, ignoreHook bool, nodesLimit int) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -137,6 +138,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		hook.AfterStart = entrypoint.Hook.AfterStart
 		hook.BeforeStop = entrypoint.Hook.BeforeStop
 		hook.Force = entrypoint.Hook.Force
+		hook.Once = entrypoint.Hook.Once
 	}
 
 	var healthCheck *pb.HealthCheckOptions
@@ -192,6 +194,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 		SoftLimit:    softlimit,
 		NodesLimit:   int32(nodesLimit),
 		CpuBind:      cpubind,
+		IgnoreHook:   ignoreHook,
 	}
 	return opts
 }

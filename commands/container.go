@@ -60,18 +60,42 @@ func ContainerCommand() *cli.Command {
 				Usage:     "stop container(s)",
 				ArgsUsage: containerArgsUsage,
 				Action:    stopContainers,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "force",
+						Usage:   "force to stop",
+						Aliases: []string{"f"},
+						Value:   false,
+					},
+				},
 			},
 			&cli.Command{
 				Name:      "start",
 				Usage:     "start container(s)",
 				ArgsUsage: containerArgsUsage,
 				Action:    startContainers,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "force",
+						Usage:   "force to start",
+						Aliases: []string{"f"},
+						Value:   false,
+					},
+				},
 			},
 			&cli.Command{
 				Name:      "restart",
 				Usage:     "restart container(s)",
 				ArgsUsage: containerArgsUsage,
 				Action:    restartContainers,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "force",
+						Usage:   "force to restart",
+						Aliases: []string{"f"},
+						Value:   false,
+					},
+				},
 			},
 			&cli.Command{
 				Name:      "remove",
@@ -81,7 +105,7 @@ func ContainerCommand() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "force",
-						Usage:   "ignore or not before stop hook if it was setted and force check",
+						Usage:   "force to remove",
 						Aliases: []string{"f"},
 						Value:   false,
 					},
@@ -210,7 +234,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.BoolFlag{
 						Name:    "force",
-						Usage:   "ignore or not before stop hook if it was setted and force check",
+						Usage:   "force to replace",
 						Aliases: []string{"f"},
 						Value:   false,
 					},
@@ -303,6 +327,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "bind cpu or not",
 						Value: false,
 					},
+					&cli.BoolFlag{
+						Name:  "ignore-hook",
+						Usage: "ignore hook process",
+						Value: false,
+					},
 				},
 			},
 		},
@@ -315,7 +344,9 @@ func removeContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	opts := &pb.RemoveContainerOptions{Ids: c.Args().Slice(), Force: c.Bool("force"), Step: int32(c.Int("step"))}
-
+	if opts.Force {
+		log.Warn("If container not stopped, force to remove will not trigger hook process if set")
+	}
 	resp, err := client.RemoveContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -608,7 +639,10 @@ func doControlContainers(c *cli.Context, t string) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.ControlContainerOptions{Ids: c.Args().Slice(), Type: t}
+	opts := &pb.ControlContainerOptions{
+		Ids: c.Args().Slice(), Type: t,
+		Force: c.Bool("force"),
+	}
 	resp, err := client.ControlContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)

@@ -20,7 +20,7 @@ func replaceContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
-	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _, _, _ := getDeployParams(c)
+	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _, _, _, _ := getDeployParams(c)
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}
@@ -44,7 +44,7 @@ func replaceContainers(c *cli.Context) error {
 		log.Warnf("[Replace] Network is not empty, so network-inherit will set to false")
 		networkInherit = false
 	}
-	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, false, 0)
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, false, false, 0)
 	return doReplaceContainer(client, deployOpts, force, networkInherit, labels, copys)
 }
 
