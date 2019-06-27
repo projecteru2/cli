@@ -233,10 +233,13 @@ func ContainerCommand() *cli.Command {
 						Usage: "enable debug mode for container send their logs to default log driver",
 					},
 					&cli.BoolFlag{
-						Name:    "force",
-						Usage:   "force to replace",
-						Aliases: []string{"f"},
-						Value:   false,
+						Name:  "ignore-hook",
+						Usage: "ignore-hook result",
+						Value: false,
+					},
+					&cli.StringSliceFlag{
+						Name:  "after-create",
+						Usage: "run commands after create",
 					},
 				},
 			},
@@ -304,6 +307,10 @@ func ContainerCommand() *cli.Command {
 					&cli.StringSliceFlag{
 						Name:  "file",
 						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+					},
+					&cli.StringSliceFlag{
+						Name:  "after-create",
+						Usage: "run commands after create",
 					},
 					&cli.BoolFlag{
 						Name:  "debug",

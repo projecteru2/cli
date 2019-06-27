@@ -20,7 +20,7 @@ func replaceContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
-	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _, _, _, _ := getDeployParams(c)
+	pod, node, entry, image, network, _, _, envs, count, _, _, files, user, debug, _, _, _, ignoreHook, afterCreate := getDeployParams(c)
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}
@@ -36,7 +36,6 @@ func replaceContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	force := c.Bool("force")
 	labels := makeLabels(c.StringSlice("label"))
 	networkInherit := c.Bool("network-inherit")
 	// fix issue #15
@@ -44,12 +43,12 @@ func replaceContainers(c *cli.Context) error {
 		log.Warnf("[Replace] Network is not empty, so network-inherit will set to false")
 		networkInherit = false
 	}
-	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, false, false, 0)
-	return doReplaceContainer(client, deployOpts, force, networkInherit, labels, copys)
+	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, 0, 0, envs, count, nil, "", files, user, debug, false, false, ignoreHook, 0, afterCreate)
+	return doReplaceContainer(client, deployOpts, networkInherit, labels, copys)
 }
 
-func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, force, networkInherit bool, labels map[string]string, copys map[string]string) error {
-	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Force: force, Networkinherit: networkInherit, FilterLabels: labels, Copy: copys}
+func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, networkInherit bool, labels map[string]string, copys map[string]string) error {
+	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Networkinherit: networkInherit, FilterLabels: labels, Copy: copys}
 	resp, err := client.ReplaceContainer(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
