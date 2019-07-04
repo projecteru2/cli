@@ -230,7 +230,7 @@ func NodeCommand() *cli.Command {
 				Action:    listNodeContainers,
 			},
 			&cli.Command{
-				Name:      "available",
+				Name:      "set-status",
 				Usage:     "set availability for a node",
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNodeAvailable,
@@ -296,12 +296,12 @@ func NodeCommand() *cli.Command {
 						DefaultText: "defined in core",
 					},
 					&cli.Int64Flag{
-						Name:        "memory",
-						Usage:       "memory in bytes",
+						Name:  "memory",
+						Usage: "memory in bytes",
 					},
 					&cli.Int64Flag{
-						Name:        "storage",
-						Usage:       "storage in bytes",
+						Name:  "storage",
+						Usage: "storage in bytes",
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
