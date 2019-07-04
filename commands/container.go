@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	agenttypes "github.com/projecteru2/agent/types"
+	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -394,17 +394,17 @@ func getContainers(c *cli.Context) error {
 
 	for _, container := range resp.GetContainers() {
 		log.Infof("ID: %s, Name: %s, Pod: %s, Node: %s", container.GetId(), container.GetName(), container.GetPodname(), container.GetNodename())
-		agentContainerView := &agenttypes.Container{}
-		if err := json.Unmarshal(container.StatusData, agentContainerView); err != nil {
+		containerDetail := &types.Container{Nodename: container.GetNodename()}
+		if err := json.Unmarshal(container.StatusData, containerDetail); err != nil {
 			log.Errorf("Can't get container status %v", err)
 		}
-		if agentContainerView.Running {
+		if containerDetail.Running {
 			log.Info("Container is Running")
 		}
-		if agentContainerView.Healthy {
+		if containerDetail.Healthy {
 			log.Info("Container is Healthy")
 		}
-		if !agentContainerView.Running || !agentContainerView.Healthy {
+		if !containerDetail.Running || !containerDetail.Healthy {
 			log.Warn("Container is not running or healthy")
 		}
 		for networkName, IP := range container.Publish {
