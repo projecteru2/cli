@@ -37,7 +37,7 @@ func status(c *cli.Context) error {
 			break
 		}
 
-		if err != nil {
+		if err != nil || msg == nil {
 			cli.Exit("", -1)
 		}
 
