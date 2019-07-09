@@ -10,7 +10,7 @@ require (
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/projecteru2/agent v0.0.0-20180924035053-5829aad062c6
-	github.com/projecteru2/core v0.0.0-20190627041501-c2faba5da716
+	github.com/projecteru2/core v0.0.0-20190709082849-8cfb8745e66c
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect

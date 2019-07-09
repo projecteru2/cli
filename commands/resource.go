@@ -5,7 +5,10 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
+	"strconv"
 	"strings"
+
+	"github.com/projecteru2/core/cluster"
 
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
@@ -230,26 +233,52 @@ func NodeCommand() *cli.Command {
 				Action:    listNodeContainers,
 			},
 			&cli.Command{
-				Name:      "set-status",
-				Usage:     "set availability for a node",
+				Name:      "up",
+				Usage:     "set node up",
 				ArgsUsage: nodeArgsUsage,
-				Action:    setNodeAvailable,
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "available",
-						Usage: "availability",
-					},
-				},
+				Action:    setNodeUp,
+			},
+			&cli.Command{
+				Name:      "down",
+				Usage:     "set node down",
+				ArgsUsage: nodeArgsUsage,
+				Action:    setNodeDown,
 			},
 			&cli.Command{
 				Name:      "resource",
 				Usage:     "check node resource",
 				ArgsUsage: nodeArgsUsage,
 				Action:    nodeResource,
+			},
+			&cli.Command{
+				Name:      "set",
+				Usage:     "set node resource",
+				ArgsUsage: nodeArgsUsage,
+				Action:    setNode,
 				Flags: []cli.Flag{
+					&cli.Int64Flag{
+						Name:  "delta-memory",
+						Usage: "memory changes in bytes",
+					},
+					&cli.Int64Flag{
+						Name:  "delta-storage",
+						Usage: "storage changes in bytes",
+					},
 					&cli.StringFlag{
-						Name:  "podname",
-						Usage: "pod name",
+						Name:  "delta-cpu",
+						Usage: "cpu changes in string, like 0:100,1:200,3:50",
+					},
+					&cli.Int64SliceFlag{
+						Name:  "delta-numa-memory",
+						Usage: "numa memory changes, can set multiple times",
+					},
+					&cli.StringSliceFlag{
+						Name:  "numa-cpu",
+						Usage: "numa cpu list, can set multiple times, use comma separated",
+					},
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "add label for node, like a=1 b=2, can set multiple times",
 					},
 				},
 			},
@@ -349,12 +378,8 @@ func getNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	podname := c.String("podname")
-	if podname == "" {
-		log.Fatal("[GetNode] need a podname")
-	}
-	node, err := client.GetNode(context.Background(), &pb.GetNodeOptions{
-		Podname:  podname,
+
+	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
 		Nodename: name,
 	})
 	if err != nil {
@@ -386,7 +411,6 @@ func removeNode(c *cli.Context) error {
 	}
 	name := c.Args().First()
 	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Podname:  "",
 		Nodename: name,
 	})
 	if err != nil {
@@ -404,31 +428,129 @@ func removeNode(c *cli.Context) error {
 	return nil
 }
 
-func setNodeAvailable(c *cli.Context) error {
+func setNode(c *cli.Context) error {
 	client, err := checkParamsAndGetClient(c)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	available := c.Bool("available")
 
 	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Podname:  "",
 		Nodename: name,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 
-	_, err = client.SetNodeAvailable(context.Background(), &pb.NodeAvailable{
-		Podname:   node.Podname,
-		Nodename:  node.Name,
-		Available: available,
+	numaMemoryList := c.Int64Slice("delta-numa-memory")
+	numaMemory := map[string]int64{}
+
+	for index, memory := range numaMemoryList {
+		nodeID := fmt.Sprintf("%d", index)
+		numaMemory[nodeID] = memory
+	}
+
+	numaList := c.StringSlice("numa-cpu")
+	numa := map[string]string{}
+
+	for index, cpuList := range numaList {
+		nodeID := fmt.Sprintf("%d", index)
+		for _, cpuID := range strings.Split(cpuList, ",") {
+			numa[cpuID] = nodeID
+		}
+	}
+
+	labels := map[string]string{}
+	for _, d := range c.StringSlice("label") {
+		parts := strings.SplitN(d, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		labels[parts[0]] = parts[1]
+	}
+
+	cpuList := c.String("delta-cpu")
+	cpuMap := map[string]int32{}
+	if cpuList != "" {
+		cpuMapList := strings.Split(cpuList, ",")
+		for _, cpus := range cpuMapList {
+			cpuConfigs := strings.Split(cpus, ":")
+			share, err := strconv.Atoi(cpuConfigs[1])
+			if err != nil {
+				return cli.Exit(err, -1)
+			}
+			cpuID := cpuConfigs[0]
+			cpuMap[cpuID] = int32(share)
+		}
+	}
+
+	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
+		Podname:         node.Podname,
+		Nodename:        node.Name,
+		Status:          cluster.KeepNodeStatus,
+		DeltaCpu:        cpuMap,
+		DeltaMemory:     c.Int64("delta-memory"),
+		DeltaStorage:    c.Int64("delta-storage"),
+		DeltaNumaMemory: numaMemory,
+		Numa:            numa,
+		Labels:          labels,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	log.Infof("[SetNodeAvailable] success")
+	log.Infof("[SetNode] set node %s success", name)
+	return nil
+}
+
+func setNodeUp(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	name := c.Args().First()
+
+	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
+		Nodename: name,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
+		Podname:  node.Podname,
+		Nodename: node.Name,
+		Status:   cluster.NodeUp,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	log.Infof("[SetNode] node %s up", name)
+	return nil
+}
+
+func setNodeDown(c *cli.Context) error {
+	client, err := checkParamsAndGetClient(c)
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	name := c.Args().First()
+
+	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
+		Nodename: name,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
+		Podname:  node.Podname,
+		Nodename: node.Name,
+		Status:   cluster.NodeDown,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	log.Infof("[SetNode] node %s down", name)
 	return nil
 }
 
@@ -595,13 +717,16 @@ func nodeResource(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	nodename := c.Args().First()
-	podname := c.String("podname")
-	if podname == "" {
-		log.Fatal("[NodeResource] no pod name")
+
+	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
+		Nodename: nodename,
+	})
+	if err != nil {
+		return cli.Exit(err, -1)
 	}
 
 	r, err := client.GetNodeResource(context.Background(), &pb.GetNodeOptions{
-		Podname: podname, Nodename: nodename,
+		Podname: node.Podname, Nodename: node.Name,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
