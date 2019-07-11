@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/docker/go-units"
+
 	"github.com/projecteru2/core/cluster"
 
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -256,9 +258,9 @@ func NodeCommand() *cli.Command {
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNode,
 				Flags: []cli.Flag{
-					&cli.Int64Flag{
+					&cli.StringFlag{
 						Name:  "delta-memory",
-						Usage: "memory changes in bytes",
+						Usage: "memory changes like -1M or 1G, support K, M, G, T",
 					},
 					&cli.Int64Flag{
 						Name:  "delta-storage",
@@ -268,9 +270,9 @@ func NodeCommand() *cli.Command {
 						Name:  "delta-cpu",
 						Usage: "cpu changes in string, like 0:100,1:200,3:50",
 					},
-					&cli.Int64SliceFlag{
+					&cli.StringSliceFlag{
 						Name:  "delta-numa-memory",
-						Usage: "numa memory changes, can set multiple times",
+						Usage: "numa memory changes, can set multiple times, like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringSliceFlag{
 						Name:  "numa-cpu",
@@ -442,12 +444,21 @@ func setNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	numaMemoryList := c.Int64Slice("delta-numa-memory")
+	numaMemoryList := c.StringSlice("delta-numa-memory")
 	numaMemory := map[string]int64{}
 
-	for index, memory := range numaMemoryList {
+	for index, memoryStr := range numaMemoryList {
 		nodeID := fmt.Sprintf("%d", index)
-		numaMemory[nodeID] = memory
+		i := int64(1)
+		if strings.HasSuffix(memoryStr, "-") {
+			i = int64(-1)
+			memoryStr = strings.TrimLeft(memoryStr, "-")
+		}
+		memory, err := units.RAMInBytes(memoryStr)
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		numaMemory[nodeID] = memory * i
 	}
 
 	numaList := c.StringSlice("numa-cpu")
@@ -484,12 +495,26 @@ func setNode(c *cli.Context) error {
 		}
 	}
 
+	var deltaMemory int64
+	deltaMemoryStr := c.String("delta-memory")
+	if deltaMemoryStr != "" {
+		i := int64(1)
+		if strings.HasPrefix(deltaMemoryStr, "-") {
+			i = int64(-1)
+			deltaMemoryStr = strings.TrimLeft(deltaMemoryStr, "-")
+		}
+		if deltaMemory, err = units.RAMInBytes(deltaMemoryStr); err != nil {
+			return cli.Exit(err, -1)
+		}
+		deltaMemory *= i
+	}
+
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 		Podname:         node.Podname,
 		Nodename:        node.Name,
 		Status:          cluster.KeepNodeStatus,
 		DeltaCpu:        cpuMap,
-		DeltaMemory:     c.Int64("delta-memory"),
+		DeltaMemory:     deltaMemory,
 		DeltaStorage:    c.Int64("delta-storage"),
 		DeltaNumaMemory: numaMemory,
 		Numa:            numa,

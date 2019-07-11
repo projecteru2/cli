@@ -5,6 +5,7 @@ go 1.12
 require (
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/docker/docker v0.0.0-20181112142024-a5e2dd2bb141
+	github.com/docker/go-units v0.4.0
 	github.com/ghodss/yaml v1.0.0
 	github.com/gorilla/mux v1.7.0 // indirect
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
