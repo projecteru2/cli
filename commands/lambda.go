@@ -127,7 +127,7 @@ func generateLambdaOpts(
 
 func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string) {
 	if c.NArg() <= 0 {
-		log.Fatal("[Lambda] no commands ")
+		log.Fatal("[Lambda] no commands")
 	}
 	commands := c.Args().Slice()
 	name := c.String("name")
@@ -138,7 +138,11 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	workingDir := c.String("working_dir")
 	image := c.String("image")
 	cpu := c.Float64("cpu")
-	mem := c.Int64("mem")
+	mem, err := parseRAMInHuman(c.String("memory"))
+	if err != nil {
+		log.Fatalf("[Lambda] memory wrong %v", err)
+	}
+
 	count := c.Int("count")
 	stdin := c.Bool("stdin")
 	files := c.StringSlice("file")
@@ -188,10 +192,10 @@ func LambdaCommand() *cli.Command {
 				Usage: "how many cpu",
 				Value: 1.0,
 			},
-			&cli.Int64Flag{
-				Name:  "mem",
-				Usage: "how many memory in bytes",
-				Value: 536870912,
+			&cli.StringFlag{
+				Name:  "memory",
+				Usage: "memory, support K, M, G, T",
+				Value: "512M",
 			},
 			&cli.IntFlag{
 				Name:  "count",

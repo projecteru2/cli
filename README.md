@@ -14,7 +14,7 @@ Modify resources for eru pods / nodes, manipulate containers and images.
 	* `container` subcommands:
 		* `container get {id} ...`
 		* `container remove {id} ...`
-		* `container realloc --cpu {cpu} --mem {mem}`
+		* `container realloc --cpu {cpu} --memory {memory}`
 		* `container deploy`
 	* `pod` subcommands:
 		* `pod list`

@@ -163,11 +163,11 @@ func ContainerCommand() *cli.Command {
 						Aliases: []string{"c"},
 						Value:   1.0,
 					},
-					&cli.Int64Flag{
-						Name:    "mem",
-						Usage:   "memory increment/decrement",
+					&cli.StringFlag{
+						Name:    "memory",
+						Usage:   "memory increment/decrement, like -1M or 1G, support K, M, G, T",
 						Aliases: []string{"m"},
-						Value:   134217728,
+						Value:   "1G",
 					},
 				},
 			},
@@ -283,10 +283,10 @@ func ContainerCommand() *cli.Command {
 						Usage: "how many cpu",
 						Value: 1.0,
 					},
-					&cli.Int64Flag{
-						Name:  "mem",
-						Usage: "how many memory in bytes",
-						Value: 536870912.0,
+					&cli.StringFlag{
+						Name:  "memory",
+						Usage: "how many memory like 1M or 1G, support K, M, G, T",
+						Value: "512M",
 					},
 					&cli.StringSliceFlag{
 						Name:  "env",
@@ -320,7 +320,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.BoolFlag{
 						Name:  "softlimit",
-						Usage: "enable softlmit memory",
+						Usage: "enable memory softlmit",
 					},
 					&cli.IntFlag{
 						Name:  "nodes-limit",
@@ -454,7 +454,12 @@ func reallocContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: c.Int64("mem")}
+	memory, err := parseRAMInHuman(c.String("memory"))
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {

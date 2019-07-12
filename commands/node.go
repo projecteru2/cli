@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/docker/go-units"
-
 	"github.com/projecteru2/core/cluster"
 
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -18,193 +16,7 @@ import (
 	cli "gopkg.in/urfave/cli.v2"
 )
 
-//PodCommand list and add pod
-func PodCommand() *cli.Command {
-	return &cli.Command{
-		Name:  "pod",
-		Usage: "pod commands",
-		Subcommands: []*cli.Command{
-			&cli.Command{
-				Name:   "list",
-				Usage:  "list all pods",
-				Action: listPods,
-			},
-			&cli.Command{
-				Name:      "add",
-				Usage:     "add new pod",
-				ArgsUsage: podArgsUsage,
-				Action:    addPod,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "desc",
-						Usage: "description of pod",
-						Value: "",
-					},
-				},
-			},
-			&cli.Command{
-				Name:      "rm",
-				Usage:     "remove pod",
-				ArgsUsage: podArgsUsage,
-				Action:    removePod,
-			},
-			&cli.Command{
-				Name:      "resource",
-				Usage:     "pod resource usage",
-				ArgsUsage: podArgsUsage,
-				Action:    podResource,
-			},
-			&cli.Command{
-				Name:      "nodes",
-				Usage:     "list all nodes in one pod",
-				ArgsUsage: podArgsUsage,
-				Action:    listPodNodes,
-				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "all",
-						Usage: "list all nodes or just living nodes",
-						Value: false,
-					},
-				},
-			},
-			&cli.Command{
-				Name:      "networks",
-				Usage:     "list all networks in one pod",
-				ArgsUsage: podArgsUsage,
-				Action:    listPodNetworks,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "driver",
-						Usage: "filter driver",
-					},
-				},
-			},
-		},
-	}
-}
-
-func listPods(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
-	resp, err := client.ListPods(context.Background(), &pb.Empty{})
-	if err != nil {
-		log.Fatalf("[ListPods] send request failed %v", err)
-	}
-
-	for _, pod := range resp.GetPods() {
-		log.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
-	}
-	return nil
-}
-
-func addPod(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-	desc := c.String("desc")
-
-	pod, err := client.AddPod(context.Background(), &pb.AddPodOptions{
-		Name: name,
-		Desc: desc,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	log.Infof("[AddPod] success, name: %s, desc: %s", pod.GetName(), pod.GetDesc())
-	return nil
-}
-
-func removePod(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-
-	_, err = client.RemovePod(context.Background(), &pb.RemovePodOptions{
-		Name: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	log.Infof("[RemovePod] success, name: %s", name)
-	return nil
-}
-
-func podResource(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-
-	r, err := client.GetPodResource(context.Background(), &pb.GetPodOptions{
-		Name: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	log.Infof("[PodResource] Pod %s", r.Name)
-	for nodename, percent := range r.CpuPercents {
-		log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%%", nodename, percent*100, r.MemoryPercents[nodename]*100, r.StoragePercents[nodename]*100)
-	}
-	for nodename, verification := range r.Verifications {
-		if verification {
-			continue
-		}
-		log.Warnf("[PodResource] Node %s resource diff %s", nodename, r.Details[nodename])
-	}
-	return nil
-}
-
-func listPodNodes(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-	all := c.Bool("all")
-
-	resp, err := client.ListPodNodes(context.Background(), &pb.ListNodesOptions{
-		Podname: name,
-		All:     all,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	for _, node := range resp.GetNodes() {
-		log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
-	}
-	return nil
-}
-
-func listPodNetworks(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-	driver := c.String("driver")
-
-	resp, err := client.ListNetworks(context.Background(), &pb.ListNetworkOptions{
-		Podname: name,
-		Driver:  driver,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	for _, network := range resp.GetNetworks() {
-		log.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
-	}
-	return nil
-}
-
-//NodeCommand for node control
+// NodeCommand for node control
 func NodeCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "node",
@@ -326,13 +138,13 @@ func NodeCommand() *cli.Command {
 						Usage:       "share count",
 						DefaultText: "defined in core",
 					},
-					&cli.Int64Flag{
+					&cli.StringFlag{
 						Name:  "memory",
-						Usage: "memory in bytes",
+						Usage: "memory like -1M or 1G, support K, M, G, T",
 					},
-					&cli.Int64Flag{
+					&cli.StringFlag{
 						Name:  "storage",
-						Usage: "storage in bytes",
+						Usage: "storage -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
@@ -342,7 +154,7 @@ func NodeCommand() *cli.Command {
 						Name:  "numa-cpu",
 						Usage: "numa cpu list, can set multiple times, use comma separated",
 					},
-					&cli.Int64SliceFlag{
+					&cli.StringSliceFlag{
 						Name:  "numa-memory",
 						Usage: "numa memory, can set multiple times. if not set, it will count numa-cpu groups, and divided by total memory",
 					},
@@ -448,17 +260,12 @@ func setNode(c *cli.Context) error {
 	numaMemory := map[string]int64{}
 
 	for index, memoryStr := range numaMemoryList {
+		var memory int64
 		nodeID := fmt.Sprintf("%d", index)
-		i := int64(1)
-		if strings.HasSuffix(memoryStr, "-") {
-			i = int64(-1)
-			memoryStr = strings.TrimLeft(memoryStr, "-")
-		}
-		memory, err := units.RAMInBytes(memoryStr)
-		if err != nil {
+		if memory, err = parseRAMInHuman(memoryStr); err != nil {
 			return cli.Exit(err, -1)
 		}
-		numaMemory[nodeID] = memory * i
+		numaMemory[nodeID] = memory
 	}
 
 	numaList := c.StringSlice("numa-cpu")
@@ -496,17 +303,8 @@ func setNode(c *cli.Context) error {
 	}
 
 	var deltaMemory int64
-	deltaMemoryStr := c.String("delta-memory")
-	if deltaMemoryStr != "" {
-		i := int64(1)
-		if strings.HasPrefix(deltaMemoryStr, "-") {
-			i = int64(-1)
-			deltaMemoryStr = strings.TrimLeft(deltaMemoryStr, "-")
-		}
-		if deltaMemory, err = units.RAMInBytes(deltaMemoryStr); err != nil {
-			return cli.Exit(err, -1)
-		}
-		deltaMemory *= i
+	if deltaMemory, err = parseRAMInHuman(c.String("delta-memory")); err != nil {
+		return cli.Exit(err, -1)
 	}
 
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
@@ -675,24 +473,33 @@ func addNode(c *cli.Context) error {
 		share = 100
 	}
 
+	var err error
+	var memory, storage int64
+	if memory, err = parseRAMInHuman(c.String("memory")); err != nil {
+		return cli.Exit(err, -1)
+	}
+	if storage, err = parseRAMInHuman(c.String("storage")); err != nil {
+		return cli.Exit(err, -1)
+	}
+
 	cpu := c.Int("cpu")
-	memory := c.Int64("memory")
-	storage := c.Int64("storage")
-	numaList := c.StringSlice("numa-cpu")
-	numaMemoryList := c.Int64Slice("numa-memory")
 
 	numa := map[string]string{}
 	numaMemory := map[string]int64{}
 
-	for index, cpuList := range numaList {
+	for index, cpuList := range c.StringSlice("numa-cpu") {
 		nodeID := fmt.Sprintf("%d", index)
 		for _, cpuID := range strings.Split(cpuList, ",") {
 			numa[cpuID] = nodeID
 		}
 	}
 
-	for index, memory := range numaMemoryList {
+	for index, memoryStr := range c.StringSlice("numa-memory") {
 		nodeID := fmt.Sprintf("%d", index)
+		memory, err := parseRAMInHuman(memoryStr)
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
 		numaMemory[nodeID] = memory
 	}
 

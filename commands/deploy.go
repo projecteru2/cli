@@ -102,7 +102,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	image := c.String("image")
 	network := c.String("network")
 	cpu := c.Float64("cpu")
-	mem := c.Int64("mem")
+	mem, err := parseRAMInHuman(c.String("memory"))
+	if err != nil {
+		log.Fatalf("[getDeployParams] parse memory failed %v", err)
+	}
 	envs := c.StringSlice("env")
 	files := c.StringSlice("file")
 	count := int32(c.Int("count"))
