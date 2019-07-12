@@ -3,6 +3,8 @@ package commands
 import (
 	"strings"
 
+	"github.com/docker/go-units"
+
 	enginecontainer "github.com/docker/docker/api/types/container"
 )
 
@@ -34,4 +36,20 @@ func getNetworks(network string) map[string]string {
 		networks[network] = ip
 	}
 	return networks
+}
+
+func parseRAMInHuman(ramStr string) (int64, error) {
+	if ramStr == "" {
+		return 0, nil
+	}
+	flag := int64(1)
+	if strings.HasPrefix(ramStr, "-") {
+		flag = int64(-1)
+		ramStr = strings.TrimLeft(ramStr, "-")
+	}
+	ramInBytes, err := units.RAMInBytes(ramStr)
+	if err != nil {
+		return 0, err
+	}
+	return ramInBytes * flag, nil
 }
