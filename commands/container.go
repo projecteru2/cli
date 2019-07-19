@@ -433,7 +433,7 @@ func listContainers(c *cli.Context) error {
 		log.Infof("%s: %s", container.Name, container.Id)
 		if !container.Verification {
 			log.Errorf("Container not exists on node %s", container.Nodename)
-			log.Error("Use `fix container <CONTAINER_ID>` to fix it")
+			log.Error("Use `dissociate container <CONTAINER_ID>` to dissociate container from eru")
 			continue
 		}
 		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
