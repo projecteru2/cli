@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -134,13 +135,19 @@ func publishContainers(c *cli.Context) error {
 	}
 
 	upstreams := map[string]map[string]string{}
-	for _, container := range resp.Containers {
+	for {
+		container, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
 		upstream, ok := upstreams[upstreamName]
 		if !ok {
 			upstreams[upstreamName] = map[string]string{}
 			upstream = upstreams[upstreamName]
 		}
-
 		pubinfo := coreutils.DecodePublishInfo(container.Publish)
 		for _, pub := range pubinfo {
 			for _, addr := range pub {

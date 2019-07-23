@@ -48,11 +48,20 @@ func deployContainers(c *cli.Context) error {
 			Entrypoint: deployOpts.Entrypoint.Name,
 			Nodename:   node,
 			Labels:     nil,
+			Limit:      1, // 至少有一个可以被替换的
 		}
 		resp, err := client.ListContainers(context.Background(), lsOpts)
 		if err != nil {
 			log.Warnf("[Deploy] check container failed %v", err)
-		} else if len(resp.Containers) > 0 {
+		} else {
+			_, err := resp.Recv()
+			if err == io.EOF {
+				log.Warn("[Deploy] there is no containers for replace")
+				return cli.Exit(err, -1)
+			}
+			if err != nil {
+				return cli.Exit(err, -1)
+			}
 			// 强制继承网络
 			networkInherit := true
 			if network != "" {

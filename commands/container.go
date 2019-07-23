@@ -55,6 +55,10 @@ func ContainerCommand() *cli.Command {
 						Name:  "label",
 						Usage: "label filter can set multiple times",
 					},
+					&cli.Int64Flag{
+						Name:  "limit",
+						Usage: "limit data size",
+					},
 				},
 			},
 			&cli.Command{
@@ -422,6 +426,7 @@ func listContainers(c *cli.Context) error {
 		Entrypoint: c.String("entry"),
 		Nodename:   c.String("nodename"),
 		Labels:     makeLabels(c.StringSlice("label")),
+		Limit:      c.Int64("limit"),
 	}
 
 	resp, err := client.ListContainers(context.Background(), opts)
@@ -429,7 +434,14 @@ func listContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	for _, container := range resp.Containers {
+	for {
+		container, err := resp.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
 		log.Infof("%s: %s", container.Name, container.Id)
 		if !container.Verification {
 			log.Errorf("Container not exists on node %s", container.Nodename)

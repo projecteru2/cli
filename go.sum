@@ -130,8 +130,12 @@ github.com/projecteru2/core v0.0.0-20190709074914-b267291a81d6 h1:3umtTgDfMQVyCZ
 github.com/projecteru2/core v0.0.0-20190709074914-b267291a81d6/go.mod h1:rhS/NPHl0aSE6Ltnp867L5+5JnBFDoIIL34W6WGsXGw=
 github.com/projecteru2/core v0.0.0-20190709080221-208fce4e2fb9 h1:ki8jtIUeVk2GJLFzOiG8VwgwoqxViMkXyuZxdpZ7dIQ=
 github.com/projecteru2/core v0.0.0-20190709080221-208fce4e2fb9/go.mod h1:rhS/NPHl0aSE6Ltnp867L5+5JnBFDoIIL34W6WGsXGw=
+github.com/projecteru2/core v0.0.0-20190709082849-87707948f123 h1:MaA2ZmP8WUFk79PO/jx1HdePgoUmcj1a3XwmeCsShmM=
+github.com/projecteru2/core v0.0.0-20190709082849-87707948f123/go.mod h1:rhS/NPHl0aSE6Ltnp867L5+5JnBFDoIIL34W6WGsXGw=
 github.com/projecteru2/core v0.0.0-20190709082849-8cfb8745e66c h1:4k+ytlEUNdOovruP3JNDZfuEWs2/c8Q7RiZG3OhIyTw=
 github.com/projecteru2/core v0.0.0-20190709082849-8cfb8745e66c/go.mod h1:rhS/NPHl0aSE6Ltnp867L5+5JnBFDoIIL34W6WGsXGw=
+github.com/projecteru2/core v0.0.0-20190723092034-c3bb53697d93 h1:EfkNjb/DunuhTOPMilaEul8PFtyG0i96orHmOJTLmeQ=
+github.com/projecteru2/core v0.0.0-20190723092034-c3bb53697d93/go.mod h1:rhS/NPHl0aSE6Ltnp867L5+5JnBFDoIIL34W6WGsXGw=
 github.com/projecteru2/libyavirt v0.0.0-20190620071541-06d1b5154ae0 h1:QCU7CNY8YQZ8jfSnPgowjbWm0ecgCLfJrNzy3Y3fUHc=
 github.com/projecteru2/libyavirt v0.0.0-20190620071541-06d1b5154ae0/go.mod h1:ikArnOEYWVkX78qez3OUFyZOrIxELbE98kF8OkSTbUc=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
