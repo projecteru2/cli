@@ -57,7 +57,7 @@ func deployContainers(c *cli.Context) error {
 			_, err := resp.Recv()
 			if err == io.EOF {
 				log.Warn("[Deploy] there is no containers for replace")
-				return cli.Exit(err, -1)
+				goto DOCREATE
 			}
 			if err != nil {
 				return cli.Exit(err, -1)
@@ -71,6 +71,7 @@ func deployContainers(c *cli.Context) error {
 		}
 	}
 
+DOCREATE:
 	return doCreateContainer(client, deployOpts)
 }
 
