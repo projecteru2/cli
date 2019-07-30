@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"io"
 
-	"github.com/projecteru2/cli/types"
 	pb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/store"
+	coretypes "github.com/projecteru2/core/types"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -41,35 +41,34 @@ func status(c *cli.Context) error {
 			cli.Exit("", -1)
 		}
 
-		container := &types.Container{}
+		if msg.Action == store.DeleteEvent {
+			log.Infof("[%s] %s_%s deleted", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint)
+			continue
+		}
+
+		meta := &coretypes.Meta{}
 		if len(msg.Data) > 0 {
-			if err := json.Unmarshal(msg.Data, container); err != nil {
+			if err := json.Unmarshal(msg.Data, meta); err != nil {
 				log.Errorf("[status] parse container data failed %v", err)
 				break
 			}
 		}
-		container.ID = msg.Id
-		container.Name = msg.Appname
-		container.EntryPoint = msg.Entrypoint
-		container.Nodename = msg.Nodename
 
-		if !coreutils.FilterContainer(container.Labels, labels) {
-			log.Debugf("[status] ignore container %s", container.ID)
+		if !coreutils.FilterContainer(meta.Labels, labels) {
+			log.Debugf("[status] ignore container %s", msg.Id)
 			continue
 		}
 
-		if msg.Action == store.DeleteEvent {
-			log.Infof("[%s] %s_%s deleted", coreutils.ShortID(container.ID), container.Name, container.EntryPoint)
-		} else if msg.Action == store.PutEvent {
-			if container.Healthy {
-				log.Infof("[%s] %s_%s on %s back to life", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
-				for networkName, addrs := range container.Publish {
-					log.Infof("[%s] published at %s bind %v", coreutils.ShortID(container.ID), networkName, addrs)
-				}
-				continue
+		if meta.Healthy {
+			log.Infof("[%s] %s_%s on %s back to life", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint, msg.Nodename)
+			containerMeta := coreutils.DecodeMetaInLabel(meta.Labels)
+			publish := coreutils.MakePublishInfo(meta.Networks, containerMeta.Publish)
+			for networkName, addrs := range publish {
+				log.Infof("[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}
-			log.Warnf("[%s] %s_%s on %s is unhealthy", coreutils.ShortID(container.ID), container.Name, container.EntryPoint, container.Nodename)
+			continue
 		}
+		log.Warnf("[%s] %s_%s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint, msg.Nodename)
 	}
 	return nil
 }
