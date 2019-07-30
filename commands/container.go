@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/projecteru2/cli/types"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -397,18 +397,25 @@ func getContainers(c *cli.Context) error {
 	}
 
 	for _, container := range resp.GetContainers() {
-		log.Infof("ID: %s, Name: %s, Pod: %s, Node: %s", container.GetId(), container.GetName(), container.GetPodname(), container.GetNodename())
-		containerDetail := &types.Container{Nodename: container.GetNodename()}
-		if err := json.Unmarshal(container.StatusData, containerDetail); err != nil {
+		log.Info("--------------------------------------")
+		log.Infof("%s: %s", container.Name, container.Id)
+		log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
+		log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Privileged)
+		if len(container.StatusData) == 0 {
+			log.Error("Container disappeared, use dissociate command")
+			continue
+		}
+		meta := &coretypes.Meta{}
+		if err := json.Unmarshal(container.StatusData, meta); err != nil {
 			log.Errorf("Can't get container status %v", err)
 		}
-		if containerDetail.Running {
+		if meta.Running {
 			log.Info("Container is Running")
 		}
-		if containerDetail.Healthy {
+		if meta.Healthy {
 			log.Info("Container is Healthy")
 		}
-		if !containerDetail.Running || !containerDetail.Healthy {
+		if !meta.Running || !meta.Healthy {
 			log.Warn("Container is not running or healthy")
 		}
 		for networkName, IP := range container.Publish {
@@ -442,21 +449,22 @@ func listContainers(c *cli.Context) error {
 		if err != nil {
 			return cli.Exit(err, -1)
 		}
+		log.Info("--------------------------------------")
 		log.Infof("%s: %s", container.Name, container.Id)
-		if !container.Verification {
-			log.Errorf("Container not exists on node %s", container.Nodename)
-			log.Error("Use `dissociate container <CONTAINER_ID>` to dissociate container from eru")
+		log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
+		log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Privileged)
+		if len(container.StatusData) == 0 {
+			log.Error("Container disappeared, use dissociate command")
 			continue
 		}
-		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
 		if len(container.Publish) > 0 {
 			for nname, network := range container.Publish {
-				log.Infof("Network %s at %s", nname, network)
+				log.Infof("Publish at %s : %s", nname, network)
 			}
 		} else {
-			log.Infof("Container not published and deployed on %s", container.Nodename)
+			log.Warnf("Container not published")
 		}
-		log.Infof("Image %s", container.Image)
+		log.Infof("Image: %s", container.Image)
 	}
 	return nil
 }
