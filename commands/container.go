@@ -215,7 +215,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "env",
-						Usage: "set env can use multiple times",
+						Usage: "set env can use multiple times, e.g., GO111MODULE=on",
 					},
 					&cli.StringFlag{
 						Name:  "user",
@@ -294,7 +294,7 @@ func ContainerCommand() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "env",
-						Usage: "set env can use multiple times",
+						Usage: "set env can use multiple times, e.g., GO111MODULE=on",
 					},
 					&cli.StringSliceFlag{
 						Name:  "nodelabel",
