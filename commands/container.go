@@ -211,7 +211,7 @@ func ContainerCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "network",
 						Usage: "SDN name or host mode",
-						//						Value: "host",
+						//	Value: "host",
 					},
 					&cli.StringSliceFlag{
 						Name:  "env",
@@ -401,8 +401,11 @@ func getContainers(c *cli.Context) error {
 		log.Infof("%s: %s", container.Name, container.Id)
 		log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
 		log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Privileged)
+		for networkName, IP := range container.Publish {
+			log.Infof("Publish at %s ip %s", networkName, IP)
+		}
 		if len(container.StatusData) == 0 {
-			log.Error("Container disappeared, use dissociate command")
+			log.Warn("Container has no status data, maybe dissociate from eru.")
 			continue
 		}
 		meta := &coretypes.Meta{}
@@ -417,9 +420,6 @@ func getContainers(c *cli.Context) error {
 		}
 		if !meta.Running || !meta.Healthy {
 			log.Warn("Container is not running or healthy")
-		}
-		for networkName, IP := range container.Publish {
-			log.Infof("Publish at %s ip %s", networkName, IP)
 		}
 	}
 	return nil
@@ -453,10 +453,7 @@ func listContainers(c *cli.Context) error {
 		log.Infof("%s: %s", container.Name, container.Id)
 		log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
 		log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Privileged)
-		if len(container.StatusData) == 0 {
-			log.Error("Container disappeared, use dissociate command")
-			continue
-		}
+		log.Infof("Image: %s", container.Image)
 		if len(container.Publish) > 0 {
 			for nname, network := range container.Publish {
 				log.Infof("Publish at %s : %s", nname, network)
@@ -464,7 +461,9 @@ func listContainers(c *cli.Context) error {
 		} else {
 			log.Warnf("Container not published")
 		}
-		log.Infof("Image: %s", container.Image)
+		if len(container.StatusData) == 0 {
+			log.Warn("Container has no status data, maybe dissociate from eru")
+		}
 	}
 	return nil
 }
