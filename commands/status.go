@@ -66,9 +66,11 @@ func status(c *cli.Context) error {
 			for networkName, addrs := range publish {
 				log.Infof("[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}
-			continue
+		} else if !meta.Running {
+			log.Warnf("[%s] %s_%s on %s is stopped", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint, msg.Nodename)
+		} else if !meta.Healthy {
+			log.Warnf("[%s] %s_%s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint, msg.Nodename)
 		}
-		log.Warnf("[%s] %s_%s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Appname, msg.Entrypoint, msg.Nodename)
 	}
 	return nil
 }
