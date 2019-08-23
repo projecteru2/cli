@@ -345,6 +345,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "ignore hook process",
 						Value: false,
 					},
+					&cli.StringFlag{
+						Name:  "raw-args",
+						Usage: "raw args in json (for docker engine)",
+						Value: "",
+					},
 				},
 			},
 		},
