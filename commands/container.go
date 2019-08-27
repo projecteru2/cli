@@ -292,6 +292,11 @@ func ContainerCommand() *cli.Command {
 						Usage: "how many memory like 1M or 1G, support K, M, G, T",
 						Value: "512M",
 					},
+					&cli.StringFlag{
+						Name:  "storage",
+						Usage: "how many storage quota like 1M or 1G, support K, M, G, T",
+						Value: "",
+					},
 					&cli.StringSliceFlag{
 						Name:  "env",
 						Usage: "set env can use multiple times, e.g., GO111MODULE=on",
