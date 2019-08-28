@@ -62,6 +62,20 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		terminal.Lflag &^= syscall.ICANON
 		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
 
+		// suppress terminal special characters
+		suppressSpecials := []uint8{
+			syscall.VINTR,   // ^C
+			syscall.VEOF,    // ^D
+			syscall.VSUSP,   // ^Z
+			syscall.VKILL,   // ^U
+			syscall.VERASE,  // ^?
+			syscall.VWERASE, // ^W
+		}
+		for _, s := range suppressSpecials {
+			terminal.Cc[s] = 0
+		}
+		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+
 		go func() {
 			// 获得输入
 			buf := make([]byte, 1024)
