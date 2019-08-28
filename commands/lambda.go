@@ -89,12 +89,17 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 			}
 			continue
 		}
-		data := msg.Data
-		id := coreutils.ShortID(msg.ContainerId)
-		if !bytes.HasSuffix(data, split) {
-			data = append(data, enter...)
+
+		if stdin {
+			fmt.Printf("%s", msg.Data)
+		} else {
+			data := msg.Data
+			id := coreutils.ShortID(msg.ContainerId)
+			if !bytes.HasSuffix(data, split) {
+				data = append(data, enter...)
+			}
+			fmt.Printf("[%s]: %s", id, data)
 		}
-		fmt.Printf("[%s]: %s", id, data)
 	}
 	return 0, nil
 }
