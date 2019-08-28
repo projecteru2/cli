@@ -8,7 +8,9 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"syscall"
 
+	"github.com/pkg/term/termios"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -45,6 +47,13 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 	}
 
 	if stdin {
+		// turn off echoing in terminal
+		stdinFd := os.Stdin.Fd()
+		terminal := &syscall.Termios{}
+		termios.Tcgetattr(stdinFd, terminal)
+		terminal.Lflag &^= syscall.ECHO
+		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+
 		go func() {
 			// 获得输入
 			scanner := bufio.NewScanner(os.Stdin)

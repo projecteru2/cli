@@ -9,8 +9,8 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
+	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
 	github.com/projecteru2/core v0.0.0-20190827090713-5876569e6fff
-	github.com/sanity-io/litter v1.1.0
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sirupsen/logrus v1.4.2
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
