@@ -6,6 +6,7 @@ require (
 	github.com/containerd/continuity v0.0.0-20181203112020-004b46473808 // indirect
 	github.com/docker/docker v0.0.0-20181113085551-758255791e25
 	github.com/docker/go-units v0.4.0
+	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.0
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect

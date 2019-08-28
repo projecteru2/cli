@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
@@ -10,6 +9,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/getlantern/deepcopy"
 	"github.com/pkg/term/termios"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
@@ -47,27 +47,41 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 	}
 
 	if stdin {
-		// turn off echoing in terminal
 		stdinFd := os.Stdin.Fd()
 		terminal := &syscall.Termios{}
 		termios.Tcgetattr(stdinFd, terminal)
+		terminalBak := &syscall.Termios{}
+		deepcopy.Copy(terminalBak, terminal)
+		defer termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak)
+
+		// turn off echoing in terminal
 		terminal.Lflag &^= syscall.ECHO
+		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+
+		// set uncanonical mode
+		terminal.Lflag &^= syscall.ICANON
 		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
 
 		go func() {
 			// 获得输入
-			scanner := bufio.NewScanner(os.Stdin)
-			for scanner.Scan() {
-				command := scanner.Bytes()
-				log.Debugf("input: %s", command)
-				command = append(command, enter...)
-				if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
-					log.Errorf("[Lambda] Send command %s error: %v", command, err)
+			buf := make([]byte, 1024)
+			for {
+				n, err := os.Stdin.Read(buf)
+				if n > 0 {
+					command := buf[:n]
+					if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
+						log.Errorf("[Lambda] Send command %s error: %v", command, err)
+					}
+				}
+				if err != nil {
+					if err == io.EOF {
+						return
+					}
+					log.Errorf("[runAndWait] failed to read output from virtual unit: %v", err)
+					return
 				}
 			}
-			if err := scanner.Err(); err != nil {
-				log.Errorf("[Lambda] Parse stdin failed, %v", err)
-			}
+
 		}()
 	}
 
