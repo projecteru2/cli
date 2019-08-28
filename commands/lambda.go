@@ -1,13 +1,17 @@
 package commands
 
 import (
+	"C"
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strconv"
 	"strings"
 	"syscall"
+	"unsafe"
 
 	"github.com/getlantern/deepcopy"
 	"github.com/pkg/term/termios"
@@ -23,6 +27,14 @@ import (
 var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
 var split = []byte{62, 32}
+var winchCommand = []byte{0xf, 0xa}
+
+type window struct {
+	Row    uint16
+	Col    uint16
+	Xpixel uint16 `json:"-"`
+	Ypixel uint16 `json:"-"`
+}
 
 func runLambda(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
@@ -75,6 +87,37 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 			terminal.Cc[s] = 0
 		}
 		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+
+		// capture SIGWINCH and measure window size
+		sigs := make(chan os.Signal)
+		signal.Notify(sigs, syscall.SIGWINCH)
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		go func(ctx context.Context) {
+			w := &window{}
+			for {
+				select {
+				case <-ctx.Done():
+					break
+				case _, ok := <-sigs:
+					if !ok {
+						return
+					}
+
+					if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
+						return
+					}
+					opts, err := json.Marshal(w)
+					if err != nil {
+						return
+					}
+					command := append(winchCommand, opts...)
+					if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
+						log.Errorf("[Lambda] Send SIGWINCH error: %v", err)
+					}
+				}
+			}
+		}(ctx)
 
 		go func() {
 			// 获得输入
