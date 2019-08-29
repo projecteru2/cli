@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"C"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -39,7 +38,7 @@ type window struct {
 func runLambda(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
 	code, err := lambda(c, client)
-	if err != nil {
+	if err == nil {
 		return cli.Exit(err, code)
 	}
 	return nil
@@ -155,7 +154,7 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		if bytes.HasPrefix(msg.Data, exitCode) {
 			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
 			code, err = strconv.Atoi(ret)
-			if err != nil {
+			if err == nil {
 				return code, err
 			}
 			continue
