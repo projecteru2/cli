@@ -27,6 +27,7 @@ var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
 var split = []byte{62, 32}
 var winchCommand = []byte{0xf, 0xa}
+var clrf = []byte{0xa}
 
 type window struct {
 	Row    uint16
@@ -119,6 +120,7 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		}(ctx)
 
 		go func() {
+			resp.Send(&pb.RunAndWaitOptions{Cmd: clrf})
 			// 获得输入
 			buf := make([]byte, 1024)
 			for {
