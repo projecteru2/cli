@@ -176,6 +176,30 @@ func ContainerCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
+				Name:      "exec",
+				Usage:     "run a command in a running container",
+				ArgsUsage: "container_id -- cmd1 cmd2 cmd3",
+				Action:    execContainer,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "interactive",
+						Aliases: []string{"i"},
+						Value:   false,
+					},
+					&cli.StringSliceFlag{
+						Name:    "env",
+						Aliases: []string{"e"},
+						Usage:   "ENV=value",
+					},
+					&cli.StringFlag{
+						Name:    "workdir",
+						Aliases: []string{"w"},
+						Usage:   "/path/to/workdir",
+						Value:   "/",
+					},
+				},
+			},
+			&cli.Command{
 				Name:      "replace",
 				Usage:     "replace containers by params",
 				ArgsUsage: specFileURI,
@@ -511,6 +535,41 @@ func reallocContainers(c *cli.Context) error {
 		}
 	}
 	return nil
+}
+
+func execContainer(c *cli.Context) (err error) {
+	client := setupAndGetGRPCConnection().GetRPCClient()
+
+	opts := &pb.ExecuteContainerOptions{
+		ContainerId: c.Args().First(),
+		OpenStdin:   c.Bool("interactive"),
+		Commands:    c.Args().Tail(),
+		Envs:        c.StringSlice("env"),
+		Workdir:     c.String("workdir"),
+	}
+	resp, err := client.ExecuteContainer(context.Background())
+	if err != nil {
+		return
+	}
+
+	if err = resp.Send(opts); err != nil {
+		return
+	}
+
+	iStream := interactiveStream{
+		Recv: resp.Recv,
+		Send: func(cmd []byte) error {
+			return resp.Send(&pb.ExecuteContainerOptions{ReplCmd: cmd})
+		},
+	}
+
+	code, err := handleInteractiveStream(opts.OpenStdin, iStream)
+	if err == nil {
+		return cli.Exit("", code)
+	}
+
+	return err
+
 }
 
 func getContainerLog(c *cli.Context) error {

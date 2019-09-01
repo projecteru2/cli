@@ -1,23 +1,11 @@
 package commands
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
-	"os"
-	"os/signal"
-	"strconv"
 	"strings"
-	"syscall"
-	"unsafe"
 
-	"github.com/getlantern/deepcopy"
-	"github.com/pkg/term/termios"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -40,9 +28,9 @@ func runLambda(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
 	code, err := lambda(c, client)
 	if err == nil {
-		return cli.Exit(err, code)
+		return cli.Exit("", code)
 	}
-	return nil
+	return err
 }
 
 func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
@@ -58,122 +46,14 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		return -1, err
 	}
 
-	if stdin {
-		stdinFd := os.Stdin.Fd()
-		terminal := &syscall.Termios{}
-		termios.Tcgetattr(stdinFd, terminal)
-		terminalBak := &syscall.Termios{}
-		deepcopy.Copy(terminalBak, terminal)
-		defer termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak)
-
-		// turn off echoing in terminal
-		terminal.Lflag &^= syscall.ECHO
-		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
-
-		// set uncanonical mode
-		terminal.Lflag &^= syscall.ICANON
-		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
-
-		// suppress terminal special characters
-		suppressSpecials := []uint8{
-			syscall.VINTR,   // ^C
-			syscall.VEOF,    // ^D
-			syscall.VSUSP,   // ^Z
-			syscall.VKILL,   // ^U
-			syscall.VERASE,  // ^?
-			syscall.VWERASE, // ^W
-		}
-		for _, s := range suppressSpecials {
-			terminal.Cc[s] = 0
-		}
-		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
-
-		// capture SIGWINCH and measure window size
-		sigs := make(chan os.Signal)
-		signal.Notify(sigs, syscall.SIGWINCH)
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		go func(ctx context.Context) {
-			w := &window{}
-			for {
-				select {
-				case <-ctx.Done():
-					break
-				case _, ok := <-sigs:
-					if !ok {
-						return
-					}
-
-					if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
-						return
-					}
-					opts, err := json.Marshal(w)
-					if err != nil {
-						return
-					}
-					command := append(winchCommand, opts...)
-					if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
-						log.Errorf("[Lambda] Send SIGWINCH error: %v", err)
-					}
-				}
-			}
-		}(ctx)
-
-		go func() {
-			resp.Send(&pb.RunAndWaitOptions{Cmd: clrf})
-			// 获得输入
-			buf := make([]byte, 1024)
-			for {
-				n, err := os.Stdin.Read(buf)
-				if n > 0 {
-					command := buf[:n]
-					if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
-						log.Errorf("[Lambda] Send command %s error: %v", command, err)
-					}
-				}
-				if err != nil {
-					if err == io.EOF {
-						return
-					}
-					log.Errorf("[runAndWait] failed to read output from virtual unit: %v", err)
-					return
-				}
-			}
-
-		}()
+	iStream := interactiveStream{
+		Recv: resp.Recv,
+		Send: func(cmd []byte) error {
+			return resp.Send(&pb.RunAndWaitOptions{Cmd: cmd})
+		},
 	}
 
-	for {
-		msg, err := resp.Recv()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return -1, err
-		}
-
-		if bytes.HasPrefix(msg.Data, exitCode) {
-			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
-			code, err = strconv.Atoi(ret)
-			if err == nil {
-				return code, err
-			}
-			continue
-		}
-
-		if stdin {
-			fmt.Printf("%s", msg.Data)
-		} else {
-			data := msg.Data
-			id := coreutils.ShortID(msg.ContainerId)
-			if !bytes.HasSuffix(data, split) {
-				data = append(data, enter...)
-			}
-			fmt.Printf("[%s]: %s", id, data)
-		}
-	}
-	return 0, nil
+	return handleInteractiveStream(stdin, iStream)
 }
 
 func generateLambdaOpts(
