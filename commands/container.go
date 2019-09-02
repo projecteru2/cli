@@ -563,7 +563,7 @@ func execContainer(c *cli.Context) (err error) {
 		},
 	}
 
-	code, err := handleInteractiveStream(opts.OpenStdin, iStream)
+	code, err := handleInteractiveStream(opts.OpenStdin, iStream, 1)
 	if err == nil {
 		return cli.Exit("", code)
 	}

@@ -53,7 +53,7 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		},
 	}
 
-	return handleInteractiveStream(stdin, iStream)
+	return handleInteractiveStream(stdin, iStream, count)
 }
 
 func generateLambdaOpts(

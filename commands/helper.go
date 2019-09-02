@@ -74,7 +74,7 @@ func parseRAMInHuman(ramStr string) (int64, error) {
 	return ramInBytes * flag, nil
 }
 
-func handleInteractiveStream(interactive bool, iStream interactiveStream) (code int, err error) {
+func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCount int) (code int, err error) {
 
 	if interactive {
 		stdinFd := os.Stdin.Fd()
@@ -161,6 +161,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream) (code 
 		}()
 	}
 
+	exited := 0
 	for {
 		msg, err := iStream.Recv()
 		if err == io.EOF {
@@ -174,7 +175,11 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream) (code 
 		if bytes.HasPrefix(msg.Data, exitCode) {
 			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
 			code, err = strconv.Atoi(ret)
-			if err == nil {
+			if err == nil && code != 0 {
+				return code, err
+			}
+			exited++
+			if exited == exitCount {
 				return code, err
 			}
 			continue
