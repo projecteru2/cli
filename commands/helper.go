@@ -131,7 +131,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 					}
 					command := append(winchCommand, opts...)
 					if err = iStream.Send(command); err != nil {
-						log.Errorf("[Lambda] Send SIGWINCH error: %v", err)
+						log.Errorf("[handleInteractiveStream] Send SIGWINCH error: %v", err)
 					}
 				}
 			}
@@ -146,14 +146,14 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 				if n > 0 {
 					command := buf[:n]
 					if err = iStream.Send(command); err != nil {
-						log.Errorf("[Lambda] Send command %s error: %v", command, err)
+						log.Errorf("[handleInteractiveStream] Send command %s error: %v", command, err)
 					}
 				}
 				if err != nil {
 					if err == io.EOF {
 						return
 					}
-					log.Errorf("[runAndWait] failed to read output from virtual unit: %v", err)
+					log.Errorf("[handleInteractiveStream] failed to read output from virtual unit: %v", err)
 					return
 				}
 			}
