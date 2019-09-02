@@ -1,18 +1,11 @@
 package commands
 
 import (
-	"bufio"
-	"bytes"
-	"fmt"
-	"io"
-	"os"
-	"strconv"
 	"strings"
 
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	cli "gopkg.in/urfave/cli.v2"
@@ -21,14 +14,23 @@ import (
 var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
 var split = []byte{62, 32}
+var winchCommand = []byte{0xf, 0xa}
+var clrf = []byte{0xa}
+
+type window struct {
+	Row    uint16
+	Col    uint16
+	Xpixel uint16 `json:"-"`
+	Ypixel uint16 `json:"-"`
+}
 
 func runLambda(c *cli.Context) error {
 	client := setupAndGetGRPCConnection().GetRPCClient()
 	code, err := lambda(c, client)
-	if err != nil {
-		return cli.Exit(err, code)
+	if err == nil {
+		return cli.Exit("", code)
 	}
-	return nil
+	return err
 }
 
 func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
@@ -44,50 +46,14 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		return -1, err
 	}
 
-	if stdin {
-		go func() {
-			// 获得输入
-			scanner := bufio.NewScanner(os.Stdin)
-			for scanner.Scan() {
-				command := scanner.Bytes()
-				log.Debugf("input: %s", command)
-				command = append(command, enter...)
-				if err = resp.Send(&pb.RunAndWaitOptions{Cmd: command}); err != nil {
-					log.Errorf("[Lambda] Send command %s error: %v", command, err)
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				log.Errorf("[Lambda] Parse stdin failed, %v", err)
-			}
-		}()
+	iStream := interactiveStream{
+		Recv: resp.Recv,
+		Send: func(cmd []byte) error {
+			return resp.Send(&pb.RunAndWaitOptions{Cmd: cmd})
+		},
 	}
 
-	for {
-		msg, err := resp.Recv()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return -1, err
-		}
-
-		if bytes.HasPrefix(msg.Data, exitCode) {
-			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
-			code, err = strconv.Atoi(ret)
-			if err != nil {
-				return code, err
-			}
-			continue
-		}
-		data := msg.Data
-		id := coreutils.ShortID(msg.ContainerId)
-		if !bytes.HasSuffix(data, split) {
-			data = append(data, enter...)
-		}
-		fmt.Printf("[%s]: %s", id, data)
-	}
-	return 0, nil
+	return handleInteractiveStream(stdin, iStream, count)
 }
 
 func generateLambdaOpts(
