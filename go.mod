@@ -5,7 +5,6 @@ go 1.12
 require (
 	cloud.google.com/go v0.44.3 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
-	github.com/codegangsta/cli v1.20.0 // indirect
 	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
 	github.com/coreos/bbolt v1.3.3 // indirect
 	github.com/coreos/etcd v3.3.15+incompatible // indirect
@@ -21,6 +20,7 @@ require (
 	github.com/ghodss/yaml v1.0.0
 	github.com/go-check/check v0.0.0-20190902080502-41f04d3bba15 // indirect
 	github.com/go-kit/kit v0.9.0 // indirect
+	github.com/gogo/protobuf v1.3.0 // indirect
 	github.com/golang/groupcache v0.0.0-20190702054246-869f871628b6 // indirect
 	github.com/google/go-cmp v0.3.1 // indirect
 	github.com/google/pprof v0.0.0-20190723021845-34ac40c74b70 // indirect
