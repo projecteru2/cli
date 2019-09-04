@@ -20,6 +20,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 
+	"bufio"
+
 	enginecontainer "github.com/docker/docker/api/types/container"
 )
 
@@ -138,26 +140,18 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		}(ctx)
 
 		go func() {
-			iStream.Send(clrf)
-			// 获得输入
-			buf := make([]byte, 1024)
-			for {
-				n, err := os.Stdin.Read(buf)
-				if n > 0 {
-					command := buf[:n]
-					if err = iStream.Send(command); err != nil {
-						log.Errorf("[handleInteractiveStream] Send command %s error: %v", command, err)
-					}
-				}
-				if err != nil {
-					if err == io.EOF {
-						return
-					}
-					log.Errorf("[handleInteractiveStream] failed to read output from virtual unit: %v", err)
-					return
+			scanner := bufio.NewScanner(os.Stdin)
+			scanner.Split(bufio.ScanRunes)
+			for scanner.Scan() {
+				b := scanner.Bytes()
+				if err := iStream.Send(b); err != nil {
+					log.Errorf("[handleInteractiveStream] Send command %s error: %v", b, err)
 				}
 			}
-
+			if err := scanner.Err(); err != nil {
+				log.Errorf("[handleInteractiveStream] Failed to read output from virtual unit: %v", err)
+				return
+			}
 		}()
 	}
 
