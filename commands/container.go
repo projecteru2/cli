@@ -178,7 +178,7 @@ func ContainerCommand() *cli.Command {
 			&cli.Command{
 				Name:      "exec",
 				Usage:     "run a command in a running container",
-				ArgsUsage: "container_id -- cmd1 cmd2 cmd3",
+				ArgsUsage: "containerID -- cmd1 cmd2 cmd3",
 				Action:    execContainer,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{

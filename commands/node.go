@@ -74,9 +74,9 @@ func NodeCommand() *cli.Command {
 						Name:  "delta-memory",
 						Usage: "memory changes like -1M or 1G, support K, M, G, T",
 					},
-					&cli.Int64Flag{
+					&cli.StringFlag{
 						Name:  "delta-storage",
-						Usage: "storage changes in bytes",
+						Usage: "storage changes like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
 						Name:  "delta-cpu",
@@ -307,13 +307,18 @@ func setNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	var deltaStorage int64
+	if deltaStorage, err = parseRAMInHuman(c.String("delta-storage")); err != nil {
+		return cli.Exit(err, -1)
+	}
+
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 		Podname:         node.Podname,
 		Nodename:        node.Name,
 		Status:          cluster.KeepNodeStatus,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
-		DeltaStorage:    c.Int64("delta-storage"),
+		DeltaStorage:    deltaStorage,
 		DeltaNumaMemory: numaMemory,
 		Numa:            numa,
 		Labels:          labels,
