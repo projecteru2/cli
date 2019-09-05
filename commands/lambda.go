@@ -118,7 +118,7 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user
 }
 
-//LambdaCommand for run commands in a container
+// LambdaCommand for run commands in a container
 func LambdaCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "lambda",

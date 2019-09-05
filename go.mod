@@ -39,7 +39,7 @@ require (
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
 	github.com/pquerna/ffjson v0.0.0-20190813045741-dac163c6c0a9 // indirect
-	github.com/projecteru2/core v0.0.0-20190904052617-c1471d7b9799
+	github.com/projecteru2/core v0.0.0-20190905030900-328e0d417fe8
 	github.com/projecteru2/libyavirt v0.0.0-20190722100552-4464a4c3fa23 // indirect
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/prometheus/procfs v0.0.4 // indirect

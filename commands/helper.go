@@ -113,8 +113,20 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		signal.Notify(sigs, syscall.SIGWINCH)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		go func(ctx context.Context) {
+		resize := func(ctx context.Context) error {
 			w := &window{}
+			if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
+				return err
+			}
+			opts, err := json.Marshal(w)
+			if err != nil {
+				return err
+			}
+			command := append(winchCommand, opts...)
+			return iStream.Send(command)
+		}
+
+		go func(ctx context.Context) {
 			for {
 				select {
 				case <-ctx.Done():
@@ -123,23 +135,17 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 					if !ok {
 						return
 					}
-
-					if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
-						return
-					}
-					opts, err := json.Marshal(w)
-					if err != nil {
-						return
-					}
-					command := append(winchCommand, opts...)
-					if err = iStream.Send(command); err != nil {
-						log.Errorf("[handleInteractiveStream] Send SIGWINCH error: %v", err)
+					if err := resize(ctx); err != nil {
+						log.Errorf("[handleInteractiveStream] Resize error: %v", err)
 					}
 				}
 			}
 		}(ctx)
 
 		go func() {
+			if err := resize(ctx); err != nil {
+				log.Errorf("[handleInteractiveStream] Resize error: %v", err)
+			}
 			scanner := bufio.NewScanner(os.Stdin)
 			scanner.Split(bufio.ScanRunes)
 			for scanner.Scan() {
@@ -156,6 +162,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 	}
 
 	exited := 0
+	output := map[string][]byte{}
 	for {
 		msg, err := iStream.Recv()
 		if err == io.EOF {
@@ -182,12 +189,23 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		if interactive {
 			fmt.Printf("%s", msg.Data)
 		} else {
-			data := msg.Data
 			id := coreutils.ShortID(msg.ContainerId)
-			if !bytes.HasSuffix(data, split) {
-				data = append(data, enter...)
+			if _, ok := output[id]; !ok {
+				output[id] = []byte{}
 			}
-			fmt.Printf("[%s]: %s", id, data)
+
+			output[id] = append(output[id], msg.Data...)
+
+			if bytes.HasSuffix(output[id], enter) {
+				fmt.Printf("[%s]: %s", id, output[id])
+				output[id] = []byte{}
+			}
+		}
+	}
+
+	for id, o := range output {
+		if len(o) > 0 {
+			fmt.Printf("[%s]: %s", id, output[id])
 		}
 	}
 
