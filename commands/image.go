@@ -261,6 +261,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 				b.Envs[k] = utils.ParseEnvValue(v)
 			}
 			b.StopSignal = stopSignal
+			b.Version = utils.ParseEnvValue(b.Version)
 		}
 	} else {
 		path := c.Args().First()

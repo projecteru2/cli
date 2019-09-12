@@ -180,6 +180,8 @@ github.com/projecteru2/core v0.0.0-20190904052617-c1471d7b9799 h1:A98yN8TkGZvd4P
 github.com/projecteru2/core v0.0.0-20190904052617-c1471d7b9799/go.mod h1:xh35msjovOuPGs9rw/fLyBQ/AxkCvrpEU1hau2sTkik=
 github.com/projecteru2/core v0.0.0-20190905030900-328e0d417fe8 h1:snzyp5ewfLsIsxKE/wxV1ncW0NnIJLWg5t4VepqHSHo=
 github.com/projecteru2/core v0.0.0-20190905030900-328e0d417fe8/go.mod h1:xh35msjovOuPGs9rw/fLyBQ/AxkCvrpEU1hau2sTkik=
+github.com/projecteru2/core v0.0.0-20190910104817-23332621a9d8 h1:DYsVNymBTJYx2swPaOPOcYpl4ynBGpOYoDOJuopEOQU=
+github.com/projecteru2/core v0.0.0-20190910104817-23332621a9d8/go.mod h1:xh35msjovOuPGs9rw/fLyBQ/AxkCvrpEU1hau2sTkik=
 github.com/projecteru2/libyavirt v0.0.0-20190620071541-06d1b5154ae0/go.mod h1:ikArnOEYWVkX78qez3OUFyZOrIxELbE98kF8OkSTbUc=
 github.com/projecteru2/libyavirt v0.0.0-20190722100552-4464a4c3fa23 h1:dwrzImrqEiuzkKr2qJ51uvKVUxN6pew+aIPZRSWv5aw=
 github.com/projecteru2/libyavirt v0.0.0-20190722100552-4464a4c3fa23/go.mod h1:ikArnOEYWVkX78qez3OUFyZOrIxELbE98kF8OkSTbUc=
