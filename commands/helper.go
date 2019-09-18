@@ -86,26 +86,26 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		deepcopy.Copy(terminalBak, terminal)
 		defer termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak)
 
-		// turn off echoing in terminal
-		terminal.Lflag &^= syscall.ECHO
-		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+		terminal.Lflag &^= syscall.ECHO   // off echoing
+		terminal.Lflag &^= syscall.ICANON // noncanonical mode
+		terminal.Lflag &^= syscall.ISIG   // disable signals
+		terminal.Lflag &^= syscall.IEXTEN // extended input processing
 
-		// set uncanonical mode
-		terminal.Lflag &^= syscall.ICANON
-		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+		terminal.Iflag &^= syscall.BRKINT // disable special handling of BREAK
+		terminal.Iflag &^= syscall.ICRNL  // disable special handling of CR
+		terminal.Iflag &^= syscall.IGNBRK //disable special handling of BREAK
+		terminal.Iflag &^= syscall.IGNCR  // disable special handling of CR
+		terminal.Iflag &^= syscall.INLCR  // disable special handling of NL
+		terminal.Iflag &^= syscall.INPCK  // no parity error handling
+		terminal.Iflag &^= syscall.ISTRIP // no 8th-bit stripping
+		terminal.Iflag &^= syscall.IXON   // disable output flow control
+		terminal.Iflag &^= syscall.PARMRK // no parity error handling
 
-		// suppress terminal special characters
-		suppressSpecials := []uint8{
-			syscall.VINTR,   // ^C
-			syscall.VEOF,    // ^D
-			syscall.VSUSP,   // ^Z
-			syscall.VKILL,   // ^U
-			syscall.VERASE,  // ^?
-			syscall.VWERASE, // ^W
-		}
-		for _, s := range suppressSpecials {
-			terminal.Cc[s] = 0
-		}
+		terminal.Oflag &^= syscall.OPOST // disable all output processing
+
+		terminal.Cc[syscall.VMIN] = 1  // character-at-a-time input
+		terminal.Cc[syscall.VTIME] = 0 // blocking
+
 		termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
 
 		// capture SIGWINCH and measure window size
