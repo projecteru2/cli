@@ -12,7 +12,7 @@ import (
 	"github.com/sethgrid/curse"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	cli "gopkg.in/urfave/cli.v2"
+	cli "github.com/urfave/cli/v2"
 	yaml "gopkg.in/yaml.v2"
 )
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/projecteru2/cli/commands"
 	"github.com/projecteru2/cli/versioninfo"
-	"gopkg.in/urfave/cli.v2"
+	"github.com/urfave/cli/v2"
 )
 
 func init() {

@@ -9,7 +9,7 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
-	cli "gopkg.in/urfave/cli.v2"
+	cli "github.com/urfave/cli/v2"
 )
 
 func replaceContainers(c *cli.Context) error {
