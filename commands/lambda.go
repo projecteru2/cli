@@ -1,20 +1,19 @@
 package commands
 
 import (
+	"context"
 	"strings"
 
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
 )
 
 var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
-var split = []byte{62, 32}
-var winchCommand = []byte{0xf, 0xa}
+var winchCommand = []byte{0x80}
 var clrf = []byte{0xa}
 
 type window struct {
