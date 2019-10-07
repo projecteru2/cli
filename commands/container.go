@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"context"
 
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
@@ -15,7 +16,6 @@ import (
 	coretypes "github.com/projecteru2/core/types"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
 )
 
@@ -579,7 +579,7 @@ func getContainerLog(c *cli.Context) error {
 	}
 
 	opts := &pb.ContainerID{Id: c.Args().First()}
-	resp, err := client.LogStream(context.Background(), opts)
+	resp, err := client.LogStream(c.Context, opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
