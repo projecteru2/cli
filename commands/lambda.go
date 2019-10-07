@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"strings"
 
 	"github.com/projecteru2/cli/utils"
@@ -8,12 +9,10 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
-	"golang.org/x/net/context"
 )
 
 var exitCode = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
 var enter = []byte{10}
-var split = []byte{62, 32}
 var winchCommand = []byte{0x80}
 var clrf = []byte{0xa}
 
