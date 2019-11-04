@@ -12,8 +12,8 @@ import (
 
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 )
 
 // NodeCommand for node control
@@ -573,7 +573,7 @@ func nodeResource(c *cli.Context) error {
 	log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100)
 	if !r.Verification {
 		for _, detail := range r.Details {
-			log.Warnf("[PodResource] Resource diff %s", detail)
+			log.Warnf("[NodeResource] Resource diff %s", detail)
 		}
 	}
 	return nil
