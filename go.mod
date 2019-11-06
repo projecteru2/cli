@@ -17,7 +17,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20191002093440-fbd586e6fb95
+	github.com/projecteru2/core v0.0.0-20191106062509-3403704bed93
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/prometheus/procfs v0.0.4 // indirect
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
@@ -26,7 +26,7 @@ require (
 	github.com/stretchr/testify v1.4.0 // indirect
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/urfave/cli/v2 v2.0.0-alpha.2
-	golang.org/x/net v0.0.0-20190926025831-c00fd9afed17
+	golang.org/x/net v0.0.0-20191003171128-d98b1b443823
 	gopkg.in/yaml.v2 v2.2.2
 )
 

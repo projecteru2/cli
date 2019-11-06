@@ -33,8 +33,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout)
 
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
@@ -61,10 +61,10 @@ func generateLambdaOpts(
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
 	mem int64, count int, stdin bool, deployMethod string,
-	files []string, user string) *pb.RunAndWaitOptions {
+	files []string, user string, async bool, asyncTimeout int) *pb.RunAndWaitOptions {
 
 	networks := getNetworks(network)
-	opts := &pb.RunAndWaitOptions{}
+	opts := &pb.RunAndWaitOptions{Async: async, AsyncTimeout: int32(asyncTimeout)}
 	fileData := utils.GetFilesStream(files)
 	opts.DeployOptions = &pb.DeployOptions{
 		Name: "lambda",
@@ -91,7 +91,7 @@ func generateLambdaOpts(
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string, bool, int) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands")
 	}
@@ -114,7 +114,9 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	files := c.StringSlice("file")
 	deployMethod := c.String("deploy-method")
 	user := c.String("user")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user
+	async := c.Bool("async")
+	asyncTimeout := c.Int("async-timeout")
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user, async, asyncTimeout
 }
 
 // LambdaCommand for run commands in a container
@@ -187,6 +189,15 @@ func LambdaCommand() *cli.Command {
 			&cli.StringSliceFlag{
 				Name:  "file",
 				Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+			},
+			&cli.BoolFlag{
+				Name:  "async",
+				Usage: "run lambda async",
+			},
+			&cli.IntFlag{
+				Name:  "async-timeout",
+				Usage: "for async timeout",
+				Value: 30,
 			},
 		},
 		Action: runLambda,
