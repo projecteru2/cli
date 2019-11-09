@@ -10,6 +10,8 @@ import (
 
 	"github.com/projecteru2/core/cluster"
 
+	"time"
+
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -53,8 +55,19 @@ func NodeCommand() *cli.Command {
 				Action:    setNodeUp,
 			},
 			&cli.Command{
-				Name:      "down",
-				Usage:     "set node down",
+				Name:  "down",
+				Usage: "set node down",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "check",
+						Usage: "check node containers are online or not",
+					},
+					&cli.IntFlag{
+						Name:  "check-timeout",
+						Usage: "check node timeout",
+						Value: 20,
+					},
+				},
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNodeDown,
 			},
@@ -370,15 +383,30 @@ func setNodeDown(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-		Podname:  node.Podname,
-		Nodename: node.Name,
-		Status:   cluster.NodeDown,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
+	do := true
+	if c.Bool("check") {
+		t := c.Int("check-timeout")
+		timeout, cancel := context.WithTimeout(c.Context, time.Duration(t)*time.Second)
+		defer cancel()
+		if _, err := client.GetNodeResource(timeout, &pb.GetNodeOptions{
+			Podname: node.Podname, Nodename: node.Name,
+		}); err == nil {
+			log.Warn("[SetNode] node is not down")
+			do = false
+		}
 	}
-	log.Infof("[SetNode] node %s down", name)
+
+	if do {
+		_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
+			Podname:  node.Podname,
+			Nodename: node.Name,
+			Status:   cluster.NodeDown,
+		})
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		log.Infof("[SetNode] node %s down", name)
+	}
 	return nil
 }
 
