@@ -5,8 +5,8 @@ import (
 
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 )
 
 // PodCommand list and add pod
@@ -34,7 +34,7 @@ func PodCommand() *cli.Command {
 				},
 			},
 			&cli.Command{
-				Name:      "rm",
+				Name:      "remove",
 				Usage:     "remove pod",
 				ArgsUsage: podArgsUsage,
 				Action:    removePod,
