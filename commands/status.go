@@ -49,14 +49,13 @@ func status(c *cli.Context) error {
 			return cli.Exit("", -1)
 		}
 
-		if msg.Delete {
-			log.Warnf("[%s] status expired", coreutils.ShortID(msg.Id))
-			continue
-		}
-
 		if msg.Error != "" {
 			log.Errorf("[%s] status changed with error %v", coreutils.ShortID(msg.Id), msg.Error)
 			continue
+		}
+
+		if msg.Delete {
+			log.Warnf("[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Container.Name)
 		}
 
 		if !msg.Status.Running {
@@ -64,7 +63,7 @@ func status(c *cli.Context) error {
 		} else if !msg.Status.Healthy {
 			log.Warnf("[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Container.Name, msg.Container.Nodename)
 		} else if msg.Status.Running && msg.Status.Healthy {
-			log.Infof("[%s] back to life", coreutils.ShortID(msg.Container.Id))
+			log.Infof("[%s] %s back to life", coreutils.ShortID(msg.Container.Id), msg.Container.Name)
 			for networkName, addrs := range msg.Container.Publish {
 				log.Infof("[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}

@@ -17,7 +17,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20191129101134-74c84ffabdce
+	github.com/projecteru2/core v0.0.0-20191202075725-dbd2c5e2251b
 	github.com/prometheus/client_model v0.0.0-20190812154241-14fe0d1b01d4 // indirect
 	github.com/prometheus/procfs v0.0.4 // indirect
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2

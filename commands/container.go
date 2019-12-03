@@ -463,6 +463,8 @@ func renderContianer(container *pb.Container) {
 	}
 	if container.Status == nil {
 		log.Warn("Can't get container status, maybe dissociate with Eru")
+	} else {
+		log.Infof("Networks: %v", container.Status.Networks)
 	}
 }
 
