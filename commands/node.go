@@ -29,12 +29,6 @@ func NodeCommand() *cli.Command {
 				Usage:     "get a node",
 				ArgsUsage: nodeArgsUsage,
 				Action:    getNode,
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "podname",
-						Usage: "which podname",
-					},
-				},
 			},
 			&cli.Command{
 				Name:      "remove",
@@ -206,7 +200,7 @@ func getNode(c *cli.Context) error {
 	}
 	name := c.Args().First()
 
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
+	node, err := client.GetNode(context.Background(), &pb.GetNodeOptions{
 		Nodename: name,
 	})
 	if err != nil {
@@ -237,16 +231,8 @@ func removeNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Nodename: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
 	_, err = client.RemoveNode(context.Background(), &pb.RemoveNodeOptions{
-		Podname:  node.Podname,
-		Nodename: node.Name,
+		Nodename: name,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -261,14 +247,6 @@ func setNode(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Nodename: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
 	numaMemoryList := c.StringSlice("delta-numa-memory")
 	numaMemory := map[string]int64{}
 
@@ -326,8 +304,7 @@ func setNode(c *cli.Context) error {
 	}
 
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-		Podname:         node.Podname,
-		Nodename:        node.Name,
+		Nodename:        name,
 		Status:          cluster.KeepNodeStatus,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
@@ -349,17 +326,8 @@ func setNodeUp(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Nodename: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-		Podname:  node.Podname,
-		Nodename: node.Name,
+		Nodename: name,
 		Status:   cluster.NodeUp,
 	})
 	if err != nil {
@@ -375,22 +343,12 @@ func setNodeDown(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Nodename: name,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
 	do := true
 	if c.Bool("check") {
 		t := c.Int("check-timeout")
 		timeout, cancel := context.WithTimeout(c.Context, time.Duration(t)*time.Second)
 		defer cancel()
-		if _, err := client.GetNodeResource(timeout, &pb.GetNodeOptions{
-			Podname: node.Podname, Nodename: node.Name,
-		}); err == nil {
+		if _, err := client.GetNodeResource(timeout, &pb.GetNodeOptions{Nodename: name}); err == nil {
 			log.Warn("[SetNode] node is not down")
 			do = false
 		}
@@ -398,8 +356,7 @@ func setNodeDown(c *cli.Context) error {
 
 	if do {
 		_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-			Podname:  node.Podname,
-			Nodename: node.Name,
+			Nodename: name,
 			Status:   cluster.NodeDown,
 		})
 		if err != nil {
@@ -581,18 +538,8 @@ func nodeResource(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	nodename := c.Args().First()
-
-	node, err := client.GetNodeByName(context.Background(), &pb.GetNodeOptions{
-		Nodename: nodename,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	r, err := client.GetNodeResource(context.Background(), &pb.GetNodeOptions{
-		Podname: node.Podname, Nodename: node.Name,
-	})
+	name := c.Args().First()
+	r, err := client.GetNodeResource(context.Background(), &pb.GetNodeOptions{Nodename: name})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
