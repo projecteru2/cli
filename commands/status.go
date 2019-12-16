@@ -50,7 +50,11 @@ func status(c *cli.Context) error {
 		}
 
 		if msg.Error != "" {
-			log.Errorf("[%s] status changed with error %v", coreutils.ShortID(msg.Id), msg.Error)
+			if msg.Delete {
+				log.Warnf("%s deleted", coreutils.ShortID(msg.Id))
+			} else {
+				log.Errorf("[%s] status changed with error %v", coreutils.ShortID(msg.Id), msg.Error)
+			}
 			continue
 		}
 
