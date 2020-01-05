@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -164,6 +165,10 @@ func NodeCommand() *cli.Command {
 					&cli.StringSliceFlag{
 						Name:  "numa-memory",
 						Usage: "numa memory, can set multiple times. if not set, it will count numa-cpu groups, and divided by total memory",
+					},
+					&cli.StringSliceFlag{
+						Name:  "volumes",
+						Usage: `device volumes, can set multiple times. e.g. "--volumes /data:100g" `,
 					},
 				},
 			},
@@ -493,6 +498,21 @@ func addNode(c *cli.Context) error {
 		numaMemory[nodeID] = memory
 	}
 
+	volumes := map[string]int64{}
+
+	for _, volume := range c.StringSlice("volumes") {
+		parts := strings.Split(volume, ":")
+		if len(parts) != 2 {
+			return cli.Exit(errors.New("invalid volume"), -1)
+		}
+
+		capacity, err := parseRAMInHuman(parts[1])
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		volumes[parts[0]] = capacity
+	}
+
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("label") {
 		parts := strings.SplitN(d, "=", 2)
@@ -521,6 +541,7 @@ func addNode(c *cli.Context) error {
 		Labels:     labels,
 		Numa:       numa,
 		NumaMemory: numaMemory,
+		VolumeMap:  volumes,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
