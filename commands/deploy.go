@@ -9,8 +9,8 @@ import (
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -91,7 +91,7 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 		}
 
 		if msg.Success {
-			log.Infof("[Deploy] Success %s %s %s %v %v %d", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Quota, msg.Memory)
+			log.Infof("[Deploy] Success %s %s %s %v %v %d %v", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Quota, msg.Memory, msg.VolumePlan)
 			if len(msg.Hook) > 0 {
 				log.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}

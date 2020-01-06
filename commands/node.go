@@ -229,7 +229,7 @@ func getNode(c *cli.Context) error {
 	initVolume := node.GetInitVolume()
 	for volume, freeSpace := range node.GetVolume() {
 		capacity := initVolume[volume]
-		log.Info("Volume %s:\tfree space %d/%d bytes", volume, freeSpace, capacity)
+		log.Infof("Volume %s: free space %d/%d bytes", volume, freeSpace, capacity)
 	}
 
 	if node.GetInitStorage() > 0 {
@@ -308,20 +308,17 @@ func setNode(c *cli.Context) error {
 		}
 	}
 
-	volumeList := c.String("delta-volume")
 	volumeMap := map[string]int64{}
-	if volumeList != "" {
-		for _, volume := range strings.Split(volumeList, ",") {
-			parts := strings.Split(volume, ":")
-			if len(parts) != 2 {
-				return cli.Exit(fmt.Errorf("invalid volume"), -1)
-			}
-			delta, err := parseRAMInHuman(parts[1])
-			if err != nil {
-				return cli.Exit(err, -1)
-			}
-			volumeMap[parts[0]] = delta
+	for _, volume := range strings.Split(c.String("delta-volume"), ",") {
+		parts := strings.Split(volume, ":")
+		if len(parts) != 2 {
+			return cli.Exit(fmt.Errorf("invalid volume"), -1)
 		}
+		delta, err := parseRAMInHuman(parts[1])
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		volumeMap[parts[0]] = delta
 	}
 
 	var deltaMemory int64
