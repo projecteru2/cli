@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -94,6 +93,10 @@ func NodeCommand() *cli.Command {
 						Name:  "delta-numa-memory",
 						Usage: "numa memory changes, can set multiple times, like -1M or 1G, support K, M, G, T",
 					},
+					&cli.StringFlag{
+						Name:  "delta-volume",
+						Usage: `volume changed in string, like "/data0:-1G,/data1:1G"`,
+					},
 					&cli.StringSliceFlag{
 						Name:  "numa-cpu",
 						Usage: "numa cpu list, can set multiple times, use comma separated",
@@ -168,7 +171,7 @@ func NodeCommand() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "volumes",
-						Usage: `device volumes, can set multiple times. e.g. "--volumes /data:100g" `,
+						Usage: `device volumes, can set multiple times. e.g. "--volumes /data:100G" `,
 					},
 				},
 			},
@@ -305,6 +308,22 @@ func setNode(c *cli.Context) error {
 		}
 	}
 
+	volumeList := c.String("delta-volume")
+	volumeMap := map[string]int64{}
+	if volumeList != "" {
+		for _, volume := range strings.Split(volumeList, ",") {
+			parts := strings.Split(volume, ":")
+			if len(parts) != 2 {
+				return cli.Exit(fmt.Errorf("invalid volume"), -1)
+			}
+			delta, err := parseRAMInHuman(parts[1])
+			if err != nil {
+				return cli.Exit(err, -1)
+			}
+			volumeMap[parts[0]] = delta
+		}
+	}
+
 	var deltaMemory int64
 	if deltaMemory, err = parseRAMInHuman(c.String("delta-memory")); err != nil {
 		return cli.Exit(err, -1)
@@ -322,6 +341,7 @@ func setNode(c *cli.Context) error {
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,
 		DeltaNumaMemory: numaMemory,
+		DeltaVolume:     volumeMap,
 		Numa:            numa,
 		Labels:          labels,
 	})
@@ -510,7 +530,7 @@ func addNode(c *cli.Context) error {
 	for _, volume := range c.StringSlice("volumes") {
 		parts := strings.Split(volume, ":")
 		if len(parts) != 2 {
-			return cli.Exit(errors.New("invalid volume"), -1)
+			return cli.Exit(fmt.Errorf("invalid volume"), -1)
 		}
 
 		capacity, err := parseRAMInHuman(parts[1])
