@@ -457,7 +457,7 @@ func renderContianer(container *pb.Container) {
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
-	log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Privileged)
+	log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Volume: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Volume, container.Privileged)
 	for networkName, IP := range container.Publish {
 		log.Infof("Publish at %s ip %s", networkName, IP)
 	}
