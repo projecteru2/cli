@@ -222,6 +222,13 @@ func getNode(c *cli.Context) error {
 		log.Infof("Memory Node: %s Capacity %d bytes", nodeID, memory)
 	}
 
+	log.Infof("Volume Used: %d bytes", node.GetVolumeUsed())
+	initVolume := node.GetInitVolume()
+	for volume, freeSpace := range node.GetVolume() {
+		capacity := initVolume[volume]
+		log.Info("Volume %s:\tfree space %d/%d bytes", volume, freeSpace, capacity)
+	}
+
 	if node.GetInitStorage() > 0 {
 		log.Infof("Storage Used: %d bytes", node.GetStorageUsed())
 	} else {
