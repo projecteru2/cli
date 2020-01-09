@@ -220,17 +220,19 @@ func getNode(c *cli.Context) error {
 		log.Infof("%s: %s", k, v)
 	}
 	log.Infof("CPU Used: %.2f", node.GetCpuUsed())
-	log.Infof("Memory Used: %d bytes", node.GetMemoryUsed())
+	log.Infof("Memory Used: %d/%d bytes", node.GetMemoryUsed(), node.GetInitMemory())
 	for nodeID, memory := range node.GetNumaMemory() {
 		log.Infof("Memory Node: %s Capacity %d bytes", nodeID, memory)
 	}
 
-	log.Infof("Volume Used: %d bytes", node.GetVolumeUsed())
 	initVolume := node.GetInitVolume()
+	totalCap := int64(0)
 	for volume, freeSpace := range node.GetVolume() {
 		capacity := initVolume[volume]
-		log.Infof("Volume %s: free space %d/%d bytes", volume, freeSpace, capacity)
+		totalCap += capacity
+		log.Infof("  Volume %s: Used %d/%d bytes", volume, freeSpace, capacity)
 	}
+	log.Infof("Volume Used: %d/%d bytes", node.GetVolumeUsed(), totalCap)
 
 	if node.GetInitStorage() > 0 {
 		log.Infof("Storage Used: %d bytes", node.GetStorageUsed())

@@ -206,9 +206,9 @@ func ContainerCommand() *cli.Command {
 						Aliases: []string{"m"},
 						Value:   "1G",
 					},
-					&cli.StringSliceFlag{
+					&cli.StringFlag{
 						Name:  "volumes",
-						Usage: `volumes increment/decrement, like "AUTO:/data:rw:-1G", can use multiple times`,
+						Usage: `volumes increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
 					},
 				},
 			},
@@ -461,7 +461,7 @@ func renderContianer(container *pb.Container) {
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
-	log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Volume: %v, VolumePlan: %v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Volumes, container.VolumePlan, container.Privileged)
+	log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Volume: %+v, VolumePlan: %+v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Volumes, container.VolumePlan, container.Privileged)
 	for networkName, IP := range container.Publish {
 		log.Infof("Publish at %s ip %s", networkName, IP)
 	}
@@ -587,7 +587,7 @@ func reallocContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: c.StringSlice("volumes")}
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: strings.Split(c.String("volumes"), ",")}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
