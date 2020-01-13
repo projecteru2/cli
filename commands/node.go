@@ -230,7 +230,7 @@ func getNode(c *cli.Context) error {
 	for volume, freeSpace := range node.GetVolume() {
 		capacity := initVolume[volume]
 		totalCap += capacity
-		log.Infof("  Volume %s: Used %d/%d bytes", volume, freeSpace, capacity)
+		log.Infof("  Volume %s: Used %d/%d bytes", volume, capacity-freeSpace, capacity)
 	}
 	log.Infof("Volume Used: %d/%d bytes", node.GetVolumeUsed(), totalCap)
 
