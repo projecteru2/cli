@@ -93,6 +93,10 @@ func NodeCommand() *cli.Command {
 						Name:  "delta-numa-memory",
 						Usage: "numa memory changes, can set multiple times, like -1M or 1G, support K, M, G, T",
 					},
+					&cli.StringFlag{
+						Name:  "delta-volume",
+						Usage: `volume changed in string, like "/data0:-1G,/data1:1G"`,
+					},
 					&cli.StringSliceFlag{
 						Name:  "numa-cpu",
 						Usage: "numa cpu list, can set multiple times, use comma separated",
@@ -165,6 +169,10 @@ func NodeCommand() *cli.Command {
 						Name:  "numa-memory",
 						Usage: "numa memory, can set multiple times. if not set, it will count numa-cpu groups, and divided by total memory",
 					},
+					&cli.StringSliceFlag{
+						Name:  "volumes",
+						Usage: `device volumes, can set multiple times. e.g. "--volumes /data:100G" `,
+					},
 				},
 			},
 		},
@@ -212,10 +220,19 @@ func getNode(c *cli.Context) error {
 		log.Infof("%s: %s", k, v)
 	}
 	log.Infof("CPU Used: %.2f", node.GetCpuUsed())
-	log.Infof("Memory Used: %d bytes", node.GetMemoryUsed())
+	log.Infof("Memory Used: %d/%d bytes", node.GetMemoryUsed(), node.GetInitMemory())
 	for nodeID, memory := range node.GetNumaMemory() {
 		log.Infof("Memory Node: %s Capacity %d bytes", nodeID, memory)
 	}
+
+	initVolume := node.GetInitVolume()
+	totalCap := int64(0)
+	for volume, freeSpace := range node.GetVolume() {
+		capacity := initVolume[volume]
+		totalCap += capacity
+		log.Infof("  Volume %s: Used %d/%d bytes", volume, capacity-freeSpace, capacity)
+	}
+	log.Infof("Volume Used: %d/%d bytes", node.GetVolumeUsed(), totalCap)
 
 	if node.GetInitStorage() > 0 {
 		log.Infof("Storage Used: %d bytes", node.GetStorageUsed())
@@ -293,6 +310,19 @@ func setNode(c *cli.Context) error {
 		}
 	}
 
+	volumeMap := map[string]int64{}
+	for _, volume := range strings.Split(c.String("delta-volume"), ",") {
+		parts := strings.Split(volume, ":")
+		if len(parts) != 2 {
+			return cli.Exit(fmt.Errorf("invalid volume"), -1)
+		}
+		delta, err := parseRAMInHuman(parts[1])
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		volumeMap[parts[0]] = delta
+	}
+
 	var deltaMemory int64
 	if deltaMemory, err = parseRAMInHuman(c.String("delta-memory")); err != nil {
 		return cli.Exit(err, -1)
@@ -310,6 +340,7 @@ func setNode(c *cli.Context) error {
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,
 		DeltaNumaMemory: numaMemory,
+		DeltaVolume:     volumeMap,
 		Numa:            numa,
 		Labels:          labels,
 	})
@@ -493,6 +524,21 @@ func addNode(c *cli.Context) error {
 		numaMemory[nodeID] = memory
 	}
 
+	volumes := map[string]int64{}
+
+	for _, volume := range c.StringSlice("volumes") {
+		parts := strings.Split(volume, ":")
+		if len(parts) != 2 {
+			return cli.Exit(fmt.Errorf("invalid volume"), -1)
+		}
+
+		capacity, err := parseRAMInHuman(parts[1])
+		if err != nil {
+			return cli.Exit(err, -1)
+		}
+		volumes[parts[0]] = capacity
+	}
+
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("label") {
 		parts := strings.SplitN(d, "=", 2)
@@ -521,6 +567,7 @@ func addNode(c *cli.Context) error {
 		Labels:     labels,
 		Numa:       numa,
 		NumaMemory: numaMemory,
+		VolumeMap:  volumes,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -545,7 +592,7 @@ func nodeResource(c *cli.Context) error {
 	}
 
 	log.Infof("[NodeResource] Node %s", r.Name)
-	log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100)
+	log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100, r.VolumePercent*100)
 	if !r.Verification {
 		for _, detail := range r.Details {
 			log.Warnf("[NodeResource] Resource diff %s", detail)
