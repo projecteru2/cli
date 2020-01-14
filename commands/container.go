@@ -586,8 +586,12 @@ func reallocContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
+	volumes := []string{}
+	if v := c.String("volumes"); v != "" {
+		volumes = strings.Split(v, ",")
+	}
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: strings.Split(c.String("volumes"), ",")}
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
