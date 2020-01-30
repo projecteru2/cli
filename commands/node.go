@@ -311,16 +311,19 @@ func setNode(c *cli.Context) error {
 	}
 
 	volumeMap := map[string]int64{}
-	for _, volume := range strings.Split(c.String("delta-volume"), ",") {
-		parts := strings.Split(volume, ":")
-		if len(parts) != 2 {
-			return cli.Exit(fmt.Errorf("invalid volume"), -1)
+	deltaVolume := c.String("delta-volume")
+	if deltaVolume != "" {
+		for _, volume := range strings.Split(deltaVolume, ",") {
+			parts := strings.Split(volume, ":")
+			if len(parts) != 2 {
+				return cli.Exit(fmt.Errorf("invalid volume"), -1)
+			}
+			delta, err := parseRAMInHuman(parts[1])
+			if err != nil {
+				return cli.Exit(err, -1)
+			}
+			volumeMap[parts[0]] = delta
 		}
-		delta, err := parseRAMInHuman(parts[1])
-		if err != nil {
-			return cli.Exit(err, -1)
-		}
-		volumeMap[parts[0]] = delta
 	}
 
 	var deltaMemory int64
