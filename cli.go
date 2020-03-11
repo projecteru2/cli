@@ -6,6 +6,7 @@ import (
 
 	"github.com/projecteru2/cli/commands"
 	"github.com/projecteru2/cli/versioninfo"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -32,5 +33,6 @@ func main() {
 	}
 
 	app.Flags = commands.GlobalFlags()
+	logrus.SetOutput(os.Stdout)
 	app.Run(os.Args)
 }

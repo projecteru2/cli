@@ -33,7 +33,14 @@ func ContainerCommand() *cli.Command {
 				Name:      "logs",
 				Usage:     "get container stream logs",
 				ArgsUsage: "containerID",
-				Action:    getContainerLog,
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "tail",
+						Value: "all",
+						Usage: "how many",
+					},
+				},
+				Action: getContainerLog,
 			},
 			&cli.Command{
 				Name:      "get-status",
@@ -656,8 +663,9 @@ func getContainerLog(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
+	tail := c.String("tail")
 
-	opts := &pb.ContainerID{Id: c.Args().First()}
+	opts := &pb.LogStreamOptions{Id: c.Args().First(), Tail: tail}
 	resp, err := client.LogStream(c.Context, opts)
 	if err != nil {
 		return cli.Exit(err, -1)
