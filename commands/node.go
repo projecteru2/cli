@@ -77,6 +77,10 @@ func NodeCommand() *cli.Command {
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNode,
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "mark-containers-down",
+						Usage: "mark containers down",
+					},
 					&cli.StringFlag{
 						Name:  "delta-memory",
 						Usage: "memory changes like -1M or 1G, support K, M, G, T",
@@ -266,6 +270,7 @@ func setNode(c *cli.Context) error {
 	name := c.Args().First()
 	numaMemoryList := c.StringSlice("delta-numa-memory")
 	numaMemory := map[string]int64{}
+	markContainersDown := c.Bool("mark-containers-down")
 
 	for index, memoryStr := range numaMemoryList {
 		var memory int64
@@ -346,6 +351,7 @@ func setNode(c *cli.Context) error {
 		DeltaVolume:     volumeMap,
 		Numa:            numa,
 		Labels:          labels,
+		ContainersDown:  markContainersDown,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
