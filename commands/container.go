@@ -614,10 +614,10 @@ func reallocContainers(c *cli.Context) error {
 			return cli.Exit(err, -1)
 		}
 
-		if msg.Success {
-			log.Infof("[Realloc] Success %s", coreutils.ShortID(msg.Id))
+		if msg.Error != "" {
+			log.Errorf("[Realloc] Failed %s, error is %v", coreutils.ShortID(msg.Id), msg.Error)
 		} else {
-			log.Errorf("[Realloc] Failed %s", coreutils.ShortID(msg.Id))
+			log.Infof("[Realloc] Success %s", coreutils.ShortID(msg.Id))
 		}
 	}
 	return nil
