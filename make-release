@@ -16,7 +16,7 @@ cp eru-cli $BIN/eru-cli
 
 echo $VERSION rpm build begin
 
-fpm -f -s dir -t rpm -n eru-cli --epoch 0 -v $VERSION --iteration 1.el7 -C $RPMROOT -p $PWD --verbose --category 'Development/App' --description 'cli for eru' --url 'https://github.com/projecteru2/cli' --license 'MIT' --no-rpm-sign usr
+fpm -f -s dir -t rpm -n eru-cli --epoch 0 -v $VERSION --iteration 1.el7 -C $RPMROOT -p $PWD --verbose --category 'Development/App' --description 'cli for eru' --url 'https://github.com/projecteru2/cli' --license 'MIT' -a all --no-rpm-sign usr
 
 BIN="$DEBROOT/usr/bin"
 
