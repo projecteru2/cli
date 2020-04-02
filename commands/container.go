@@ -612,15 +612,15 @@ func reallocContainers(c *cli.Context) error {
 	if bindCPU && unbindCPU{
 		return cli.Exit(errors.New("bindcpu and unbindcpu can not both be set"), -1)
 	}
-	bindCPUOps := pb.BindCPUOp_KEEP
+	bindCPUOps := pb.BindCPUOpt_KEEP
 	if bindCPU{
-		bindCPUOps = pb.BindCPUOp_BIND
+		bindCPUOps = pb.BindCPUOpt_BIND
 	}
 	if unbindCPU{
-		bindCPUOps = pb.BindCPUOp_UNBIND
+		bindCPUOps = pb.BindCPUOpt_UNBIND
 	}
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes,BindCpuOp:bindCPUOps}
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes,BindCpuOpt:bindCPUOps}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
