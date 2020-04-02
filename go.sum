@@ -205,6 +205,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/projecteru2/core v0.0.0-20200324041223-9de65e9888b7 h1:rtiaun/us2UCa3+nV4aI1PzO/1+4a4gKJGY9JdK1+Sk=
 github.com/projecteru2/core v0.0.0-20200324041223-9de65e9888b7/go.mod h1:CTiEUZuSK6d+/A+GXOl2a3eRJKqzgR3/zdxJpLvMneM=
+github.com/projecteru2/core v0.0.0-20200402120820-c60b6b573917 h1:dJMKPSNac4iQerhDQ6IMFHjrlzW612+QJHUvk/DWC3Q=
+github.com/projecteru2/core v0.0.0-20200402120820-c60b6b573917/go.mod h1:CTiEUZuSK6d+/A+GXOl2a3eRJKqzgR3/zdxJpLvMneM=
 github.com/projecteru2/libyavirt v0.0.0-20200323074159-8995ed0d1372 h1:oq9F9anuSTyGq1sV7VjmjIK6KZlWvUQTWv+wOhIR9wE=
 github.com/projecteru2/libyavirt v0.0.0-20200323074159-8995ed0d1372/go.mod h1:L+QcwDnJUIQYX7mM9//2KNF32e1aknOFFzutbVNyKfg=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
