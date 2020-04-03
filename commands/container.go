@@ -219,11 +219,11 @@ func ContainerCommand() *cli.Command {
 						Usage: `volumes increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
 					},
 					&cli.BoolFlag{
-						Name:  "bind-cpu",
+						Name:  "cpu-bind",
 						Usage: `bind fixed cpu(s) with container`,
 					},
 					&cli.BoolFlag{
-						Name:  "unbind-cpu",
+						Name:  "cpu-unbind",
 						Usage: `unbind the container relation with cpu`,
 					},
 				},
@@ -606,21 +606,21 @@ func reallocContainers(c *cli.Context) error {
 	if v := c.String("volumes"); v != "" {
 		volumes = strings.Split(v, ",")
 	}
-	bindCPU :=c.Bool("bind-cpu")
-	unbindCPU :=c.Bool("unbind-cpu")
+	bindCPU := c.Bool("cpu-bind")
+	unbindCPU := c.Bool("cpu-unbind")
 
-	if bindCPU && unbindCPU{
-		return cli.Exit(errors.New("bindcpu and unbindcpu can not both be set"), -1)
+	if bindCPU && unbindCPU {
+		return cli.Exit(errors.New("cpu-bind and cpu-unbind can not both be set"), -1)
 	}
 	bindCPUOps := pb.BindCPUOpt_KEEP
-	if bindCPU{
+	if bindCPU {
 		bindCPUOps = pb.BindCPUOpt_BIND
 	}
-	if unbindCPU{
+	if unbindCPU {
 		bindCPUOps = pb.BindCPUOpt_UNBIND
 	}
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes,BindCpuOpt:bindCPUOps}
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes, BindCpuOpt: bindCPUOps}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
