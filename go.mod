@@ -25,7 +25,7 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
-	github.com/urfave/cli/v2 v2.1.1
+	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec
 	gopkg.in/yaml.v2 v2.2.7
 )
