@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -216,6 +217,14 @@ func ContainerCommand() *cli.Command {
 					&cli.StringFlag{
 						Name:  "volumes",
 						Usage: `volumes increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
+					},
+					&cli.BoolFlag{
+						Name:  "cpu-bind",
+						Usage: `bind fixed cpu(s) with container`,
+					},
+					&cli.BoolFlag{
+						Name:  "cpu-unbind",
+						Usage: `unbind the container relation with cpu`,
 					},
 				},
 			},
@@ -597,8 +606,21 @@ func reallocContainers(c *cli.Context) error {
 	if v := c.String("volumes"); v != "" {
 		volumes = strings.Split(v, ",")
 	}
+	bindCPU := c.Bool("cpu-bind")
+	unbindCPU := c.Bool("cpu-unbind")
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes}
+	if bindCPU && unbindCPU {
+		return cli.Exit(errors.New("cpu-bind and cpu-unbind can not both be set"), -1)
+	}
+	bindCPUOps := pb.BindCPUOpt_KEEP
+	if bindCPU {
+		bindCPUOps = pb.BindCPUOpt_BIND
+	}
+	if unbindCPU {
+		bindCPUOps = pb.BindCPUOpt_UNBIND
+	}
+
+	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes, BindCpuOpt: bindCPUOps}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
