@@ -11,8 +11,8 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	"github.com/sethgrid/curse"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 	yaml "gopkg.in/yaml.v2"
 )
 
@@ -38,6 +38,10 @@ func ImageCommand() *cli.Command {
 					&cli.BoolFlag{
 						Name:  "raw",
 						Usage: "build image from dir",
+					},
+					&cli.BoolFlag{
+						Name:  "exist",
+						Usage: "build image from exist",
 					},
 					&cli.StringFlag{
 						Name:        "user",
@@ -234,10 +238,22 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		log.Fatal("[Build] no spec")
 	}
 	raw := c.Bool("raw")
+	exist := c.Bool("exist")
+	if raw && exist {
+		log.Fatal("[Build] mutually exclusive flag: raw or exist")
+	}
 	stopSignal := c.String("stop-signal")
+
 	var specs *pb.Builds
 	var tar []byte
-	if !raw {
+	var existID string
+	var buildMethod pb.BuildImageOptions_BuildMethod
+	if exist {
+		buildMethod = pb.BuildImageOptions_EXIST
+		existID = c.Args().First()
+
+	} else if !raw {
+		buildMethod = pb.BuildImageOptions_SCM
 		specURI := c.Args().First()
 		log.Debugf("[Build] Deploy %s", specURI)
 		var data []byte
@@ -263,7 +279,9 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 			b.StopSignal = stopSignal
 			b.Version = utils.ParseEnvValue(b.Version)
 		}
+
 	} else {
+		buildMethod = pb.BuildImageOptions_RAW
 		path := c.Args().First()
 		data, err := dockerengine.CreateTarStream(path)
 		if err != nil {
@@ -287,12 +305,14 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 	}
 
 	opts := &pb.BuildImageOptions{
-		Name:   name,
-		User:   user,
-		Uid:    uid,
-		Tags:   tags,
-		Builds: specs,
-		Tar:    tar,
+		Name:        name,
+		User:        user,
+		Uid:         uid,
+		Tags:        tags,
+		BuildMethod: buildMethod,
+		Builds:      specs,
+		Tar:         tar,
+		ExistId:     existID,
 	}
 	return opts
 }
