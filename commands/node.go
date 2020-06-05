@@ -7,11 +7,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/projecteru2/core/cluster"
-
 	"time"
 
+	"github.com/jedib0t/go-pretty/table"
+	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -198,9 +197,38 @@ func listNodeContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
+
+	containers := []*pb.Container{}
 	for _, container := range resp.Containers {
-		log.Infof("%s: %s", container.Name, container.Id)
-		log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
+		containers = append(containers, container)
+	}
+
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name/ID", "Information"})
+		for _, c := range containers {
+			rows := [][]string{
+				[]string{c.Name, c.Id},
+				[]string{
+					fmt.Sprintf("Pod: %s", c.Podname),
+					fmt.Sprintf("Node: %s", c.Nodename),
+					fmt.Sprintf("CPU: %v", c.Cpu),
+					fmt.Sprintf("Quota: %v", c.Quota),
+					fmt.Sprintf("Memory: %v", c.Memory),
+					fmt.Sprintf("Privileged: %v", c.Privileged),
+				},
+			}
+			t.AppendRows(toTableRows(rows))
+			t.AppendSeparator()
+		}
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		for _, container := range containers {
+			log.Infof("%s: %s", container.Name, container.Id)
+			log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
+		}
 	}
 	return nil
 }
@@ -600,11 +628,30 @@ func nodeResource(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	log.Infof("[NodeResource] Node %s", r.Name)
-	log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100, r.VolumePercent*100)
-	if !r.Verification {
-		for _, detail := range r.Details {
-			log.Warnf("[NodeResource] Resource diff %s", detail)
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name", "Resource"})
+		rows := [][]string{
+			[]string{r.Name},
+			[]string{
+				fmt.Sprintf("Cpu: %.2f%%", r.CpuPercent*100),
+				fmt.Sprintf("Memory: %.2f%%", r.MemoryPercent*100),
+				fmt.Sprintf("Storage: %.2f%%", r.StoragePercent*100),
+				fmt.Sprintf("Volume: %.2f%%", r.VolumePercent*100),
+			},
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		log.Infof("[NodeResource] Node %s", r.Name)
+		log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100, r.VolumePercent*100)
+		if !r.Verification {
+			for _, detail := range r.Details {
+				log.Warnf("[NodeResource] Resource diff %s", detail)
+			}
 		}
 	}
 	return nil

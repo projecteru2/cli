@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jedib0t/go-pretty/table"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -473,7 +475,7 @@ func removeContainers(c *cli.Context) error {
 	return nil
 }
 
-func renderContianer(container *pb.Container) {
+func renderContainer(container *pb.Container) {
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
@@ -488,12 +490,83 @@ func renderContianer(container *pb.Container) {
 	}
 }
 
+func prettyRenderContianers(containers []*pb.Container) {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "IP", "Networks"})
+
+	for _, c := range containers {
+		// publish ip
+		ips := []string{}
+		for networkName, IP := range c.Publish {
+			ips = append(ips, fmt.Sprintf("%s: %s", networkName, IP))
+		}
+
+		// networks
+		ns := []string{}
+		if c.Status != nil {
+			for name, ip := range c.Status.Networks {
+				ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+			}
+		}
+
+		rows := [][]string{
+			[]string{c.Name, c.Id},
+			[]string{c.Podname},
+			[]string{c.Nodename},
+			[]string{fmt.Sprintf("Quota: %f", c.Quota), fmt.Sprintf("Memory: %v", c.Memory), fmt.Sprintf("Storage: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			c.Volumes,
+			ips,
+			ns,
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+	}
+
+	t.SetStyle(table.StyleLight)
+	t.Render()
+}
+
 func renderContainerStatus(containerStatus *pb.ContainerStatus) {
 	log.Info("--------------------------------------")
 	log.Infof("ID: %s", containerStatus.Id)
 	log.Infof("Running: %v, Healthy: %v", containerStatus.Running, containerStatus.Healthy)
 	log.Infof("Networks: %v", containerStatus.Networks)
 	log.Infof("Extension %s", containerStatus.Extension)
+}
+
+func prettyRenderContainerStatus(containerStatuses []*pb.ContainerStatus) {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
+
+	for _, s := range containerStatuses {
+		// networks
+		ns := []string{}
+		for name, ip := range s.Networks {
+			ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+		}
+
+		// extensions
+		extensions := map[string]string{}
+		json.Unmarshal(s.Extension, &extensions)
+		es := []string{}
+		for k, v := range extensions {
+			es = append(es, fmt.Sprintf("%s: %s", k, v))
+		}
+
+		rows := [][]string{
+			[]string{s.Id},
+			[]string{fmt.Sprintf("Running: %v", s.Running), fmt.Sprintf("Healthy: %v", s.Healthy)},
+			ns,
+			es,
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+	}
+
+	t.SetStyle(table.StyleLight)
+	t.Render()
 }
 
 func getContainers(c *cli.Context) error {
@@ -506,8 +579,16 @@ func getContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	containers := []*pb.Container{}
 	for _, container := range resp.GetContainers() {
-		renderContianer(container)
+		containers = append(containers, container)
+	}
+	if c.Bool("pretty") {
+		prettyRenderContianers(containers)
+	} else {
+		for _, container := range containers {
+			renderContainer(container)
+		}
 	}
 	return nil
 }
@@ -523,8 +604,16 @@ func getContainersStatus(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	containerStatuses := []*pb.ContainerStatus{}
 	for _, containerStatus := range resp.Status {
-		renderContainerStatus(containerStatus)
+		containerStatuses = append(containerStatuses, containerStatus)
+	}
+	if c.Bool("pretty") {
+		prettyRenderContainerStatus(containerStatuses)
+	} else {
+		for _, containerStatus := range containerStatuses {
+			renderContainerStatus(containerStatus)
+		}
 	}
 	return nil
 }
@@ -558,8 +647,16 @@ func setContainersStatus(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	containerStatuses := []*pb.ContainerStatus{}
 	for _, containerStatus := range resp.Status {
-		renderContainerStatus(containerStatus)
+		containerStatuses = append(containerStatuses, containerStatus)
+	}
+	if c.Bool("pretty") {
+		prettyRenderContainerStatus(containerStatuses)
+	} else {
+		for _, containerStatus := range containerStatuses {
+			renderContainerStatus(containerStatus)
+		}
 	}
 	return nil
 }
@@ -580,6 +677,7 @@ func listContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
+	containers := []*pb.Container{}
 	for {
 		container, err := resp.Recv()
 		if err == io.EOF {
@@ -588,7 +686,15 @@ func listContainers(c *cli.Context) error {
 		if err != nil {
 			return cli.Exit(err, -1)
 		}
-		renderContianer(container)
+		containers = append(containers, container)
+	}
+
+	if c.Bool("pretty") {
+		prettyRenderContianers(containers)
+	} else {
+		for _, container := range containers {
+			renderContainer(container)
+		}
 	}
 	return nil
 }
