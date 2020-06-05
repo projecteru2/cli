@@ -75,6 +75,12 @@ func GlobalFlags() []cli.Flag {
 			EnvVars:     []string{"ERU_PASSWORD"},
 			Destination: &password,
 		},
+		&cli.BoolFlag{
+			Name:    "pretty",
+			Usage:   "use table to output",
+			Value:   false,
+			EnvVars: []string{"ERU_PRETTY_PRINT"},
+		},
 	}
 }
 

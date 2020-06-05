@@ -12,8 +12,10 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-openapi/strfmt v0.19.5 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/gorilla/mux v1.7.3 // indirect
+	github.com/jedib0t/go-pretty v1.0.1-0.20200513164024-8b58fbaf3b31
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
@@ -23,7 +25,6 @@ require (
 	github.com/prometheus/common v0.8.0 // indirect
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sirupsen/logrus v1.4.2
-	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec
