@@ -21,6 +21,7 @@ Modify resources for eru pods / nodes, manipulate containers and images.
 		* `pod add`
 		* `pod nodes {podname}`
 		* `pod networks {podname}`
+        * `pod resource {podname}`
 	* `node` subcommands:
 		* `node get {nodename}`
 		* `node remove {nodename}`
