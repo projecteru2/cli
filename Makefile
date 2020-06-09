@@ -3,7 +3,7 @@
 REPO_PATH := github.com/projecteru2/cli
 REVISION := $(shell git rev-parse HEAD || unknown)
 BUILTAT := $(shell date +%Y-%m-%dT%H:%M:%S)
-VERSION := $(shell cat VERSION)
+VERSION := $(shell date +%y.%m.%d)
 GO_LDFLAGS ?= -s -X $(REPO_PATH)/versioninfo.REVISION=$(REVISION) \
 			  -X $(REPO_PATH)/versioninfo.BUILTAT=$(BUILTAT) \
 			  -X $(REPO_PATH)/versioninfo.VERSION=$(VERSION)
