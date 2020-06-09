@@ -26,6 +26,7 @@ Modify resources for eru pods / nodes, manipulate containers and images.
 		* `node get {nodename}`
 		* `node remove {nodename}`
 		* `node set-status [--available] {nodename}`
+        * `node resource {nodename}`
 	* `image` subcommands:
 		* `image build`
 	* `lambda`
