@@ -2,8 +2,6 @@ name: docker-image
 
 on:
   push:
-    branches:
-      - master
     tags:
       - v*
 
@@ -21,4 +19,4 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           tag_with_ref: true
-          tag_with_sha: true
+          tag_with_sha: false
