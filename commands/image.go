@@ -22,7 +22,7 @@ func ImageCommand() *cli.Command {
 		Name:  "image",
 		Usage: "image commands",
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:      "build",
 				Usage:     "build image",
 				ArgsUsage: specFileURI,
@@ -62,7 +62,7 @@ func ImageCommand() *cli.Command {
 				},
 				Action: buildImage,
 			},
-			&cli.Command{
+			{
 				Name:      "cache",
 				Usage:     "cache image",
 				ArgsUsage: "name of images",
@@ -83,7 +83,7 @@ func ImageCommand() *cli.Command {
 				},
 				Action: cacheImage,
 			},
-			&cli.Command{
+			{
 				Name:      "remove",
 				Usage:     "remove image",
 				ArgsUsage: "name of images",

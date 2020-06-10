@@ -14,8 +14,8 @@ import (
 	pb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 )
 
 // PublishCommand for publish containers
@@ -24,13 +24,13 @@ func PublishCommand() *cli.Command {
 		Name:  "publish",
 		Usage: "publish commands",
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:      "dump",
 				Usage:     "dump elb things",
 				ArgsUsage: "elb url",
 				Action:    dumpELB,
 			},
-			&cli.Command{
+			{
 				Name:      "update",
 				Usage:     "update publish things",
 				ArgsUsage: specFileURI,
@@ -99,7 +99,7 @@ func publishContainers(c *cli.Context) error {
 
 		var data []byte
 		var err error
-		domain := []byte{}
+		var domain []byte
 		if strings.HasPrefix(specURI, "http") {
 			data, err = utils.GetSpecFromRemote(specURI)
 		} else {

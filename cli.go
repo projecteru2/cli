@@ -34,5 +34,5 @@ func main() {
 
 	app.Flags = commands.GlobalFlags()
 	logrus.SetOutput(os.Stdout)
-	app.Run(os.Args)
+	_ = app.Run(os.Args)
 }

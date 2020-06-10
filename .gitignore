@@ -8,4 +8,4 @@ build.yaml
 update_core.sh
 *~
 cscope.*
-dist/
+dist/*

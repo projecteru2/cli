@@ -52,7 +52,7 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 		},
 	}
 
-	go iStream.Send(clrf)
+	go func() { _ = iStream.Send(clrf) }()
 	return handleInteractiveStream(stdin, iStream, count)
 }
 
