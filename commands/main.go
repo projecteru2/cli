@@ -85,9 +85,9 @@ func GlobalFlags() []cli.Flag {
 }
 
 func setupAndGetGRPCConnection() *client.Client {
-	setupLog("INFO")
+	_ = setupLog("INFO")
 	if debug {
-		setupLog("DEBUG")
+		_ = setupLog("DEBUG")
 	}
 
 	return client.NewClient(eru, types.AuthConfig{Username: username, Password: password})

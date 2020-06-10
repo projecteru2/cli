@@ -15,12 +15,12 @@ func PodCommand() *cli.Command {
 		Name:  "pod",
 		Usage: "pod commands",
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:   "list",
 				Usage:  "list all pods",
 				Action: listPods,
 			},
-			&cli.Command{
+			{
 				Name:      "add",
 				Usage:     "add new pod",
 				ArgsUsage: podArgsUsage,
@@ -33,19 +33,19 @@ func PodCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "remove",
 				Usage:     "remove pod",
 				ArgsUsage: podArgsUsage,
 				Action:    removePod,
 			},
-			&cli.Command{
+			{
 				Name:      "resource",
 				Usage:     "pod resource usage",
 				ArgsUsage: podArgsUsage,
 				Action:    podResource,
 			},
-			&cli.Command{
+			{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
 				ArgsUsage: podArgsUsage,
@@ -58,7 +58,7 @@ func PodCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "networks",
 				Usage:     "list all networks in one pod",
 				ArgsUsage: podArgsUsage,

@@ -6,12 +6,17 @@ import (
 )
 
 var (
-	NAME     = "cli"
-	VERSION  = "unknown"
+	// NAME .
+	NAME = "cli"
+	// VERSION .
+	VERSION = "unknown"
+	// REVISION .
 	REVISION = "HEAD"
-	BUILTAT  = "now"
+	// BUILTAT .
+	BUILTAT = "now"
 )
 
+// VersionString .
 func VersionString() string {
 	version := ""
 	version += fmt.Sprintf("Version:        %s\n", VERSION)
