@@ -36,7 +36,7 @@ func status(c *cli.Context) error {
 			Labels:     labels,
 		})
 	if err != nil || resp == nil {
-		cli.Exit("", -1)
+		return cli.Exit("", -1)
 	}
 
 	for {

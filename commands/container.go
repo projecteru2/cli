@@ -26,13 +26,13 @@ func ContainerCommand() *cli.Command {
 		Name:  "container",
 		Usage: "container commands",
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:      "get",
 				Usage:     "get container(s)",
 				ArgsUsage: containerArgsUsage,
 				Action:    getContainers,
 			},
-			&cli.Command{
+			{
 				Name:      "logs",
 				Usage:     "get container stream logs",
 				ArgsUsage: "containerID",
@@ -45,13 +45,13 @@ func ContainerCommand() *cli.Command {
 				},
 				Action: getContainerLog,
 			},
-			&cli.Command{
+			{
 				Name:      "get-status",
 				Usage:     "get container status",
 				ArgsUsage: containerArgsUsage,
 				Action:    getContainersStatus,
 			},
-			&cli.Command{
+			{
 				Name:      "set-status",
 				Usage:     "set container status",
 				ArgsUsage: containerArgsUsage,
@@ -80,7 +80,7 @@ func ContainerCommand() *cli.Command {
 				},
 				Action: setContainersStatus,
 			},
-			&cli.Command{
+			{
 				Name:      "list",
 				Usage:     "list container(s) by appname",
 				ArgsUsage: "[appname]",
@@ -104,7 +104,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "stop",
 				Usage:     "stop container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -118,7 +118,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "start",
 				Usage:     "start container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -132,7 +132,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "restart",
 				Usage:     "restart container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -146,7 +146,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "remove",
 				Usage:     "remove container(s)",
 				ArgsUsage: containerArgsUsage,
@@ -166,7 +166,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "copy",
 				Usage:     "copy file(s) from container(s)",
 				ArgsUsage: copyArgsUsage,
@@ -180,7 +180,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "send",
 				Usage:     "send file(s) to container(s)",
 				ArgsUsage: sendArgsUsage,
@@ -192,13 +192,13 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "dissociate",
 				Usage:     "Dissociate container(s) from eru, return it resource but not remove it",
 				ArgsUsage: containerArgsUsage,
 				Action:    dissociateContainers,
 			},
-			&cli.Command{
+			{
 				Name:      "realloc",
 				Usage:     "realloc containers resource",
 				ArgsUsage: containerArgsUsage,
@@ -230,7 +230,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "exec",
 				Usage:     "run a command in a running container",
 				ArgsUsage: "containerID -- cmd1 cmd2 cmd3",
@@ -254,7 +254,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "replace",
 				Usage:     "replace containers by params",
 				ArgsUsage: specFileURI,
@@ -328,7 +328,7 @@ func ContainerCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "deploy",
 				Usage:     "deploy containers by params",
 				ArgsUsage: specFileURI,
@@ -511,10 +511,10 @@ func prettyRenderContianers(containers []*pb.Container) {
 		}
 
 		rows := [][]string{
-			[]string{c.Name, c.Id},
-			[]string{c.Podname},
-			[]string{c.Nodename},
-			[]string{fmt.Sprintf("Quota: %f", c.Quota), fmt.Sprintf("Memory: %v", c.Memory), fmt.Sprintf("Storage: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			{c.Name, c.Id},
+			{c.Podname},
+			{c.Nodename},
+			{fmt.Sprintf("Quota: %f", c.Quota), fmt.Sprintf("Memory: %v", c.Memory), fmt.Sprintf("Storage: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
 			c.Volumes,
 			ips,
 			ns,
@@ -549,15 +549,18 @@ func prettyRenderContainerStatus(containerStatuses []*pb.ContainerStatus) {
 
 		// extensions
 		extensions := map[string]string{}
-		json.Unmarshal(s.Extension, &extensions)
+		if err := json.Unmarshal(s.Extension, &extensions); err != nil {
+			log.Errorf("json unmarshal failed %v", err)
+			continue
+		}
 		es := []string{}
 		for k, v := range extensions {
 			es = append(es, fmt.Sprintf("%s: %s", k, v))
 		}
 
 		rows := [][]string{
-			[]string{s.Id},
-			[]string{fmt.Sprintf("Running: %v", s.Running), fmt.Sprintf("Healthy: %v", s.Healthy)},
+			{s.Id},
+			{fmt.Sprintf("Running: %v", s.Running), fmt.Sprintf("Healthy: %v", s.Healthy)},
 			ns,
 			es,
 		}
@@ -579,14 +582,10 @@ func getContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	containers := []*pb.Container{}
-	for _, container := range resp.GetContainers() {
-		containers = append(containers, container)
-	}
 	if c.Bool("pretty") {
-		prettyRenderContianers(containers)
+		prettyRenderContianers(resp.Containers)
 	} else {
-		for _, container := range containers {
+		for _, container := range resp.Containers {
 			renderContainer(container)
 		}
 	}
@@ -604,14 +603,10 @@ func getContainersStatus(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	containerStatuses := []*pb.ContainerStatus{}
-	for _, containerStatus := range resp.Status {
-		containerStatuses = append(containerStatuses, containerStatus)
-	}
 	if c.Bool("pretty") {
-		prettyRenderContainerStatus(containerStatuses)
+		prettyRenderContainerStatus(resp.Status)
 	} else {
-		for _, containerStatus := range containerStatuses {
+		for _, containerStatus := range resp.Status {
 			renderContainerStatus(containerStatus)
 		}
 	}
@@ -647,14 +642,10 @@ func setContainersStatus(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	containerStatuses := []*pb.ContainerStatus{}
-	for _, containerStatus := range resp.Status {
-		containerStatuses = append(containerStatuses, containerStatus)
-	}
 	if c.Bool("pretty") {
-		prettyRenderContainerStatus(containerStatuses)
+		prettyRenderContainerStatus(resp.Status)
 	} else {
-		for _, containerStatus := range containerStatuses {
+		for _, containerStatus := range resp.Status {
 			renderContainerStatus(containerStatus)
 		}
 	}

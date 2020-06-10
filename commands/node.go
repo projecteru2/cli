@@ -23,31 +23,31 @@ func NodeCommand() *cli.Command {
 		Name:  "node",
 		Usage: "node commands",
 		Subcommands: []*cli.Command{
-			&cli.Command{
+			{
 				Name:      "get",
 				Usage:     "get a node",
 				ArgsUsage: nodeArgsUsage,
 				Action:    getNode,
 			},
-			&cli.Command{
+			{
 				Name:      "remove",
 				Usage:     "remove a node",
 				ArgsUsage: nodeArgsUsage,
 				Action:    removeNode,
 			},
-			&cli.Command{
+			{
 				Name:      "containers",
 				Usage:     "list node containers",
 				ArgsUsage: nodeArgsUsage,
 				Action:    listNodeContainers,
 			},
-			&cli.Command{
+			{
 				Name:      "up",
 				Usage:     "set node up",
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNodeUp,
 			},
-			&cli.Command{
+			{
 				Name:  "down",
 				Usage: "set node down",
 				Flags: []cli.Flag{
@@ -64,13 +64,13 @@ func NodeCommand() *cli.Command {
 				ArgsUsage: nodeArgsUsage,
 				Action:    setNodeDown,
 			},
-			&cli.Command{
+			{
 				Name:      "resource",
 				Usage:     "check node resource",
 				ArgsUsage: nodeArgsUsage,
 				Action:    nodeResource,
 			},
-			&cli.Command{
+			{
 				Name:      "set",
 				Usage:     "set node resource",
 				ArgsUsage: nodeArgsUsage,
@@ -110,7 +110,7 @@ func NodeCommand() *cli.Command {
 					},
 				},
 			},
-			&cli.Command{
+			{
 				Name:      "add",
 				Usage:     "add node",
 				ArgsUsage: "podname",
@@ -198,19 +198,15 @@ func listNodeContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	containers := []*pb.Container{}
-	for _, container := range resp.Containers {
-		containers = append(containers, container)
-	}
-
+	containers := resp.Containers
 	if c.Bool("pretty") {
 		t := table.NewWriter()
 		t.SetOutputMirror(os.Stdout)
 		t.AppendHeader(table.Row{"Name/ID", "Information"})
 		for _, c := range containers {
 			rows := [][]string{
-				[]string{c.Name, c.Id},
-				[]string{
+				{c.Name, c.Id},
+				{
 					fmt.Sprintf("Pod: %s", c.Podname),
 					fmt.Sprintf("Node: %s", c.Nodename),
 					fmt.Sprintf("CPU: %v", c.Cpu),
@@ -633,8 +629,8 @@ func nodeResource(c *cli.Context) error {
 		t.SetOutputMirror(os.Stdout)
 		t.AppendHeader(table.Row{"Name", "Resource"})
 		rows := [][]string{
-			[]string{r.Name},
-			[]string{
+			{r.Name},
+			{
 				fmt.Sprintf("Cpu: %.2f%%", r.CpuPercent*100),
 				fmt.Sprintf("Memory: %.2f%%", r.MemoryPercent*100),
 				fmt.Sprintf("Storage: %.2f%%", r.StoragePercent*100),

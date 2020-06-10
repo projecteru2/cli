@@ -161,7 +161,6 @@ github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORN
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/pty v1.1.8/go.mod h1:O1sed60cT9XZ5uDucP5qwvh+TE3NnUj51EiZO/lmSfw=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/libgit2/git2go v0.28.4/go.mod h1:4bKN42efkbNYMZlvDfxGDxzl066GhpvIircZDsm8Y+Y=
 github.com/libgit2/git2go/v30 v30.0.3/go.mod h1:YReiQ7xhMoyAL4ISYFLZt+OGqn6xtLqvTC1xJ9oAH7Y=
 github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
 github.com/mailru/easyjson v0.0.0-20190403194419-1ea4449da983/go.mod h1:C1wdFJiN94OJF2b5HbByQZoLdCWB1Yqtg26g4irojpc=
@@ -198,8 +197,8 @@ github.com/pkg/profile v1.2.1/go.mod h1:hJw3o1OdXxsrSjjVksARp5W95eeEaEfptyVZyv6J
 github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 h1:A7GG7zcGjl3jqAqGPmcNjd/D9hzL95SuoOQAaFNdLU0=
 github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942/go.mod h1:eCbImbZ95eXtAUIbLAuAVnBnwf83mjf6QIVH8SHYwqQ=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/projecteru2/core v0.0.0-20200609171555-819aa4543cdc h1:VEaaX38SOSSQX1ilZV7z5iVM50/yGTfsk0T/2JVA22w=
-github.com/projecteru2/core v0.0.0-20200609171555-819aa4543cdc/go.mod h1:AJ0sTeKg5fFP9osveT6mx9IfDFiNh5+C6P/RMLOxLdY=
+github.com/projecteru2/core v0.0.0-20200610052151-b3b528ac8a49 h1:7RblIRDEtPhUDVQQZKTkn3zWLTZBO9Qnr5SR8daZvHw=
+github.com/projecteru2/core v0.0.0-20200610052151-b3b528ac8a49/go.mod h1:e2FIClfYCQOzjoYEuX/130Jpymcbh5mPbGy0Y6KljIU=
 github.com/projecteru2/libyavirt v0.0.0-20200603101105-6723b04f230a/go.mod h1:L+QcwDnJUIQYX7mM9//2KNF32e1aknOFFzutbVNyKfg=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3/go.mod h1:/TN21ttK/J9q6uSwhBd54HahCDft0ttaMvbicHlPoso=
