@@ -20,7 +20,7 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.2 // indirect
 	github.com/opencontainers/runc v0.1.1 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20200610084412-646f2323913a
+	github.com/projecteru2/core v0.0.0-20200615174527-472cde49849e
 	github.com/prometheus/client_golang v1.3.0 // indirect
 	github.com/prometheus/common v0.8.0 // indirect
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
@@ -28,5 +28,5 @@ require (
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec
-	gopkg.in/yaml.v2 v2.2.7
+	gopkg.in/yaml.v2 v2.3.0
 )
