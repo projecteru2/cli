@@ -33,8 +33,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout)
+	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout, priviledged, node := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethods, files, user, async, asyncTimeout, priviledged, node)
 
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
@@ -61,7 +61,7 @@ func generateLambdaOpts(
 	pod string, envs []string, volumes []string,
 	workingDir string, image string, cpu float64,
 	mem int64, count int, stdin bool, deployMethod string,
-	files []string, user string, async bool, asyncTimeout int) *pb.RunAndWaitOptions {
+	files []string, user string, async bool, asyncTimeout int, priviledged bool, node string) *pb.RunAndWaitOptions {
 
 	networks := getNetworks(network)
 	opts := &pb.RunAndWaitOptions{Async: async, AsyncTimeout: int32(asyncTimeout)}
@@ -71,10 +71,11 @@ func generateLambdaOpts(
 		Entrypoint: &pb.EntrypointOptions{
 			Name:       name,
 			Command:    strings.Join(commands, " && "),
-			Privileged: false,
+			Privileged: priviledged,
 			Dir:        workingDir,
 		},
 		Podname:      pod,
+		Nodename:     node,
 		Image:        image,
 		CpuQuota:     cpu,
 		Memory:       mem,
@@ -91,7 +92,7 @@ func generateLambdaOpts(
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string, bool, int) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string, bool, int, bool, string) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands")
 	}
@@ -116,7 +117,9 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	user := c.String("user")
 	async := c.Bool("async")
 	asyncTimeout := c.Int("async-timeout")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user, async, asyncTimeout
+	privileged := c.Bool("privileged")
+	node := c.String("node")
+	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployMethod, files, user, async, asyncTimeout, privileged, node
 }
 
 // LambdaCommand for run commands in a container
@@ -198,6 +201,17 @@ func LambdaCommand() *cli.Command {
 				Name:  "async-timeout",
 				Usage: "for async timeout",
 				Value: 30,
+			},
+			&cli.BoolFlag{
+				Name:    "privileged",
+				Usage:   "give extended privileges to this lambda",
+				Aliases: []string{"p"},
+				Value:   false,
+			},
+			&cli.StringFlag{
+				Name:  "node",
+				Usage: "which node to run",
+				Value: "",
 			},
 		},
 		Action: runLambda,
