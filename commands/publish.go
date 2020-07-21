@@ -61,7 +61,7 @@ func PublishCommand() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "upstream-name",
-						Usage: "custom upstream name, if not set, will use app_verison_entry",
+						Usage: "custom upstream name, if not set, will use app_version_entry",
 						Value: "",
 					},
 				},
@@ -94,7 +94,7 @@ func publishContainers(c *cli.Context) error {
 	}
 
 	specURI := c.Args().First()
-	if specURI != "" {
+	if specURI != "" { // nolint
 		log.Debugf("[Publish] Publish %s", specURI)
 
 		var data []byte

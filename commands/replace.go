@@ -8,8 +8,8 @@ import (
 	"github.com/projecteru2/cli/utils"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
-	"golang.org/x/net/context"
 	cli "github.com/urfave/cli/v2"
+	"golang.org/x/net/context"
 )
 
 func replaceContainers(c *cli.Context) error {
@@ -20,7 +20,7 @@ func replaceContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
-	pod, node, entry, image, network, _, _, _, envs, count, _, _, files, user, debug, _, _, _, ignoreHook, afterCreate, _ := getDeployParams(c)
+	pod, node, entry, image, network, _, _, _, envs, count, _, _, files, user, debug, _, _, _, ignoreHook, afterCreate, _ := getDeployParams(c) // nolint
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}

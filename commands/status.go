@@ -62,11 +62,12 @@ func status(c *cli.Context) error {
 			log.Warnf("[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Container.Name)
 		}
 
-		if !msg.Status.Running {
+		switch {
+		case !msg.Status.Running:
 			log.Warnf("[%s] %s on %s is stopped", coreutils.ShortID(msg.Id), msg.Container.Name, msg.Container.Nodename)
-		} else if !msg.Status.Healthy {
+		case !msg.Status.Healthy:
 			log.Warnf("[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Container.Name, msg.Container.Nodename)
-		} else if msg.Status.Running && msg.Status.Healthy {
+		case msg.Status.Running && msg.Status.Healthy:
 			log.Infof("[%s] %s back to life", coreutils.ShortID(msg.Container.Id), msg.Container.Name)
 			for networkName, addrs := range msg.Container.Publish {
 				log.Infof("[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)

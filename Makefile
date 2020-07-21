@@ -20,3 +20,6 @@ build: deps binary
 test: deps
 	go vet `go list ./... | grep -v '/vendor/'`
 	go test -v `go list ./... | grep -v '/vendor/'`
+
+lint:
+	golangci-lint run

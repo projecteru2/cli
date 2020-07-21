@@ -133,7 +133,7 @@ func buildImage(c *cli.Context) error {
 			return cli.Exit(err, -1)
 		}
 
-		if msg.Error != "" {
+		if msg.Error != "" { // nolint
 			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
@@ -248,11 +248,11 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 	var tar []byte
 	var existID string
 	var buildMethod pb.BuildImageOptions_BuildMethod
-	if exist {
+	switch {
+	case exist:
 		buildMethod = pb.BuildImageOptions_EXIST
 		existID = c.Args().First()
-
-	} else if !raw {
+	case !raw:
 		buildMethod = pb.BuildImageOptions_SCM
 		specURI := c.Args().First()
 		log.Debugf("[Build] Deploy %s", specURI)
@@ -279,8 +279,7 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 			b.StopSignal = stopSignal
 			b.Version = utils.ParseEnvValue(b.Version)
 		}
-
-	} else {
+	default:
 		buildMethod = pb.BuildImageOptions_RAW
 		path := c.Args().First()
 		data, err := dockerengine.CreateTarStream(path)

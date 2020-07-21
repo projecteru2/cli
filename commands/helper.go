@@ -77,8 +77,7 @@ func parseRAMInHuman(ramStr string) (int64, error) {
 }
 
 func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCount int) (code int, err error) {
-
-	if interactive {
+	if interactive { // nolint
 		stdinFd := os.Stdin.Fd()
 		terminal := &syscall.Termios{}
 		_ = termios.Tcgetattr(stdinFd, terminal)
@@ -113,7 +112,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		signal.Notify(sigs, syscall.SIGWINCH)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		resize := func(ctx context.Context) error {
+		resize := func(_ context.Context) error {
 			w := &window{}
 			if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
 				return err
@@ -209,5 +208,5 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		}
 	}
 
-	return
+	return code, err
 }

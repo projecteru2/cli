@@ -330,7 +330,8 @@ func setNode(c *cli.Context) error {
 		cpuMapList := strings.Split(cpuList, ",")
 		for _, cpus := range cpuMapList {
 			cpuConfigs := strings.Split(cpus, ":")
-			share, err := strconv.Atoi(cpuConfigs[1])
+			// G109: Potential Integer overflow made by strconv.Atoi result conversion to int16/32
+			share, err := strconv.Atoi(cpuConfigs[1]) // nolint
 			if err != nil {
 				return cli.Exit(err, -1)
 			}
@@ -446,7 +447,7 @@ func getLocalIP() string {
 	return ""
 }
 
-func addNode(c *cli.Context) error {
+func addNode(c *cli.Context) error { // nolint
 	podname := c.Args().First()
 	if podname == "" {
 		return cli.Exit(fmt.Errorf("podname must not be empty"), -1)
