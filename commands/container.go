@@ -208,13 +208,13 @@ func ContainerCommand() *cli.Command {
 						Name:    "cpu",
 						Usage:   "cpu increment/decrement",
 						Aliases: []string{"c"},
-						Value:   1.0,
+						Value:   0,
 					},
 					&cli.StringFlag{
 						Name:    "memory",
 						Usage:   "memory increment/decrement, like -1M or 1G, support K, M, G, T",
 						Aliases: []string{"m"},
-						Value:   "1G",
+						Value:   "0",
 					},
 					&cli.StringFlag{
 						Name:  "volumes",
@@ -227,6 +227,14 @@ func ContainerCommand() *cli.Command {
 					&cli.BoolFlag{
 						Name:  "cpu-unbind",
 						Usage: `unbind the container relation with cpu`,
+					},
+					&cli.BoolFlag{
+						Name:  "memory-softlimit",
+						Usage: `force softlimit memory`,
+					},
+					&cli.BoolFlag{
+						Name:  "memory-hardlimit",
+						Usage: `force hardlimit memory`,
 					},
 				},
 			},
@@ -709,15 +717,32 @@ func reallocContainers(c *cli.Context) error {
 	if bindCPU && unbindCPU {
 		return cli.Exit(errors.New("cpu-bind and cpu-unbind can not both be set"), -1)
 	}
-	bindCPUOps := pb.BindCPUOpt_KEEP
+	bindCPUOpt := pb.BindCPUOpt_KEEP
 	if bindCPU {
-		bindCPUOps = pb.BindCPUOpt_BIND
+		bindCPUOpt = pb.BindCPUOpt_BIND
 	}
 	if unbindCPU {
-		bindCPUOps = pb.BindCPUOpt_UNBIND
+		bindCPUOpt = pb.BindCPUOpt_FREE
 	}
 
-	opts := &pb.ReallocOptions{Ids: c.Args().Slice(), Cpu: c.Float64("cpu"), Memory: memory, Volumes: volumes, BindCpuOpt: bindCPUOps}
+	memorySoftlimit := c.Bool("memory-softlimit")
+	memoryHardlimit := c.Bool("memory-hardlimit")
+	if memorySoftlimit && memoryHardlimit {
+		return cli.Exit(errors.New("memory-softlimit and memory-hardlimit can not both be set"), -1)
+	}
+	memoryLimitOpt := pb.MemoryLimitOpt_INHERIT
+	if memorySoftlimit {
+		memoryLimitOpt = pb.MemoryLimitOpt_SOFT
+	}
+	if memoryHardlimit {
+		memoryLimitOpt = pb.MemoryLimitOpt_HARD
+	}
+
+	opts := &pb.ReallocOptions{
+		Ids: c.Args().Slice(), Cpu: c.Float64("cpu"),
+		Memory: memory, Volumes: volumes,
+		BindCpu: bindCPUOpt, MemoryLimit: memoryLimitOpt,
+	}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
 	if err != nil {
