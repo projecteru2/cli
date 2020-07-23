@@ -717,12 +717,12 @@ func reallocContainers(c *cli.Context) error {
 	if bindCPU && unbindCPU {
 		return cli.Exit(errors.New("cpu-bind and cpu-unbind can not both be set"), -1)
 	}
-	bindCPUOpt := pb.BindCPUOpt_KEEP
+	bindCPUOpt := pb.TriOpt_KEEP
 	if bindCPU {
-		bindCPUOpt = pb.BindCPUOpt_BIND
+		bindCPUOpt = pb.TriOpt_TRUE
 	}
 	if unbindCPU {
-		bindCPUOpt = pb.BindCPUOpt_FREE
+		bindCPUOpt = pb.TriOpt_FALSE
 	}
 
 	memorySoftlimit := c.Bool("memory-softlimit")
@@ -730,12 +730,12 @@ func reallocContainers(c *cli.Context) error {
 	if memorySoftlimit && memoryHardlimit {
 		return cli.Exit(errors.New("memory-softlimit and memory-hardlimit can not both be set"), -1)
 	}
-	memoryLimitOpt := pb.MemoryLimitOpt_INHERIT
+	memoryLimitOpt := pb.TriOpt_KEEP
 	if memorySoftlimit {
-		memoryLimitOpt = pb.MemoryLimitOpt_SOFT
+		memoryLimitOpt = pb.TriOpt_TRUE
 	}
 	if memoryHardlimit {
-		memoryLimitOpt = pb.MemoryLimitOpt_HARD
+		memoryLimitOpt = pb.TriOpt_FALSE
 	}
 
 	opts := &pb.ReallocOptions{
