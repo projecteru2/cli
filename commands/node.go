@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/jedib0t/go-pretty/table"
-	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -368,7 +367,7 @@ func setNode(c *cli.Context) error {
 
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 		Nodename:        name,
-		Status:          cluster.KeepNodeStatus,
+		Status:          pb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,
@@ -393,7 +392,7 @@ func setNodeUp(c *cli.Context) error {
 	name := c.Args().First()
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 		Nodename: name,
-		Status:   cluster.NodeUp,
+		Status:   pb.TriOpt_TRUE,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -422,7 +421,7 @@ func setNodeDown(c *cli.Context) error {
 	if do {
 		_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 			Nodename: name,
-			Status:   cluster.NodeDown,
+			Status:   pb.TriOpt_FALSE,
 		})
 		if err != nil {
 			return cli.Exit(err, -1)
