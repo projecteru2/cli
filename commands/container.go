@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/docker/go-units"
 	"github.com/jedib0t/go-pretty/table"
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
@@ -19,6 +20,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
 )
+
+const unlimited = "UNLIMITED"
 
 // ContainerCommand for control containers
 func ContainerCommand() *cli.Command {
@@ -484,10 +487,23 @@ func removeContainers(c *cli.Context) error {
 }
 
 func renderContainer(container *pb.Container) {
+	cpu := unlimited
+	if container.Quota != 0 {
+		cpu = fmt.Sprintf("%v", container.Quota)
+	}
+	memory := unlimited
+	if container.Memory != 0 {
+		memory = units.HumanSize(float64(container.Memory))
+	}
+	storage := unlimited
+	if container.Storage != 0 {
+		storage = units.HumanSize(float64(container.Storage))
+	}
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
-	log.Infof("CPU: %v, Quota: %v, Memory: %v, Storage: %v, Volume: %+v, VolumePlan: %+v, Privileged %v", container.Cpu, container.Quota, container.Memory, container.Storage, container.Volumes, container.VolumePlan, container.Privileged)
+	log.Infof("Quota: %v, Memory: %v, Storage: %v", cpu, memory, storage)
+	log.Infof("CPU: %v, Volume: %+v, VolumePlan: %+v, Privileged %v", container.Cpu, container.Volumes, container.VolumePlan, container.Privileged)
 	for networkName, IP := range container.Publish {
 		log.Infof("Publish at %s ip %s", networkName, IP)
 	}
