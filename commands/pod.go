@@ -1,8 +1,11 @@
 package commands
 
 import (
+	"fmt"
+	"os"
 	"strings"
 
+	"github.com/jedib0t/go-pretty/table"
 	pb "github.com/projecteru2/core/rpc/gen"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -138,9 +141,32 @@ func podResource(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	log.Infof("[PodResource] Pod %s", r.Name)
-	for nodename, percent := range r.CpuPercents {
-		log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%%", nodename, percent*100, r.MemoryPercents[nodename]*100, r.StoragePercents[nodename]*100)
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume"})
+		nodeRow := []string{}
+		cpuRow := []string{}
+		memoryRow := []string{}
+		storageRow := []string{}
+		volumeRow := []string{}
+		for nodename, percent := range r.CpuPercents {
+			nodeRow = append(nodeRow, nodename)
+			cpuRow = append(cpuRow, fmt.Sprintf("%.2f%%", percent*100))
+			memoryRow = append(memoryRow, fmt.Sprintf("%.2f%%", r.MemoryPercents[nodename]*100))
+			storageRow = append(storageRow, fmt.Sprintf("%.2f%%", r.StoragePercents[nodename]*100))
+			volumeRow = append(volumeRow, fmt.Sprintf("%.2f%%", r.VolumePercents[nodename]*100))
+		}
+		rows := [][]string{nodeRow, cpuRow, memoryRow, storageRow, volumeRow}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		log.Infof("[PodResource] Pod %s", r.Name)
+		for nodename, percent := range r.CpuPercents {
+			log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", nodename, percent*100, r.MemoryPercents[nodename]*100, r.StoragePercents[nodename]*100, r.VolumePercents[nodename]*100)
+		}
 	}
 	for nodename, verification := range r.Verifications {
 		if verification {

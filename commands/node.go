@@ -639,15 +639,13 @@ func nodeResource(c *cli.Context) error {
 	if c.Bool("pretty") {
 		t := table.NewWriter()
 		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{"Name", "Resource"})
+		t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume"})
 		rows := [][]string{
 			{r.Name},
-			{
-				fmt.Sprintf("Cpu: %.2f%%", r.CpuPercent*100),
-				fmt.Sprintf("Memory: %.2f%%", r.MemoryPercent*100),
-				fmt.Sprintf("Storage: %.2f%%", r.StoragePercent*100),
-				fmt.Sprintf("Volume: %.2f%%", r.VolumePercent*100),
-			},
+			{fmt.Sprintf("%.2f%%", r.CpuPercent*100)},
+			{fmt.Sprintf("%.2f%%", r.MemoryPercent*100)},
+			{fmt.Sprintf("%.2f%%", r.StoragePercent*100)},
+			{fmt.Sprintf("%.2f%%", r.VolumePercent*100)},
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
@@ -656,10 +654,10 @@ func nodeResource(c *cli.Context) error {
 	} else {
 		log.Infof("[NodeResource] Node %s", r.Name)
 		log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100, r.VolumePercent*100)
-		if !r.Verification {
-			for _, detail := range r.Details {
-				log.Warnf("[NodeResource] Resource diff %s", detail)
-			}
+	}
+	if !r.Verification {
+		for _, detail := range r.Details {
+			log.Warnf("[NodeResource] Resource diff %s", detail)
 		}
 	}
 	return nil
