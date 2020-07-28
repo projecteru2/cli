@@ -84,8 +84,26 @@ func listPods(c *cli.Context) error {
 		log.Fatalf("[ListPods] send request failed %v", err)
 	}
 
-	for _, pod := range resp.GetPods() {
-		log.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name", "Description"})
+		nameRow := []string{}
+		descRow := []string{}
+		for _, pod := range resp.GetPods() {
+			nameRow = append(nameRow, pod.Name)
+			descRow = append(descRow, pod.Desc)
+
+		}
+		rows := [][]string{nameRow, descRow}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		for _, pod := range resp.GetPods() {
+			log.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
+		}
 	}
 	return nil
 }
@@ -193,8 +211,25 @@ func listPodNodes(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	for _, node := range resp.GetNodes() {
-		log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name", "Endpoint"})
+		nameRow := []string{}
+		endpointRow := []string{}
+		for _, node := range resp.Nodes {
+			nameRow = append(nameRow, node.Name)
+			endpointRow = append(endpointRow, node.Endpoint)
+		}
+		rows := [][]string{nameRow, endpointRow}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		for _, node := range resp.GetNodes() {
+			log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+		}
 	}
 	return nil
 }
@@ -215,8 +250,25 @@ func listPodNetworks(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	for _, network := range resp.GetNetworks() {
-		log.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
+	if c.Bool("pretty") {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"Name", "Network"})
+		nameRow := []string{}
+		networkRow := []string{}
+		for _, network := range resp.Networks {
+			nameRow = append(nameRow, network.Name)
+			networkRow = append(networkRow, strings.Join(network.GetSubnets(), ","))
+		}
+		rows := [][]string{nameRow, networkRow}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	} else {
+		for _, network := range resp.GetNetworks() {
+			log.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
+		}
 	}
 	return nil
 }

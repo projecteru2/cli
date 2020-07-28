@@ -270,7 +270,7 @@ func getNode(c *cli.Context) error {
 	if node.GetInitStorage() > 0 {
 		log.Infof("Storage Used: %d bytes", node.GetStorageUsed())
 	} else {
-		log.Infof("Storage Used: %d bytes (unlimited)", node.GetStorageUsed())
+		log.Infof("Storage Used: %d bytes (%s)", node.GetStorageUsed(), unlimited)
 	}
 	return nil
 }
