@@ -67,7 +67,13 @@ func NodeCommand() *cli.Command {
 				Name:      "resource",
 				Usage:     "check node resource",
 				ArgsUsage: nodeArgsUsage,
-				Action:    nodeResource,
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "fix",
+						Usage: "fix node resource diff",
+					},
+				},
+				Action: nodeResource,
 			},
 			{
 				Name:      "set",
@@ -412,7 +418,7 @@ func setNodeDown(c *cli.Context) error {
 		t := c.Int("check-timeout")
 		timeout, cancel := context.WithTimeout(c.Context, time.Duration(t)*time.Second)
 		defer cancel()
-		if _, err := client.GetNodeResource(timeout, &pb.GetNodeOptions{Nodename: name}); err == nil {
+		if _, err := client.GetNodeResource(timeout, &pb.GetNodeResourceOptions{Opts: &pb.GetNodeOptions{Nodename: name}}); err == nil {
 			log.Warn("[SetNode] node is not down")
 			do = false
 		}
@@ -619,7 +625,13 @@ func nodeResource(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 	name := c.Args().First()
-	r, err := client.GetNodeResource(context.Background(), &pb.GetNodeOptions{Nodename: name})
+	r, err := client.GetNodeResource(
+		context.Background(),
+		&pb.GetNodeResourceOptions{
+			Opts: &pb.GetNodeOptions{Nodename: name},
+			Fix:  c.Bool("fix"),
+		},
+	)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
