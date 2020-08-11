@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"strings"
+	"text/template"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -33,12 +35,24 @@ func GetFilesStream(files []string) map[string][]byte {
 	return fileData
 }
 
-// ParseEnvValue get value from env
-func ParseEnvValue(f string) string {
-	if !strings.HasPrefix(f, "$") {
-		return f
+// EnvParser .
+func EnvParser(b []byte) ([]byte, error) {
+	tmpl, err := template.New("tmpl").
+		Option("missingkey=default").
+		Parse(string(b))
+	if err != nil {
+		return b, err
 	}
+	out := bytes.Buffer{}
+	err = tmpl.Execute(&out, splitEnv(os.Environ()))
+	return out.Bytes(), err
+}
 
-	f = strings.TrimLeft(f, "$")
-	return os.Getenv(f)
+func splitEnv(env []string) map[string]interface{} {
+	r := map[string]interface{}{}
+	for _, e := range env {
+		p := strings.SplitN(e, "=", 2)
+		r[p[0]] = p[1]
+	}
+	return r
 }

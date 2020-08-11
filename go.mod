@@ -25,6 +25,7 @@ require (
 	github.com/prometheus/common v0.8.0 // indirect
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sirupsen/logrus v1.4.2
+	github.com/stretchr/testify v1.6.1
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/urfave/cli/v2 v2.2.0
 	golang.org/x/net v0.0.0-20200319234117-63522dbf7eec

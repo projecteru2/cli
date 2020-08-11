@@ -266,18 +266,17 @@ func generateBuildOpts(c *cli.Context) *pb.BuildImageOptions {
 		if err != nil {
 			log.Fatalf("[Build] read spec failed %v", err)
 		}
+		data, err = utils.EnvParser(data)
+		if err != nil {
+			log.Fatalf("[Build] parse env failed %v", err)
+		}
 		specs = &pb.Builds{}
 		if err = yaml.Unmarshal(data, specs); err != nil {
 			log.Fatalf("[Build] unmarshal specs failed %v", err)
 		}
-		// Set value from env
 		for s := range specs.Builds {
 			b := specs.Builds[s]
-			for k, v := range b.Envs {
-				b.Envs[k] = utils.ParseEnvValue(v)
-			}
 			b.StopSignal = stopSignal
-			b.Version = utils.ParseEnvValue(b.Version)
 		}
 	default:
 		buildMethod = pb.BuildImageOptions_RAW
