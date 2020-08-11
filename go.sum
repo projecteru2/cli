@@ -129,6 +129,7 @@ github.com/google/btree v1.0.0/go.mod h1:lNA+9X1NB3Zf8V7Ke586lFgjr2dZNuvo3lPJSGZ
 github.com/google/go-cmp v0.2.0/go.mod h1:oXzfMopK8JAjlY9xF4vHSVASa0yLyX7SntLO5aqRK0M=
 github.com/google/go-cmp v0.3.0/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
 github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMywk6iLU=
+github.com/google/go-cmp v0.5.0/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/martian v2.1.0+incompatible/go.mod h1:9I4somxYTbIHy5NJKHRl3wXiIaQGbYVAs8BPL6v8lEs=
 github.com/google/pprof v0.0.0-20181206194817-3ea8567a2e57/go.mod h1:zfwlbNMJ+OItoe0UupaVj+oy1omPYYDuagoSzA8v9mc=
@@ -221,9 +222,9 @@ github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942 h1:A7GG7zcGjl3jqAqGPmcNjd
 github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942/go.mod h1:eCbImbZ95eXtAUIbLAuAVnBnwf83mjf6QIVH8SHYwqQ=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/projecteru2/core v0.0.0-20200728033957-a9d896fdb6ba h1:WzFnGKGPuRf6aqNp6hkQ1WriFmDDG+VM/nESlfirEE8=
-github.com/projecteru2/core v0.0.0-20200728033957-a9d896fdb6ba/go.mod h1:h+chW5hNkEc0ZS4dBGpNeWvbmrGdej2q3riN/n5pYvE=
-github.com/projecteru2/libyavirt v0.0.0-20200706021408-b8f160e2f677/go.mod h1:L+QcwDnJUIQYX7mM9//2KNF32e1aknOFFzutbVNyKfg=
+github.com/projecteru2/core v0.0.0-20200811170522-fd80ffd0b9ed h1:n1bGHmdiBvV2OTVkq5A/8gpA0gg3VuHf4XO4wqGTuTY=
+github.com/projecteru2/core v0.0.0-20200811170522-fd80ffd0b9ed/go.mod h1:xLOP2yWZTPSTTK3zqGlHMRxYgDkJXGKBI9D5zyHSAaY=
+github.com/projecteru2/libyavirt v0.0.0-20200803015801-c31d39b6e15c/go.mod h1:9/SNmdphwl12ubwihkRa9YtOozM6liYLDxsricra1mY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.1.0/go.mod h1:I1FGZT9+L76gKKOs5djB6ezCbFQP1xR9D75/vuwEF3g=

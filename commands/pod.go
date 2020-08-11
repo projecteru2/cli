@@ -3,7 +3,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/jedib0t/go-pretty/table"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -229,45 +228,6 @@ func listPodNodes(c *cli.Context) error {
 	} else {
 		for _, node := range resp.GetNodes() {
 			log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
-		}
-	}
-	return nil
-}
-
-func listPodNetworks(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-	name := c.Args().First()
-	driver := c.String("driver")
-
-	resp, err := client.ListNetworks(context.Background(), &pb.ListNetworkOptions{
-		Podname: name,
-		Driver:  driver,
-	})
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
-
-	if c.Bool("pretty") {
-		t := table.NewWriter()
-		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{"Name", "Network"})
-		nameRow := []string{}
-		networkRow := []string{}
-		for _, network := range resp.Networks {
-			nameRow = append(nameRow, network.Name)
-			networkRow = append(networkRow, strings.Join(network.GetSubnets(), ","))
-		}
-		rows := [][]string{nameRow, networkRow}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
-		t.SetStyle(table.StyleLight)
-		t.Render()
-	} else {
-		for _, network := range resp.GetNetworks() {
-			log.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
 		}
 	}
 	return nil

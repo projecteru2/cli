@@ -29,6 +29,7 @@ func main() {
 		commands.LambdaCommand(),
 		commands.StatusCommand(),
 		commands.PublishCommand(),
+		commands.NetworkCommand(),
 	}
 
 	app.Flags = commands.GlobalFlags()
