@@ -115,7 +115,7 @@ func ImageCommand() *cli.Command {
 
 func buildImage(c *cli.Context) error {
 	opts := generateBuildOpts(c)
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	resp, err := client.BuildImage(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -175,7 +175,7 @@ func cacheImage(c *cli.Context) error {
 		Nodename: c.String("nodename"),
 	}
 
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	resp, err := client.CacheImage(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -206,7 +206,7 @@ func cleanImage(c *cli.Context) error {
 		Nodename: c.String("nodename"),
 		Prune:    c.Bool("prune"),
 	}
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	resp, err := client.RemoveImage(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)

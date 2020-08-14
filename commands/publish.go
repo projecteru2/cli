@@ -81,7 +81,7 @@ func dumpELB(c *cli.Context) error {
 }
 
 func publishContainers(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
 	app := c.String("app")
 	elb := c.String("elb")

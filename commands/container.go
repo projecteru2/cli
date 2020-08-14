@@ -677,7 +677,7 @@ func setContainersStatus(c *cli.Context) error {
 }
 
 func listContainers(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
 	opts := &pb.ListContainersOptions{
 		Appname:    c.Args().First(),
@@ -784,7 +784,7 @@ func reallocContainers(c *cli.Context) error {
 }
 
 func execContainer(c *cli.Context) (err error) {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
 	opts := &pb.ExecuteContainerOptions{
 		ContainerId: c.Args().First(),

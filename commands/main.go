@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/projecteru2/core/client"
@@ -84,18 +85,22 @@ func GlobalFlags() []cli.Flag {
 	}
 }
 
-func setupAndGetGRPCConnection() *client.Client {
+func setupAndGetGRPCConnection(ctx context.Context) *client.Client {
 	_ = setupLog("INFO")
 	if debug {
 		_ = setupLog("DEBUG")
 	}
 
-	return client.NewClient(eru, types.AuthConfig{Username: username, Password: password})
+	cli, err := client.NewClient(ctx, eru, types.AuthConfig{Username: username, Password: password})
+	if err != nil {
+		log.Fatalf("[setupAndGetGRPCConnection] create client failed %v", err)
+	}
+	return cli
 }
 
 func checkParamsAndGetClient(c *cli.Context) (pb.CoreRPCClient, error) {
 	if c.NArg() == 0 {
 		return nil, fmt.Errorf("not specify arguments")
 	}
-	return setupAndGetGRPCConnection().GetRPCClient(), nil
+	return setupAndGetGRPCConnection(c.Context).GetRPCClient(), nil
 }

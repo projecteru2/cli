@@ -24,7 +24,7 @@ type window struct {
 }
 
 func runLambda(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	code, err := lambda(c, client)
 	if err == nil {
 		return cli.Exit("", code)
