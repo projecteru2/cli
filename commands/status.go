@@ -14,7 +14,7 @@ import (
 )
 
 func status(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	name := c.Args().First()
 	entry := c.String("entry")
 	node := c.String("node")

@@ -23,7 +23,7 @@ func CoreCommand() *cli.Command {
 }
 
 func info(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	opts := &pb.Empty{}
 	coreInfo, err := client.Info(c.Context, opts)
 	if err != nil {

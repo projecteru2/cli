@@ -77,7 +77,7 @@ func PodCommand() *cli.Command {
 }
 
 func listPods(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	resp, err := client.ListPods(context.Background(), &pb.Empty{})
 	if err != nil {
 		log.Fatalf("[ListPods] send request failed %v", err)

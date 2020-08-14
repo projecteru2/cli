@@ -188,7 +188,7 @@ func NodeCommand() *cli.Command {
 }
 
 func listNodeContainers(c *cli.Context) error {
-	client := setupAndGetGRPCConnection().GetRPCClient()
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
 	nodename := c.Args().First()
 	if nodename == "" {
