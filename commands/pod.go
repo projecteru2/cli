@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 
@@ -228,6 +229,10 @@ func listPodNodes(c *cli.Context) error {
 	} else {
 		for _, node := range resp.GetNodes() {
 			log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+			r := map[string]interface{}{}
+			if err := json.Unmarshal([]byte(node.Info), &r); err != nil {
+				log.Errorf("Get Node Info failed: %v", node.Info)
+			}
 		}
 	}
 	return nil
