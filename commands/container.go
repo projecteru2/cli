@@ -16,6 +16,7 @@ import (
 	"github.com/projecteru2/cli/utils"
 	"github.com/projecteru2/core/cluster"
 	pb "github.com/projecteru2/core/rpc/gen"
+	"github.com/projecteru2/core/strategy"
 	coreutils "github.com/projecteru2/core/utils"
 	log "github.com/sirupsen/logrus"
 	cli "github.com/urfave/cli/v2"
@@ -396,9 +397,9 @@ func ContainerCommand() *cli.Command {
 						Usage: "filter nodes by labels",
 					},
 					&cli.StringFlag{
-						Name:  "deploy-method",
+						Name:  "deploy-strategy",
 						Usage: "deploy method auto/fill/each/global",
-						Value: cluster.DeployAuto,
+						Value: strategy.Auto,
 					},
 					&cli.StringFlag{
 						Name:  "user",
