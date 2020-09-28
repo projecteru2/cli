@@ -67,7 +67,7 @@ func ImageCommand() *cli.Command {
 				Usage:     "cache image",
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name:  "nodename",
 						Usage: "nodename if you just want to cache on one node",
 					},
@@ -88,7 +88,7 @@ func ImageCommand() *cli.Command {
 				Usage:     "remove image",
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name:  "nodename",
 						Usage: "nodename if you just want to cache on one node",
 					},
@@ -169,10 +169,10 @@ func buildImage(c *cli.Context) error {
 
 func cacheImage(c *cli.Context) error {
 	opts := &pb.CacheImageOptions{
-		Images:   c.Args().Slice(),
-		Step:     int32(c.Int("concurrent")),
-		Podname:  c.String("podname"),
-		Nodename: c.String("nodename"),
+		Images:    c.Args().Slice(),
+		Step:      int32(c.Int("concurrent")),
+		Podname:   c.String("podname"),
+		Nodenames: c.StringSlice("nodename"),
 	}
 
 	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
@@ -200,11 +200,11 @@ func cacheImage(c *cli.Context) error {
 
 func cleanImage(c *cli.Context) error {
 	opts := &pb.RemoveImageOptions{
-		Images:   c.Args().Slice(),
-		Step:     int32(c.Int("concurrent")),
-		Podname:  c.String("podname"),
-		Nodename: c.String("nodename"),
-		Prune:    c.Bool("prune"),
+		Images:    c.Args().Slice(),
+		Step:      int32(c.Int("concurrent")),
+		Podname:   c.String("podname"),
+		Nodenames: c.StringSlice("nodename"),
+		Prune:     c.Bool("prune"),
 	}
 	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	resp, err := client.RemoveImage(context.Background(), opts)

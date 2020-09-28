@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
 	autoReplace := c.Bool("auto-replace")
-	pod, node, entry, image, network, cpu, mem, storage, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs := getDeployParams(c)
+	pod, entry, image, network, nodes, cpu, mem, storage, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -41,14 +41,13 @@ func deployContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	deployOpts := generateDeployOpts(data, pod, node, entry, image, network, cpu, mem, storage, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, cpubind, ignoreHook, nodesLimit, afterCreate, rawArgs)
+	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, cpu, mem, storage, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, cpubind, ignoreHook, nodesLimit, afterCreate, rawArgs)
 	if !autoReplace {
 		return doCreateContainer(client, deployOpts)
 	}
 	lsOpts := &pb.ListContainersOptions{
 		Appname:    deployOpts.Name,
 		Entrypoint: deployOpts.Entrypoint.Name,
-		Nodename:   node,
 		Labels:     nil,
 		Limit:      1, // 至少有一个可以被替换的
 	}
@@ -103,9 +102,9 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, string, float64, int64, int64, []string, int32, map[string]string, string, []string, string, bool, bool, int, bool, bool, []string, string) {
+func getDeployParams(c *cli.Context) (string, string, string, string, []string, float64, int64, int64, []string, int32, map[string]string, string, []string, string, bool, bool, int, bool, bool, []string, string) {
 	pod := c.String("pod")
-	node := c.String("node")
+	nodes := c.StringSlice("node")
 	entry := c.String("entry")
 	image := c.String("image")
 	network := c.String("network")
@@ -135,10 +134,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, string, fl
 	ignoreHook := c.Bool("ignore-hook")
 	afterCreate := c.StringSlice("after-create")
 	rawArgs := c.String("raw-args")
-	return pod, node, entry, image, network, cpu, mem, storage, envs, count, labels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs
+	return pod, entry, image, network, nodes, cpu, mem, storage, envs, count, labels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs
 }
 
-func generateDeployOpts(data []byte, pod, node, entry, image, network string, cpu float64, mem, storage int64, envs []string, count int32, nodeLabels map[string]string, deployStrategy string, files []string, user string, debug, softlimit, cpubind, ignoreHook bool, nodesLimit int, afterCreate []string, rawArgs string) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, entry, image, network string, nodes []string, cpu float64, mem, storage int64, envs []string, count int32, nodeLabels map[string]string, deployStrategy string, files []string, user string, debug, softlimit, cpubind, ignoreHook bool, nodesLimit int, afterCreate []string, rawArgs string) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -194,7 +193,7 @@ func generateDeployOpts(data []byte, pod, node, entry, image, network string, cp
 			Sysctls:       entrypoint.Sysctls,
 		},
 		Podname:        pod,
-		Nodename:       node,
+		Nodenames:      nodes,
 		Image:          image,
 		CpuQuota:       cpu,
 		Memory:         mem,
