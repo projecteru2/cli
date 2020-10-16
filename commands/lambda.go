@@ -85,7 +85,7 @@ func generateLambdaOpts(
 		Networks:       networks,
 		Networkmode:    network,
 		OpenStdin:      stdin,
-		DeployStrategy: pb.DeployStrategy(pb.DeployStrategy_value[deployStrategy]),
+		DeployStrategy: pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
 		Data:           fileData,
 		User:           user,
 	}
