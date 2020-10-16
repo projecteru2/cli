@@ -207,7 +207,7 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, nodes []
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
 		Nodelabels:     nodeLabels,
-		DeployStrategy: pb.DeployStrategy(pb.DeployStrategy_value[deployStrategy]),
+		DeployStrategy: pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
 		Data:           fileData,
 		User:           user,
 		Debug:          debug,
