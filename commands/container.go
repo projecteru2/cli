@@ -373,18 +373,33 @@ func ContainerCommand() *cli.Command {
 						Value: "host",
 					},
 					&cli.Float64Flag{
+						Name:  "cpu-request",
+						Usage: "how many cpu to request",
+						Value: 1.0,
+					},
+					&cli.Float64Flag{
 						Name:  "cpu",
-						Usage: "how many cpu",
+						Usage: "how many cpu to limit",
 						Value: 1.0,
 					},
 					&cli.StringFlag{
-						Name:  "memory",
-						Usage: "how many memory like 1M or 1G, support K, M, G, T",
+						Name:  "memory-request",
+						Usage: "how many memory to request like 1M or 1G, support K, M, G, T",
 						Value: "512M",
 					},
 					&cli.StringFlag{
+						Name:  "memory",
+						Usage: "how many memory to limit like 1M or 1G, support K, M, G, T",
+						Value: "512M",
+					},
+					&cli.StringFlag{
+						Name:  "storage-request",
+						Usage: "how many storage to request quota like 1M or 1G, support K, M, G, T",
+						Value: "",
+					},
+					&cli.StringFlag{
 						Name:  "storage",
-						Usage: "how many storage quota like 1M or 1G, support K, M, G, T",
+						Usage: "how many storage to limit quota like 1M or 1G, support K, M, G, T",
 						Value: "",
 					},
 					&cli.StringSliceFlag{
