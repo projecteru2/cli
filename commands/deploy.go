@@ -88,7 +88,7 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 		}
 
 		if msg.Success {
-			log.Infof("[Deploy] Success %s %s %s %v %v %d %v", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.Quota, msg.Memory, msg.VolumePlan)
+			log.Infof("[Deploy] Success %s %s %s %v %v %v %d %d %v %v", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.QuotaRequest, msg.Quota, msg.MemoryRequest, msg.Memory, msg.VolumePlanRequest, msg.VolumePlan)
 			if len(msg.Hook) > 0 {
 				log.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}

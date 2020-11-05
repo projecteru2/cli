@@ -514,23 +514,35 @@ func removeContainers(c *cli.Context) error {
 }
 
 func renderContainer(container *pb.Container) {
-	cpu := unlimited
+	cpuRequest, cpuLimit := unlimited, unlimited
+	if container.QuotaRequest != 0 {
+		cpuRequest = fmt.Sprintf("%v", container.QuotaRequest)
+	}
 	if container.Quota != 0 {
-		cpu = fmt.Sprintf("%v", container.Quota)
+		cpuLimit = fmt.Sprintf("%v", container.Quota)
 	}
-	memory := unlimited
+	memoryRequest, memoryLimit := unlimited, unlimited
+	if container.MemoryRequest != 0 {
+		memoryRequest = units.HumanSize(float64(container.MemoryRequest))
+	}
 	if container.Memory != 0 {
-		memory = units.HumanSize(float64(container.Memory))
+		memoryLimit = units.HumanSize(float64(container.Memory))
 	}
-	storage := unlimited
+	storageRequest, storageLimit := unlimited, unlimited
+	if container.StorageRequest != 0 {
+		storageRequest = units.HumanSize(float64(container.StorageRequest))
+	}
 	if container.Storage != 0 {
-		storage = units.HumanSize(float64(container.Storage))
+		storageLimit = units.HumanSize(float64(container.Storage))
 	}
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
-	log.Infof("Quota: %v, Memory: %v, Storage: %v", cpu, memory, storage)
-	log.Infof("CPU: %v, Volume: %+v, VolumePlan: %+v, Privileged %v", container.Cpu, container.Volumes, container.VolumePlan, container.Privileged)
+	log.Infof("QuotaRequest: %v, QuotaLimit: %v, CPUMap: %v", cpuRequest, cpuLimit, container.Cpu)
+	log.Infof("MemoryRequest: %v, MemoryLimit: %v", memoryRequest, memoryLimit)
+	log.Infof("StorageRequest: %v, StorageLimit: %v", storageRequest, storageLimit)
+	log.Infof("VolumeRequest: %v, VolumeLimit: %v", container.VolumesRequest, container.Volumes)
+	log.Infof("VolumePlanRequest: %+v, VolumePlanLimit: %+v, Privileged %v", container.VolumePlanRequest, container.VolumePlan, container.Privileged)
 	for networkName, IP := range container.Publish {
 		log.Infof("Publish at %s ip %s", networkName, IP)
 	}
@@ -565,8 +577,11 @@ func prettyRenderContianers(containers []*pb.Container) {
 			{c.Name, c.Id},
 			{c.Podname},
 			{c.Nodename},
-			{fmt.Sprintf("Quota: %f", c.Quota), fmt.Sprintf("Memory: %v", c.Memory), fmt.Sprintf("Storage: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			{fmt.Sprintf("QuotaRequest: %f", c.QuotaRequest), fmt.Sprintf("QuotaLimit: %f", c.Quota), fmt.Sprintf("MemoryRequest: %v", c.MemoryRequest), fmt.Sprintf("MemoryLimit: %v", c.Memory), fmt.Sprintf("StorageRequest: %v", c.StorageRequest), fmt.Sprintf("StorageLimit: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			c.VolumesRequest,
 			c.Volumes,
+			{fmt.Sprintf("VolumePlanRequest: %+v", c.VolumePlanRequest)},
+			{fmt.Sprintf("VolumePlanRequest: %+v", c.VolumePlanRequest)},
 			ips,
 			ns,
 		}

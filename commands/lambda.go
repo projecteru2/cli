@@ -33,8 +33,8 @@ func runLambda(c *cli.Context) error {
 }
 
 func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
-	commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployStrategys, files, user, async, asyncTimeout, priviledged, nodes := getLambdaParams(c)
-	opts := generateLambdaOpts(commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployStrategys, files, user, async, asyncTimeout, priviledged, nodes)
+	commands, name, network, pod, envs, volumesRequest, volumesLimit, workingDir, image, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, count, stdin, deployStrategys, files, user, async, asyncTimeout, priviledged, nodes := getLambdaParams(c)
+	opts := generateLambdaOpts(commands, name, network, pod, envs, volumesRequest, volumesLimit, workingDir, image, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, count, stdin, deployStrategys, files, user, async, asyncTimeout, priviledged, nodes)
 
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
@@ -58,9 +58,10 @@ func lambda(c *cli.Context, client pb.CoreRPCClient) (code int, err error) {
 
 func generateLambdaOpts(
 	commands []string, name string, network string,
-	pod string, envs []string, volumes []string,
-	workingDir string, image string, cpu float64,
-	mem int64, count int, stdin bool, deployStrategy string,
+	pod string, envs []string, volumesRequest []string, volumesLimit []string,
+	workingDir string, image string, cpuRequest, cpuLimit float64,
+	memRequest, memLimit, storageRequest, storageLimit int64,
+	count int, stdin bool, deployStrategy string,
 	files []string, user string, async bool, asyncTimeout int, priviledged bool, nodes []string) *pb.RunAndWaitOptions {
 
 	networks := getNetworks(network)
@@ -74,25 +75,30 @@ func generateLambdaOpts(
 			Privileged: priviledged,
 			Dir:        workingDir,
 		},
-		Podname:        pod,
-		Nodenames:      nodes,
-		Image:          image,
-		CpuQuota:       cpu,
-		Memory:         mem,
-		Count:          int32(count),
-		Env:            envs,
-		Volumes:        volumes,
-		Networks:       networks,
-		Networkmode:    network,
-		OpenStdin:      stdin,
-		DeployStrategy: pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
-		Data:           fileData,
-		User:           user,
+		Podname:         pod,
+		Nodenames:       nodes,
+		Image:           image,
+		CpuQuotaRequest: cpuRequest,
+		CpuQuota:        cpuLimit,
+		MemoryRequest:   memRequest,
+		Memory:          memLimit,
+		StorageRequest:  storageRequest,
+		Storage:         storageLimit,
+		Count:           int32(count),
+		Env:             envs,
+		Volumes:         volumesLimit,
+		VolumesRequest:  volumesRequest,
+		Networks:        networks,
+		Networkmode:     network,
+		OpenStdin:       stdin,
+		DeployStrategy:  pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
+		Data:            fileData,
+		User:            user,
 	}
 	return opts
 }
 
-func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, string, string, float64, int64, int, bool, string, []string, string, bool, int, bool, []string) {
+func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string, []string, []string, string, string, float64, float64, int64, int64, int64, int64, int, bool, string, []string, string, bool, int, bool, []string) {
 	if c.NArg() <= 0 {
 		log.Fatal("[Lambda] no commands")
 	}
@@ -101,14 +107,22 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	network := c.String("network")
 	pod := c.String("pod")
 	envs := c.StringSlice("env")
-	volumes := c.StringSlice("volume")
+	volumeRequest := c.StringSlice("volume-request")
+	volumeLimit := c.StringSlice("volume")
 	workingDir := c.String("working_dir")
 	image := c.String("image")
-	cpu := c.Float64("cpu")
-	mem, err := parseRAMInHuman(c.String("memory"))
+	cpuRequest := c.Float64("cpu-request")
+	cpuLimit := c.Float64("cpu")
+	memRequest, err := parseRAMInHuman(c.String("memory-request"))
 	if err != nil {
 		log.Fatalf("[Lambda] memory wrong %v", err)
 	}
+	memLimit, err := parseRAMInHuman(c.String("memory"))
+	if err != nil {
+		log.Fatalf("[Lambda] memory wrong %v", err)
+	}
+	storageRequest := c.Int64("storage-request")
+	storageLimit := c.Int64("storage")
 
 	count := c.Int("count")
 	stdin := c.Bool("stdin")
@@ -119,7 +133,7 @@ func getLambdaParams(c *cli.Context) ([]string, string, string, string, []string
 	asyncTimeout := c.Int("async-timeout")
 	privileged := c.Bool("privileged")
 	nodes := c.StringSlice("node")
-	return commands, name, network, pod, envs, volumes, workingDir, image, cpu, mem, count, stdin, deployStrategy, files, user, async, asyncTimeout, privileged, nodes
+	return commands, name, network, pod, envs, volumeRequest, volumeLimit, workingDir, image, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, count, stdin, deployStrategy, files, user, async, asyncTimeout, privileged, nodes
 }
 
 // LambdaCommand for run commands in a container
@@ -145,8 +159,12 @@ func LambdaCommand() *cli.Command {
 				Usage: "set env can use multiple times, e.g., GO111MODULE=on",
 			},
 			&cli.StringSliceFlag{
+				Name:  "volume-request",
+				Usage: "set volume request can use multiple times",
+			},
+			&cli.StringSliceFlag{
 				Name:  "volume",
-				Usage: "set volume can use multiple times",
+				Usage: "set volume limitcan use multiple times",
 			},
 			&cli.StringFlag{
 				Name:  "working_dir",
@@ -159,14 +177,34 @@ func LambdaCommand() *cli.Command {
 				Value: "alpine:latest",
 			},
 			&cli.Float64Flag{
+				Name:  "cpu-request",
+				Usage: "how many cpu request",
+				Value: 0,
+			},
+			&cli.Float64Flag{
 				Name:  "cpu",
-				Usage: "how many cpu",
+				Usage: "how many cpu limit",
 				Value: 1.0,
 			},
 			&cli.StringFlag{
+				Name:  "memory-request",
+				Usage: "memory request, support K, M, G, T",
+				Value: "",
+			},
+			&cli.StringFlag{
 				Name:  "memory",
-				Usage: "memory, support K, M, G, T",
+				Usage: "memory limit, support K, M, G, T",
 				Value: "512M",
+			},
+			&cli.StringFlag{
+				Name:  "storage-request",
+				Usage: "how many storage to request quota like 1M or 1G, support K, M, G, T",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "storage",
+				Usage: "how many storage to limit quota like 1M or 1G, support K, M, G, T",
+				Value: "",
 			},
 			&cli.IntFlag{
 				Name:  "count",
