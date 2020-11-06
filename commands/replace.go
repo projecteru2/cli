@@ -20,7 +20,7 @@ func replaceContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Replace] Replace container by %s", specURI)
 
-	pod, entry, image, network, nodes, _, _, _, envs, count, _, _, files, user, debug, _, _, _, ignoreHook, afterCreate, _ := getDeployParams(c) // nolint
+	pod, entry, image, network, nodes, _, _, _, _, _, _, envs, count, _, _, files, user, debug, _, _, _, ignoreHook, afterCreate, _ := getDeployParams(c) // nolint
 	if entry == "" || image == "" {
 		log.Fatalf("[Replace] no entry or image")
 	}
@@ -43,7 +43,7 @@ func replaceContainers(c *cli.Context) error {
 		log.Warnf("[Replace] Network is not empty, so network-inherit will set to false")
 		networkInherit = false
 	}
-	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, 0, 0, 0, envs, count, nil, "", files, user, debug, false, false, ignoreHook, 0, afterCreate, "")
+	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, 0, 0, 0, 0, 0, 0, envs, count, nil, "", files, user, debug, false, false, ignoreHook, 0, afterCreate, "")
 	return doReplaceContainer(client, deployOpts, networkInherit, labels, copys)
 }
 
@@ -80,7 +80,7 @@ func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, n
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
-		log.Infof("[Replace] New container %s, cpu %v, quota %v, mem %v", createMsg.Name, createMsg.Cpu, createMsg.Quota, createMsg.Memory)
+		log.Infof("[Replace] New container %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Cpu, createMsg.QuotaRequest, createMsg.Quota, createMsg.MemoryRequest, createMsg.Memory)
 		if len(createMsg.Hook) > 0 {
 			log.Infof("[Replace] Other output \n%s", createMsg.Hook)
 		}

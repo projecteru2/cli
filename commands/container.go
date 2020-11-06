@@ -209,20 +209,32 @@ func ContainerCommand() *cli.Command {
 				Action:    reallocContainers,
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
-						Name:    "cpu",
-						Usage:   "cpu increment/decrement",
-						Aliases: []string{"c"},
-						Value:   0,
+						Name:  "cpu-request",
+						Usage: "cpu request increment/decrement",
+						Value: 0,
+					},
+					&cli.Float64Flag{
+						Name:  "cpu-limit",
+						Usage: "cpu limit increment/decrement",
+						Value: 0,
 					},
 					&cli.StringFlag{
-						Name:    "memory",
-						Usage:   "memory increment/decrement, like -1M or 1G, support K, M, G, T",
-						Aliases: []string{"m"},
-						Value:   "0",
+						Name:  "memory-request",
+						Usage: "memory request increment/decrement, like -1M or 1G, support K, M, G, T",
+						Value: "0",
 					},
 					&cli.StringFlag{
-						Name:  "volumes",
-						Usage: `volumes increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
+						Name:  "memory-limit",
+						Usage: "memory limit increment/decrement, like -1M or 1G, support K, M, G, T",
+						Value: "0",
+					},
+					&cli.StringFlag{
+						Name:  "volumes-request",
+						Usage: `volumes request increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
+					},
+					&cli.StringFlag{
+						Name:  "volumes-limit",
+						Usage: `volumes limit increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
 					},
 					&cli.BoolFlag{
 						Name:  "cpu-bind",
@@ -373,18 +385,33 @@ func ContainerCommand() *cli.Command {
 						Value: "host",
 					},
 					&cli.Float64Flag{
-						Name:  "cpu",
-						Usage: "how many cpu",
+						Name:  "cpu-request",
+						Usage: "how many cpu to request",
+						Value: 0,
+					},
+					&cli.Float64Flag{
+						Name:  "cpu-limit",
+						Usage: "how many cpu to limit",
 						Value: 1.0,
 					},
 					&cli.StringFlag{
-						Name:  "memory",
-						Usage: "how many memory like 1M or 1G, support K, M, G, T",
+						Name:  "memory-request",
+						Usage: "how many memory to request like 1M or 1G, support K, M, G, T",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "memory-limit",
+						Usage: "how many memory to limit like 1M or 1G, support K, M, G, T",
 						Value: "512M",
 					},
 					&cli.StringFlag{
-						Name:  "storage",
-						Usage: "how many storage quota like 1M or 1G, support K, M, G, T",
+						Name:  "storage-request",
+						Usage: "how many storage to request quota like 1M or 1G, support K, M, G, T",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "storage-limit",
+						Usage: "how many storage to limit quota like 1M or 1G, support K, M, G, T",
 						Value: "",
 					},
 					&cli.StringSliceFlag{
@@ -418,7 +445,7 @@ func ContainerCommand() *cli.Command {
 						Usage: "enable debug mode for container send their logs to default log driver",
 					},
 					&cli.BoolFlag{
-						Name:  "softlimit",
+						Name:  "memory-softlimit",
 						Usage: "enable memory softlmit",
 					},
 					&cli.IntFlag{
@@ -487,23 +514,35 @@ func removeContainers(c *cli.Context) error {
 }
 
 func renderContainer(container *pb.Container) {
-	cpu := unlimited
+	cpuRequest, cpuLimit := unlimited, unlimited
+	if container.QuotaRequest != 0 {
+		cpuRequest = fmt.Sprintf("%v", container.QuotaRequest)
+	}
 	if container.Quota != 0 {
-		cpu = fmt.Sprintf("%v", container.Quota)
+		cpuLimit = fmt.Sprintf("%v", container.Quota)
 	}
-	memory := unlimited
+	memoryRequest, memoryLimit := unlimited, unlimited
+	if container.MemoryRequest != 0 {
+		memoryRequest = units.HumanSize(float64(container.MemoryRequest))
+	}
 	if container.Memory != 0 {
-		memory = units.HumanSize(float64(container.Memory))
+		memoryLimit = units.HumanSize(float64(container.Memory))
 	}
-	storage := unlimited
+	storageRequest, storageLimit := unlimited, unlimited
+	if container.StorageRequest != 0 {
+		storageRequest = units.HumanSize(float64(container.StorageRequest))
+	}
 	if container.Storage != 0 {
-		storage = units.HumanSize(float64(container.Storage))
+		storageLimit = units.HumanSize(float64(container.Storage))
 	}
 	log.Info("--------------------------------------")
 	log.Infof("%s: %s", container.Name, container.Id)
 	log.Infof("Pod: %s, Node: %s", container.Podname, container.Nodename)
-	log.Infof("Quota: %v, Memory: %v, Storage: %v", cpu, memory, storage)
-	log.Infof("CPU: %v, Volume: %+v, VolumePlan: %+v, Privileged %v", container.Cpu, container.Volumes, container.VolumePlan, container.Privileged)
+	log.Infof("QuotaRequest: %v, QuotaLimit: %v, CPUMap: %v", cpuRequest, cpuLimit, container.Cpu)
+	log.Infof("MemoryRequest: %v, MemoryLimit: %v", memoryRequest, memoryLimit)
+	log.Infof("StorageRequest: %v, StorageLimit: %v", storageRequest, storageLimit)
+	log.Infof("VolumeRequest: %v, VolumeLimit: %v", container.VolumesRequest, container.Volumes)
+	log.Infof("VolumePlanRequest: %+v, VolumePlanLimit: %+v, Privileged %v", container.VolumePlanRequest, container.VolumePlan, container.Privileged)
 	for networkName, IP := range container.Publish {
 		log.Infof("Publish at %s ip %s", networkName, IP)
 	}
@@ -538,8 +577,11 @@ func prettyRenderContianers(containers []*pb.Container) {
 			{c.Name, c.Id},
 			{c.Podname},
 			{c.Nodename},
-			{fmt.Sprintf("Quota: %f", c.Quota), fmt.Sprintf("Memory: %v", c.Memory), fmt.Sprintf("Storage: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			{fmt.Sprintf("QuotaRequest: %f", c.QuotaRequest), fmt.Sprintf("QuotaLimit: %f", c.Quota), fmt.Sprintf("MemoryRequest: %v", c.MemoryRequest), fmt.Sprintf("MemoryLimit: %v", c.Memory), fmt.Sprintf("StorageRequest: %v", c.StorageRequest), fmt.Sprintf("StorageLimit: %v", c.Storage), fmt.Sprintf("Privileged: %v", c.Privileged)},
+			c.VolumesRequest,
 			c.Volumes,
+			{fmt.Sprintf("VolumePlanRequest: %+v", c.VolumePlanRequest)},
+			{fmt.Sprintf("VolumePlanRequest: %+v", c.VolumePlanRequest)},
 			ips,
 			ns,
 		}
@@ -719,13 +761,20 @@ func reallocContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	memory, err := parseRAMInHuman(c.String("memory"))
+	memoryRequest, err := parseRAMInHuman(c.String("memory-request"))
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	volumes := []string{}
-	if v := c.String("volumes"); v != "" {
-		volumes = strings.Split(v, ",")
+	memoryLimit, err := parseRAMInHuman(c.String("memory-limit"))
+	if err != nil {
+		return cli.Exit(err, -1)
+	}
+	var volumesRequest, volumesLimit []string
+	if v := c.String("volumes-request"); v != "" {
+		volumesRequest = strings.Split(v, ",")
+	}
+	if v := c.String("volumes-limit"); v != "" {
+		volumesLimit = strings.Split(v, ",")
 	}
 	bindCPU := c.Bool("cpu-bind")
 	unbindCPU := c.Bool("cpu-unbind")
@@ -755,9 +804,15 @@ func reallocContainers(c *cli.Context) error {
 	}
 
 	opts := &pb.ReallocOptions{
-		Ids: c.Args().Slice(), Cpu: c.Float64("cpu"),
-		Memory: memory, Volumes: volumes,
-		BindCpu: bindCPUOpt, MemoryLimit: memoryLimitOpt,
+		Ids:            c.Args().Slice(),
+		CpuRequest:     c.Float64("cpu-request"),
+		CpuLimit:       c.Float64("cpu-limit"),
+		MemoryRequest:  memoryRequest,
+		MemoryLimit:    memoryLimit,
+		VolumeRequest:  volumesRequest,
+		VolumeLimit:    volumesLimit,
+		BindCpuOpt:     bindCPUOpt,
+		MemoryLimitOpt: memoryLimitOpt,
 	}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
