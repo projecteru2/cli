@@ -373,7 +373,7 @@ func setNode(c *cli.Context) error {
 
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
 		Nodename:        name,
-		Status:          pb.TriOpt_KEEP,
+		StatusOpt:       pb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,
@@ -397,8 +397,8 @@ func setNodeUp(c *cli.Context) error {
 	}
 	name := c.Args().First()
 	_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-		Nodename: name,
-		Status:   pb.TriOpt_TRUE,
+		Nodename:  name,
+		StatusOpt: pb.TriOpt_TRUE,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)
@@ -426,8 +426,8 @@ func setNodeDown(c *cli.Context) error {
 
 	if do {
 		_, err = client.SetNode(context.Background(), &pb.SetNodeOptions{
-			Nodename: name,
-			Status:   pb.TriOpt_FALSE,
+			Nodename:  name,
+			StatusOpt: pb.TriOpt_FALSE,
 		})
 		if err != nil {
 			return cli.Exit(err, -1)

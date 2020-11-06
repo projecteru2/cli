@@ -804,15 +804,15 @@ func reallocContainers(c *cli.Context) error {
 	}
 
 	opts := &pb.ReallocOptions{
-		Ids:           c.Args().Slice(),
-		CpuRequest:    c.Float64("cpu-request"),
-		CpuLimit:      c.Float64("cpu-limit"),
-		MemoryRequest: memoryRequest,
-		MemoryLim:     memoryLimit,
-		VolumeRequest: volumesRequest,
-		VolumeLimit:   volumesLimit,
-		BindCpu:       bindCPUOpt,
-		MemoryLimit:   memoryLimitOpt,
+		Ids:            c.Args().Slice(),
+		CpuRequest:     c.Float64("cpu-request"),
+		CpuLimit:       c.Float64("cpu-limit"),
+		MemoryRequest:  memoryRequest,
+		MemoryLimit:    memoryLimit,
+		VolumeRequest:  volumesRequest,
+		VolumeLimit:    volumesLimit,
+		BindCpuOpt:     bindCPUOpt,
+		MemoryLimitOpt: memoryLimitOpt,
 	}
 
 	resp, err := client.ReallocResource(context.Background(), opts)
