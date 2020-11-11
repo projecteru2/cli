@@ -80,7 +80,7 @@ func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, n
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
-		log.Infof("[Replace] New container %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Cpu, createMsg.QuotaRequest, createMsg.Quota, createMsg.MemoryRequest, createMsg.Memory)
+		log.Infof("[Replace] New container %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Resource.Cpu, createMsg.Resource.CpuQuotaRequest, createMsg.Resource.CpuQuotaLimit, createMsg.Resource.MemoryRequest, createMsg.Resource.MemoryLimit)
 		if len(createMsg.Hook) > 0 {
 			log.Infof("[Replace] Other output \n%s", createMsg.Hook)
 		}
