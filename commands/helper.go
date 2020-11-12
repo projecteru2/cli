@@ -92,7 +92,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 
 		terminal.Iflag &^= syscall.BRKINT // disable special handling of BREAK
 		terminal.Iflag &^= syscall.ICRNL  // disable special handling of CR
-		terminal.Iflag &^= syscall.IGNBRK //disable special handling of BREAK
+		terminal.Iflag &^= syscall.IGNBRK // disable special handling of BREAK
 		terminal.Iflag &^= syscall.IGNCR  // disable special handling of CR
 		terminal.Iflag &^= syscall.INLCR  // disable special handling of NL
 		terminal.Iflag &^= syscall.INPCK  // no parity error handling

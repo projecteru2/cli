@@ -23,7 +23,7 @@ func deployContainers(c *cli.Context) error {
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
 	autoReplace := c.Bool("auto-replace")
-	pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs := getDeployParams(c)
+	pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
 	}
@@ -41,7 +41,7 @@ func deployContainers(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, softlimit, cpubind, ignoreHook, nodesLimit, afterCreate, rawArgs)
+	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, cpubind, ignoreHook, nodesLimit, afterCreate, rawArgs)
 	if !autoReplace {
 		return doCreateContainer(client, deployOpts)
 	}
@@ -88,7 +88,7 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 		}
 
 		if msg.Success {
-			log.Infof("[Deploy] Success %s %s %s %v %v %v %d %d %v %v", msg.Id, msg.Name, msg.Nodename, msg.Cpu, msg.QuotaRequest, msg.Quota, msg.MemoryRequest, msg.Memory, msg.VolumePlanRequest, msg.VolumePlan)
+			log.Infof("[Deploy] Success %s %s %s %v %v %v %d %d %v %v", msg.Id, msg.Name, msg.Nodename, msg.Resource.CpuQuotaRequest, msg.Resource.CpuQuotaLimit, msg.Resource.Cpu, msg.Resource.MemoryRequest, msg.Resource.MemoryLimit, msg.Resource.VolumePlanRequest, msg.Resource.VolumePlanLimit)
 			if len(msg.Hook) > 0 {
 				log.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}
@@ -102,7 +102,7 @@ func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) er
 	return nil
 }
 
-func getDeployParams(c *cli.Context) (string, string, string, string, []string, float64, float64, int64, int64, int64, int64, []string, int32, map[string]string, string, []string, string, bool, bool, int, bool, bool, []string, string) {
+func getDeployParams(c *cli.Context) (string, string, string, string, []string, float64, float64, int64, int64, int64, int64, []string, int32, map[string]string, string, []string, string, bool, int, bool, bool, []string, string) {
 	pod := c.String("pod")
 	nodes := c.StringSlice("node")
 	entry := c.String("entry")
@@ -132,7 +132,6 @@ func getDeployParams(c *cli.Context) (string, string, string, string, []string, 
 	deployStrategy := c.String("deploy-strategy")
 	user := c.String("user")
 	debug := c.Bool("debug")
-	softlimit := c.Bool("memory-softlimit")
 	labels := map[string]string{}
 	for _, d := range c.StringSlice("nodelabel") {
 		parts := strings.Split(d, "=")
@@ -143,10 +142,10 @@ func getDeployParams(c *cli.Context) (string, string, string, string, []string, 
 	ignoreHook := c.Bool("ignore-hook")
 	afterCreate := c.StringSlice("after-create")
 	rawArgs := c.String("raw-args")
-	return pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, labels, deployStrategy, files, user, debug, softlimit, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs
+	return pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, labels, deployStrategy, files, user, debug, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs
 }
 
-func generateDeployOpts(data []byte, pod, entry, image, network string, nodes []string, cpuRequest, cpuLimit float64, memRequest, memLimit, storageRequest, storageLimit int64, envs []string, count int32, nodeLabels map[string]string, deployStrategy string, files []string, user string, debug, softlimit, cpubind, ignoreHook bool, nodesLimit int, afterCreate []string, rawArgs string) *pb.DeployOptions {
+func generateDeployOpts(data []byte, pod, entry, image, network string, nodes []string, cpuRequest, cpuLimit float64, memRequest, memLimit, storageRequest, storageLimit int64, envs []string, count int32, nodeLabels map[string]string, deployStrategy string, files []string, user string, debug, cpubind, ignoreHook bool, nodesLimit int, afterCreate []string, rawArgs string) *pb.DeployOptions {
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		log.Fatalf("[generateOpts] get specs failed %v", err)
@@ -201,35 +200,36 @@ func generateDeployOpts(data []byte, pod, entry, image, network string, nodes []
 			RestartPolicy: entrypoint.RestartPolicy,
 			Sysctls:       entrypoint.Sysctls,
 		},
-		Podname:         pod,
-		Nodenames:       nodes,
-		Image:           image,
-		CpuQuotaRequest: cpuRequest,
-		CpuQuota:        cpuLimit,
-		MemoryRequest:   memRequest,
-		Memory:          memLimit,
-		StorageRequest:  storageRequest,
-		Storage:         storageLimit,
-		Count:           count,
-		Env:             envs,
-		Networks:        networks,
-		Networkmode:     network,
-		Volumes:         specs.Volumes,
-		VolumesRequest:  specs.VolumesRequest,
-		Labels:          specs.Labels,
-		Dns:             specs.DNS,
-		ExtraHosts:      specs.ExtraHosts,
-		Nodelabels:      nodeLabels,
-		DeployStrategy:  pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
-		Data:            fileData,
-		User:            user,
-		Debug:           debug,
-		SoftLimit:       softlimit,
-		NodesLimit:      int32(nodesLimit),
-		CpuBind:         cpubind,
-		IgnoreHook:      ignoreHook,
-		AfterCreate:     afterCreate,
-		RawArgs:         rawArgsByte,
+		ResourceOpts: &pb.ResourceOptions{
+			CpuQuotaRequest: cpuRequest,
+			CpuQuotaLimit:   cpuLimit,
+			CpuBind:         cpubind,
+			MemoryRequest:   memRequest,
+			MemoryLimit:     memLimit,
+			StorageRequest:  storageRequest,
+			StorageLimit:    storageLimit,
+			VolumesRequest:  specs.VolumesRequest,
+			VolumesLimit:    specs.Volumes,
+		},
+		Podname:        pod,
+		Nodenames:      nodes,
+		Image:          image,
+		Count:          count,
+		Env:            envs,
+		Networks:       networks,
+		Networkmode:    network,
+		Labels:         specs.Labels,
+		Dns:            specs.DNS,
+		ExtraHosts:     specs.ExtraHosts,
+		Nodelabels:     nodeLabels,
+		DeployStrategy: pb.DeployOptions_Strategy(pb.DeployOptions_Strategy_value[strings.ToUpper(deployStrategy)]),
+		Data:           fileData,
+		User:           user,
+		Debug:          debug,
+		NodesLimit:     int32(nodesLimit),
+		IgnoreHook:     ignoreHook,
+		AfterCreate:    afterCreate,
+		RawArgs:        rawArgsByte,
 	}
 	return opts
 }

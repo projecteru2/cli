@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/table"
 	pb "github.com/projecteru2/core/rpc/gen"
@@ -162,44 +163,43 @@ func podResource(c *cli.Context) error {
 	if c.Bool("pretty") {
 		t := table.NewWriter()
 		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume"})
+		t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})
 		nodeRow := []string{}
 		cpuRow := []string{}
 		memoryRow := []string{}
 		storageRow := []string{}
 		volumeRow := []string{}
-		for nodename, percent := range r.CpuPercents {
-			nodeRow = append(nodeRow, nodename)
-			cpuRow = append(cpuRow, fmt.Sprintf("%.2f%%", percent*100))
-			memoryRow = append(memoryRow, fmt.Sprintf("%.2f%%", r.MemoryPercents[nodename]*100))
-			storageRow = append(storageRow, fmt.Sprintf("%.2f%%", r.StoragePercents[nodename]*100))
-			volumeRow = append(volumeRow, fmt.Sprintf("%.2f%%", r.VolumePercents[nodename]*100))
+		diffsRow := []string{}
+		for _, nodeResource := range r.NodesResource {
+			nodeRow = append(nodeRow, nodeResource.Name)
+			cpuRow = append(cpuRow, fmt.Sprintf("%.2f%%", nodeResource.CpuPercent*100))
+			memoryRow = append(memoryRow, fmt.Sprintf("%.2f%%", nodeResource.MemoryPercent*100))
+			storageRow = append(storageRow, fmt.Sprintf("%.2f%%", nodeResource.StoragePercent*100))
+			volumeRow = append(volumeRow, fmt.Sprintf("%.2f%%", nodeResource.VolumePercent*100))
+			diffsRow = append(diffsRow, strings.Join(nodeResource.Diffs, "\n"))
 		}
-		rows := [][]string{nodeRow, cpuRow, memoryRow, storageRow, volumeRow}
+		rows := [][]string{nodeRow, cpuRow, memoryRow, storageRow, volumeRow, diffsRow}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
 		t.SetStyle(table.StyleLight)
 		t.Render()
 	} else {
 		log.Infof("[PodResource] Pod %s", r.Name)
-		for nodename, percent := range r.CpuPercents {
-			log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", nodename, percent*100, r.MemoryPercents[nodename]*100, r.StoragePercents[nodename]*100, r.VolumePercents[nodename]*100)
+		for _, nodeResource := range r.NodesResource {
+			log.Infof("[PodResource] Node %s Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%",
+				nodeResource.Name, nodeResource.CpuPercent*100, nodeResource.MemoryPercent*100,
+				nodeResource.StoragePercent*100, nodeResource.VolumePercent*100,
+			)
+			if len(nodeResource.Diffs) > 0 {
+				log.Warnf("[PodResource] Node %s resource diff %s", nodeResource.Name, strings.Join(nodeResource.Diffs, "\n"))
+			}
 		}
-	}
-	for nodename, verification := range r.Verifications {
-		if verification {
-			continue
-		}
-		log.Warnf("[PodResource] Node %s resource diff %s", nodename, r.Details[nodename])
 	}
 	return nil
 }
 
 func listPodNodes(c *cli.Context) error {
-	client, err := checkParamsAndGetClient(c)
-	if err != nil {
-		return cli.Exit(err, -1)
-	}
+	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 	name := c.Args().First()
 	all := c.Bool("all")
 
@@ -226,13 +226,14 @@ func listPodNodes(c *cli.Context) error {
 		t.AppendSeparator()
 		t.SetStyle(table.StyleLight)
 		t.Render()
-	} else {
-		for _, node := range resp.GetNodes() {
-			log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
-			r := map[string]interface{}{}
-			if err := json.Unmarshal([]byte(node.Info), &r); err != nil {
-				log.Errorf("Get Node Info failed: %v", node.Info)
-			}
+		return nil
+	}
+
+	for _, node := range resp.GetNodes() {
+		log.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
+		r := map[string]interface{}{}
+		if err := json.Unmarshal([]byte(node.Info), &r); err != nil {
+			log.Errorf("Get Node Info failed: %v", node.Info)
 		}
 	}
 	return nil
