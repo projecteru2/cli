@@ -214,9 +214,15 @@ func listNodeContainers(c *cli.Context) error {
 				{
 					fmt.Sprintf("Pod: %s", c.Podname),
 					fmt.Sprintf("Node: %s", c.Nodename),
-					fmt.Sprintf("CPU: %v", c.Cpu),
-					fmt.Sprintf("Quota: %v", c.Quota),
-					fmt.Sprintf("Memory: %v", c.Memory),
+					fmt.Sprintf("CPU: %v", c.Resource.Cpu),
+					fmt.Sprintf("QuotaRequest: %v", c.Resource.CpuQuotaRequest),
+					fmt.Sprintf("QuotaLimit: %v", c.Resource.CpuQuotaLimit),
+					fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
+					fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
+					fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),
+					fmt.Sprintf("StorageLimit: %v", c.Resource.StorageLimit),
+					fmt.Sprintf("VolumePlanRequest: %v", c.Resource.VolumePlanRequest),
+					fmt.Sprintf("VolumePlanLimit: %v", c.Resource.VolumePlanLimit),
 					fmt.Sprintf("Privileged: %v", c.Privileged),
 				},
 			}
@@ -228,7 +234,7 @@ func listNodeContainers(c *cli.Context) error {
 	} else {
 		for _, container := range containers {
 			log.Infof("%s: %s", container.Name, container.Id)
-			log.Infof("Pod %s, Node %s, CPU %v, Quota %v, Memory %v, Privileged %v", container.Podname, container.Nodename, container.Cpu, container.Quota, container.Memory, container.Privileged)
+			log.Infof("Pod %s, Node %s, CPU %v, QuotaRequest %v, QuotaLimit %v, MemoryRequest %v, MemoryLimit %v, StorageRequest %v, StorageLimit %v, VolumePlanRequest %v, VolumePlanLimit %v, Privileged %v", container.Podname, container.Nodename, container.Resource.Cpu, container.Resource.CpuQuotaRequest, container.Resource.CpuQuotaLimit, container.Resource.MemoryRequest, container.Resource.MemoryLimit, container.Resource.StorageRequest, container.Resource.StorageLimit, container.Resource.VolumePlanRequest, container.Resource.VolumePlanLimit, container.Privileged)
 		}
 	}
 	return nil
@@ -655,9 +661,9 @@ func nodeResource(c *cli.Context) error {
 		log.Infof("[NodeResource] Node %s", r.Name)
 		log.Infof("[NodeResource] Cpu %.2f%% Memory %.2f%% Storage %.2f%% Volume %.2f%%", r.CpuPercent*100, r.MemoryPercent*100, r.StoragePercent*100, r.VolumePercent*100)
 	}
-	if !r.Verification {
-		for _, detail := range r.Details {
-			log.Warnf("[NodeResource] Resource diff %s", detail)
+	if len(r.Diffs) > 0 {
+		for _, diff := range r.Diffs {
+			log.Warnf("[NodeResource] Resource diff %s", diff)
 		}
 	}
 	return nil
