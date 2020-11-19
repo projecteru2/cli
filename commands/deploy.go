@@ -22,7 +22,6 @@ func deployContainers(c *cli.Context) error {
 	specURI := c.Args().First()
 	log.Debugf("[Deploy] Deploy %s", specURI)
 
-	autoReplace := c.Bool("auto-replace")
 	pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, nodesLimit, cpubind, ignoreHook, afterCreate, rawArgs := getDeployParams(c)
 	if pod == "" || entry == "" || image == "" {
 		log.Fatal("[Deploy] no pod or entry or image")
@@ -42,7 +41,21 @@ func deployContainers(c *cli.Context) error {
 	}
 
 	deployOpts := generateDeployOpts(data, pod, entry, image, network, nodes, cpuRequest, cpuLimit, memRequest, memLimit, storageRequest, storageLimit, envs, count, nodeLabels, deployStrategy, files, user, debug, cpubind, ignoreHook, nodesLimit, afterCreate, rawArgs)
-	if !autoReplace {
+
+	if c.Bool("dry-run") {
+		r, err := client.CalculateCapacity(c.Context, deployOpts)
+		if err != nil {
+			log.Errorf("[Deploy] Calculate capacity failed %v", err)
+			return err
+		}
+		log.Infof("[Deploy] Capacity total %v", r.Total)
+		for nodename, capacity := range r.NodeCapacities {
+			log.Infof("[Deploy] Node %v capacity %v", nodename, capacity)
+		}
+		return nil
+	}
+
+	if !c.Bool("auto-replace") {
 		return doCreateContainer(client, deployOpts)
 	}
 	lsOpts := &pb.ListContainersOptions{

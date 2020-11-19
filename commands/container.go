@@ -356,6 +356,10 @@ func ContainerCommand() *cli.Command {
 				ArgsUsage: specFileURI,
 				Action:    deployContainers,
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:  "dry-run",
+						Usage: "dry run show capacity",
+					},
 					&cli.StringFlag{
 						Name:  "pod",
 						Usage: "where to run",
