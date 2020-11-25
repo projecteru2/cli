@@ -227,8 +227,8 @@ github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942/go.mod h1:eCbImbZ95eXtAUI
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/projecteru2/core v0.0.0-20201119101637-e65c465120ed h1:HMsFeTlZL4bF66c2ZqzonKn1AScNaZqHIPAX55KBFkc=
-github.com/projecteru2/core v0.0.0-20201119101637-e65c465120ed/go.mod h1:VUOsPjafyMtYM9C9v9wajwG+gM5oDQwM0+DguZdQjuw=
+github.com/projecteru2/core v0.0.0-20201123102548-9490bac62719 h1:RBRVoW4UF1bts0V2iQUp3kX8iKQ4n27G9ZLgMJOZjEk=
+github.com/projecteru2/core v0.0.0-20201123102548-9490bac62719/go.mod h1:VUOsPjafyMtYM9C9v9wajwG+gM5oDQwM0+DguZdQjuw=
 github.com/projecteru2/libyavirt v0.0.0-20200831030711-2bb3f2ba0cb7/go.mod h1:9/SNmdphwl12ubwihkRa9YtOozM6liYLDxsricra1mY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=

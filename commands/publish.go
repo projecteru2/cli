@@ -122,14 +122,14 @@ func publishContainers(c *cli.Context) error {
 		upstreamName = fmt.Sprintf("%s_%s", app, entry)
 	}
 
-	lsOpts := &pb.ListContainersOptions{
+	lsOpts := &pb.ListWorkloadsOptions{
 		Appname:    app,
 		Entrypoint: entry,
 		Nodename:   node,
 		Labels:     labels,
 	}
 
-	resp, err := client.ListContainers(context.Background(), lsOpts)
+	resp, err := client.ListWorkloads(context.Background(), lsOpts)
 	if err != nil {
 		log.Fatalf("[Publish] check container failed %v", err)
 	}

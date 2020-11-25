@@ -27,9 +27,9 @@ func status(c *cli.Context) error {
 		cancel()
 	}()
 
-	resp, err := client.ContainerStatusStream(
+	resp, err := client.WorkloadStatusStream(
 		ctx,
-		&pb.ContainerStatusStreamOptions{
+		&pb.WorkloadStatusStreamOptions{
 			Appname:    name,
 			Entrypoint: entry,
 			Nodename:   node,
@@ -59,17 +59,17 @@ func status(c *cli.Context) error {
 		}
 
 		if msg.Delete {
-			log.Warnf("[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Container.Name)
+			log.Warnf("[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Workload.Name)
 		}
 
 		switch {
 		case !msg.Status.Running:
-			log.Warnf("[%s] %s on %s is stopped", coreutils.ShortID(msg.Id), msg.Container.Name, msg.Container.Nodename)
+			log.Warnf("[%s] %s on %s is stopped", coreutils.ShortID(msg.Id), msg.Workload.Name, msg.Workload.Nodename)
 		case !msg.Status.Healthy:
-			log.Warnf("[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Container.Name, msg.Container.Nodename)
+			log.Warnf("[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Workload.Name, msg.Workload.Nodename)
 		case msg.Status.Running && msg.Status.Healthy:
-			log.Infof("[%s] %s back to life", coreutils.ShortID(msg.Container.Id), msg.Container.Name)
-			for networkName, addrs := range msg.Container.Publish {
+			log.Infof("[%s] %s back to life", coreutils.ShortID(msg.Workload.Id), msg.Workload.Name)
+			for networkName, addrs := range msg.Workload.Publish {
 				log.Infof("[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}
 		}
