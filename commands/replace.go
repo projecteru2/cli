@@ -49,7 +49,7 @@ func replaceContainers(c *cli.Context) error {
 
 func doReplaceContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions, networkInherit bool, labels map[string]string, copys map[string]string) error {
 	opts := &pb.ReplaceOptions{DeployOpt: deployOpts, Networkinherit: networkInherit, FilterLabels: labels, Copy: copys}
-	resp, err := client.ReplaceContainer(context.Background(), opts)
+	resp, err := client.ReplaceWorkload(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}

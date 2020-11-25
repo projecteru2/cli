@@ -198,12 +198,12 @@ func listNodeContainers(c *cli.Context) error {
 		Nodename: nodename,
 	}
 
-	resp, err := client.ListNodeContainers(context.Background(), opts)
+	resp, err := client.ListNodeWorkloads(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 
-	containers := resp.Containers
+	containers := resp.Workloads
 	if c.Bool("pretty") {
 		t := table.NewWriter()
 		t.SetOutputMirror(os.Stdout)
@@ -387,7 +387,7 @@ func setNode(c *cli.Context) error {
 		DeltaVolume:     volumeMap,
 		Numa:            numa,
 		Labels:          labels,
-		ContainersDown:  markContainersDown,
+		WorkloadsDown:   markContainersDown,
 	})
 	if err != nil {
 		return cli.Exit(err, -1)

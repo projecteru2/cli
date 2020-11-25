@@ -58,13 +58,13 @@ func deployContainers(c *cli.Context) error {
 	if !c.Bool("auto-replace") {
 		return doCreateContainer(client, deployOpts)
 	}
-	lsOpts := &pb.ListContainersOptions{
+	lsOpts := &pb.ListWorkloadsOptions{
 		Appname:    deployOpts.Name,
 		Entrypoint: deployOpts.Entrypoint.Name,
 		Labels:     nil,
 		Limit:      1, // 至少有一个可以被替换的
 	}
-	resp, err := client.ListContainers(context.Background(), lsOpts)
+	resp, err := client.ListWorkloads(context.Background(), lsOpts)
 	if err != nil {
 		log.Warnf("[Deploy] check container failed %v", err)
 		return err
@@ -86,7 +86,7 @@ func deployContainers(c *cli.Context) error {
 }
 
 func doCreateContainer(client pb.CoreRPCClient, deployOpts *pb.DeployOptions) error {
-	resp, err := client.CreateContainer(context.Background(), deployOpts)
+	resp, err := client.CreateWorkload(context.Background(), deployOpts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}

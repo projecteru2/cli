@@ -481,11 +481,11 @@ func removeContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.RemoveContainerOptions{Ids: c.Args().Slice(), Force: c.Bool("force"), Step: int32(c.Int("step"))}
+	opts := &pb.RemoveWorkloadOptions{Ids: c.Args().Slice(), Force: c.Bool("force"), Step: int32(c.Int("step"))}
 	if opts.Force {
 		log.Warn("If container not stopped, force to remove will not trigger hook process if set")
 	}
-	resp, err := client.RemoveContainer(context.Background(), opts)
+	resp, err := client.RemoveWorkload(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
@@ -511,7 +511,7 @@ func removeContainers(c *cli.Context) error {
 	return nil
 }
 
-func renderContainer(container *pb.Container) {
+func renderContainer(container *pb.Workload) {
 	cpuRequest, cpuLimit := unlimited, unlimited
 	if container.Resource.CpuQuotaRequest != 0 {
 		cpuRequest = fmt.Sprintf("%v", container.Resource.CpuQuotaRequest)
@@ -551,7 +551,7 @@ func renderContainer(container *pb.Container) {
 	}
 }
 
-func prettyRenderContianers(containers []*pb.Container) {
+func prettyRenderContianers(containers []*pb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "IP", "Networks"})
@@ -591,7 +591,7 @@ func prettyRenderContianers(containers []*pb.Container) {
 	t.Render()
 }
 
-func renderContainerStatus(containerStatus *pb.ContainerStatus) {
+func renderContainerStatus(containerStatus *pb.WorkloadStatus) {
 	log.Info("--------------------------------------")
 	log.Infof("ID: %s", containerStatus.Id)
 	log.Infof("Running: %v, Healthy: %v", containerStatus.Running, containerStatus.Healthy)
@@ -599,7 +599,7 @@ func renderContainerStatus(containerStatus *pb.ContainerStatus) {
 	log.Infof("Extension %s", containerStatus.Extension)
 }
 
-func prettyRenderContainerStatus(containerStatuses []*pb.ContainerStatus) {
+func prettyRenderContainerStatus(containerStatuses []*pb.WorkloadStatus) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
@@ -641,15 +641,15 @@ func getContainers(c *cli.Context) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	resp, err := client.GetContainers(context.Background(), &pb.ContainerIDs{Ids: c.Args().Slice()})
+	resp, err := client.GetWorkloads(context.Background(), &pb.WorkloadIDs{Ids: c.Args().Slice()})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 
 	if c.Bool("pretty") {
-		prettyRenderContianers(resp.Containers)
+		prettyRenderContianers(resp.Workloads)
 	} else {
-		for _, container := range resp.Containers {
+		for _, container := range resp.Workloads {
 			renderContainer(container)
 		}
 	}
@@ -662,7 +662,7 @@ func getContainersStatus(c *cli.Context) error {
 		return cli.Exit(err, -1)
 	}
 
-	resp, err := client.GetContainersStatus(context.Background(), &pb.ContainerIDs{Ids: c.Args().Slice()})
+	resp, err := client.GetWorkloadsStatus(context.Background(), &pb.WorkloadIDs{Ids: c.Args().Slice()})
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
@@ -688,9 +688,9 @@ func setContainersStatus(c *cli.Context) error {
 	ttl := c.Int64("ttl")
 	networks := makeLabels(c.StringSlice("network"))
 	extension := c.String("extension")
-	opts := &pb.SetContainersStatusOptions{Status: []*pb.ContainerStatus{}}
+	opts := &pb.SetWorkloadsStatusOptions{Status: []*pb.WorkloadStatus{}}
 	for _, ID := range c.Args().Slice() {
-		s := &pb.ContainerStatus{
+		s := &pb.WorkloadStatus{
 			Id:        ID,
 			Running:   running,
 			Healthy:   healthy,
@@ -701,7 +701,7 @@ func setContainersStatus(c *cli.Context) error {
 		opts.Status = append(opts.Status, s)
 	}
 
-	resp, err := client.SetContainersStatus(context.Background(), opts)
+	resp, err := client.SetWorkloadsStatus(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
@@ -719,7 +719,7 @@ func setContainersStatus(c *cli.Context) error {
 func listContainers(c *cli.Context) error {
 	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
-	opts := &pb.ListContainersOptions{
+	opts := &pb.ListWorkloadsOptions{
 		Appname:    c.Args().First(),
 		Entrypoint: c.String("entry"),
 		Nodename:   c.String("nodename"),
@@ -727,12 +727,12 @@ func listContainers(c *cli.Context) error {
 		Limit:      c.Int64("limit"),
 	}
 
-	resp, err := client.ListContainers(context.Background(), opts)
+	resp, err := client.ListWorkloads(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
 
-	containers := []*pb.Container{}
+	containers := []*pb.Workload{}
 	for {
 		container, err := resp.Recv()
 		if err == io.EOF {
@@ -827,14 +827,14 @@ func reallocContainers(c *cli.Context) error {
 func execContainer(c *cli.Context) (err error) {
 	client := setupAndGetGRPCConnection(c.Context).GetRPCClient()
 
-	opts := &pb.ExecuteContainerOptions{
-		ContainerId: c.Args().First(),
-		OpenStdin:   c.Bool("interactive"),
-		Commands:    c.Args().Tail(),
-		Envs:        c.StringSlice("env"),
-		Workdir:     c.String("workdir"),
+	opts := &pb.ExecuteWorkloadOptions{
+		WorkloadId: c.Args().First(),
+		OpenStdin:  c.Bool("interactive"),
+		Commands:   c.Args().Tail(),
+		Envs:       c.StringSlice("env"),
+		Workdir:    c.String("workdir"),
 	}
-	resp, err := client.ExecuteContainer(context.Background())
+	resp, err := client.ExecuteWorkload(context.Background())
 	if err != nil {
 		return
 	}
@@ -846,7 +846,7 @@ func execContainer(c *cli.Context) (err error) {
 	iStream := interactiveStream{
 		Recv: resp.Recv,
 		Send: func(cmd []byte) error {
-			return resp.Send(&pb.ExecuteContainerOptions{ReplCmd: cmd})
+			return resp.Send(&pb.ExecuteWorkloadOptions{ReplCmd: cmd})
 		},
 	}
 
@@ -999,8 +999,8 @@ func dissociateContainers(c *cli.Context) error {
 
 	containerIDs := c.Args().Slice()
 
-	opts := &pb.DissociateContainerOptions{Ids: containerIDs}
-	resp, err := client.DissociateContainer(context.Background(), opts)
+	opts := &pb.DissociateWorkloadOptions{Ids: containerIDs}
+	resp, err := client.DissociateWorkload(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
@@ -1026,15 +1026,15 @@ func dissociateContainers(c *cli.Context) error {
 }
 
 func startContainers(c *cli.Context) error {
-	return doControlContainers(c, cluster.ContainerStart)
+	return doControlContainers(c, cluster.WorkloadStart)
 }
 
 func stopContainers(c *cli.Context) error {
-	return doControlContainers(c, cluster.ContainerStop)
+	return doControlContainers(c, cluster.WorkloadStop)
 }
 
 func restartContainers(c *cli.Context) error {
-	return doControlContainers(c, cluster.ContainerRestart)
+	return doControlContainers(c, cluster.WorkloadRestart)
 }
 
 func doControlContainers(c *cli.Context, t string) error {
@@ -1042,11 +1042,11 @@ func doControlContainers(c *cli.Context, t string) error {
 	if err != nil {
 		return cli.Exit(err, -1)
 	}
-	opts := &pb.ControlContainerOptions{
+	opts := &pb.ControlWorkloadOptions{
 		Ids: c.Args().Slice(), Type: t,
 		Force: c.Bool("force"),
 	}
-	resp, err := client.ControlContainer(context.Background(), opts)
+	resp, err := client.ControlWorkload(context.Background(), opts)
 	if err != nil {
 		return cli.Exit(err, -1)
 	}

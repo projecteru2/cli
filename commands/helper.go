@@ -27,7 +27,7 @@ import (
 
 type interactiveStream struct {
 	Send func(cmd []byte) error
-	Recv func() (*pb.AttachContainerMessage, error)
+	Recv func() (*pb.AttachWorkloadMessage, error)
 }
 
 func makeLabels(labels []string) map[string]string {
@@ -188,7 +188,7 @@ func handleInteractiveStream(interactive bool, iStream interactiveStream, exitCo
 		if interactive {
 			fmt.Printf("%s", msg.Data)
 		} else {
-			id := coreutils.ShortID(msg.ContainerId)
+			id := coreutils.ShortID(msg.WorkloadId)
 			if _, ok := output[id]; !ok {
 				output[id] = []byte{}
 			}

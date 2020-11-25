@@ -12,7 +12,7 @@ require (
 	github.com/jedib0t/go-pretty v1.0.1-0.20200513164024-8b58fbaf3b31
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20201119101637-e65c465120ed
+	github.com/projecteru2/core v0.0.0-20201123102548-9490bac62719
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.6.1
