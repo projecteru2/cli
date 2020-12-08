@@ -9,8 +9,8 @@ import (
 	"strings"
 
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,16 +20,12 @@ type addNodeOptions struct {
 }
 
 func (o *addNodeOptions) run(ctx context.Context) error {
-	resp, err := o.client.AddNode(ctx, o.opts)
+	node, err := o.client.AddNode(ctx, o.opts)
 	if err != nil {
 		return err
 	}
 
-	logrus.Infof("[AddNode] success")
-	logrus.Infof("%s add %s at %s", o.opts.Podname, o.opts.Nodename, resp.Endpoint)
-	for k, v := range resp.Labels {
-		logrus.Infof("%s: %s", k, v)
-	}
+	describe.DescribeNodes(node)
 	return nil
 }
 

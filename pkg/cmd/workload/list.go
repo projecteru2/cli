@@ -6,8 +6,8 @@ import (
 	"io"
 
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -48,7 +48,7 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 		workloads = append(workloads, w)
 	}
 
-	logrus.Info(workloads)
+	describe.DescribeWorkloads(workloads...)
 	return nil
 }
 

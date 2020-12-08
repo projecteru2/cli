@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,10 +20,7 @@ func (o *listPodsOptions) run(ctx context.Context) error {
 		return fmt.Errorf("[ListPods] send request failed %v", err)
 	}
 
-	pods := resp.GetPods()
-	for _, pod := range pods {
-		logrus.Infof("Name: %s, Desc: %s", pod.GetName(), pod.GetDesc())
-	}
+	describe.DescribePods(resp.GetPods()...)
 	return nil
 }
 

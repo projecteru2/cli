@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -21,7 +21,7 @@ func (o *getWorkloadsStatusOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	logrus.Info(resp.Status)
+	describe.DescribeWorkloadStatuses(resp.Status...)
 	return nil
 }
 
@@ -73,7 +73,7 @@ func (o *setWorkloadsStatusOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	logrus.Info(resp.Status)
+	describe.DescribeWorkloadStatuses(resp.Status...)
 	return nil
 }
 

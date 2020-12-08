@@ -7,6 +7,8 @@ require (
 	github.com/docker/docker v0.0.0-20181113085551-758255791e25
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
+	github.com/google/go-cmp v0.5.2 // indirect
+	github.com/jedib0t/go-pretty/v6 v6.0.5
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/juju/testing v0.0.0-20201030020617-7189b3728523 // indirect
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
@@ -18,6 +20,7 @@ require (
 	github.com/stretchr/objx v0.2.0 // indirect
 	github.com/tredoe/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/urfave/cli/v2 v2.2.0
+	golang.org/x/text v0.3.3 // indirect
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/protobuf v1.25.0 // indirect
 	gopkg.in/yaml.v2 v2.3.0

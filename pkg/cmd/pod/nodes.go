@@ -2,12 +2,11 @@ package pod
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/juju/errors"
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -26,13 +25,7 @@ func (o *listPodNodesOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	for _, node := range resp.GetNodes() {
-		logrus.Infof("Name: %s, Endpoint: %s", node.GetName(), node.GetEndpoint())
-		r := map[string]interface{}{}
-		if err := json.Unmarshal([]byte(node.Info), &r); err != nil {
-			logrus.Errorf("Get Node Info failed: %v", node.Info)
-		}
-	}
+	describe.DescribeNodes(resp.GetNodes()...)
 	return nil
 }
 

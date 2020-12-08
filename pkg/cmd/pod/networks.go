@@ -2,12 +2,11 @@ package pod
 
 import (
 	"context"
-	"strings"
 
 	"github.com/juju/errors"
 	"github.com/projecteru2/cli/pkg/cmd/utils"
+	"github.com/projecteru2/cli/pkg/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -26,9 +25,7 @@ func (o *listPodNetworksOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	for _, network := range resp.GetNetworks() {
-		logrus.Infof("Name: %s, Subnets: %s", network.GetName(), strings.Join(network.GetSubnets(), ","))
-	}
+	describe.DescribeNetworks(resp.GetNetworks()...)
 	return nil
 }
 

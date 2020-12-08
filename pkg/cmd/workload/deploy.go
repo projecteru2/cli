@@ -142,23 +142,23 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	memLimit, err := utils.ParseRAMInHuman(c.String("memory-limit"))
 	if err != nil {
-		return nil, fmt.Errorf("[getDeployParams] parse memory failed %v", err)
+		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
 	}
 	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
 	if err != nil {
-		return nil, fmt.Errorf("[getDeployParams] parse memory failed %v", err)
+		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
 	}
 	storageLimit, err := utils.ParseRAMInHuman(c.String("storage-limit"))
 	if err != nil {
-		return nil, fmt.Errorf("[getDeployParams] parse storage failed %v", err)
+		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
 	}
 	storageRequest, err := utils.ParseRAMInHuman(c.String("storage-request"))
 	if err != nil {
-		return nil, fmt.Errorf("[getDeployParams] parse storage failed %v", err)
+		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
 	}
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateOpts] get specs failed %v", err)
+		return nil, fmt.Errorf("[generateDeployOptions] get specs failed %v", err)
 	}
 
 	entry := c.String("entry")
@@ -167,7 +167,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
-		return nil, fmt.Errorf("[generateOpts] get entry failed")
+		return nil, fmt.Errorf("[generateDeployOptions] get entry failed")
 	}
 
 	var hook *corepb.HookOptions

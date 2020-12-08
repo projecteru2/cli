@@ -132,7 +132,7 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateOpts] get specs failed %v", err)
+		return nil, fmt.Errorf("[generateReplaceOptions] get specs failed %v", err)
 	}
 
 	entry := c.String("entry")
@@ -141,7 +141,7 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
-		return nil, fmt.Errorf("[generateOpts] get entry failed")
+		return nil, fmt.Errorf("[generateReplaceOptions] get entry failed")
 	}
 
 	var hook *corepb.HookOptions
