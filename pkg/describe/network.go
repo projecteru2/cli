@@ -9,6 +9,17 @@ import (
 )
 
 func DescribeNetworks(networks ...*corepb.Network) {
+	switch strings.ToLower(Format) {
+	case "json":
+		describeAsJSON(networks)
+	case "yaml", "yml":
+		describeAsYAML(networks)
+	default:
+		describeNetworks(networks)
+	}
+}
+
+func describeNetworks(networks []*corepb.Network) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Network"})

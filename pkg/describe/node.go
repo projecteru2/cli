@@ -10,6 +10,17 @@ import (
 )
 
 func DescribeNodes(nodes ...*corepb.Node) {
+	switch strings.ToLower(Format) {
+	case "json":
+		describeAsJSON(nodes)
+	case "yaml", "yml":
+		describeAsYAML(nodes)
+	default:
+		describeNodes(nodes)
+	}
+}
+
+func describeNodes(nodes []*corepb.Node) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Endpoint"})
@@ -29,6 +40,17 @@ func DescribeNodes(nodes ...*corepb.Node) {
 }
 
 func DescribeNodeResources(resources ...*corepb.NodeResource) {
+	switch strings.ToLower(Format) {
+	case "json":
+		describeAsJSON(resources)
+	case "yaml", "yml":
+		describeAsYAML(resources)
+	default:
+		describeNodeResources(resources)
+	}
+}
+
+func describeNodeResources(resources []*corepb.NodeResource) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})

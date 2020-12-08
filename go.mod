@@ -7,6 +7,7 @@ require (
 	github.com/docker/docker v0.0.0-20181113085551-758255791e25
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
+	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/jedib0t/go-pretty/v6 v6.0.5
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f

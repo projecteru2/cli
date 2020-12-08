@@ -28,6 +28,7 @@ func Command() *cli.Command {
 			{
 				Name:      "containers",
 				Usage:     "list node containers",
+				Aliases:   []string{"workloads"},
 				ArgsUsage: nodeArgsUsage,
 				Action:    cmdNodeListWorkloads,
 			},

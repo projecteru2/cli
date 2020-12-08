@@ -1,8 +1,16 @@
 package describe
 
 import (
+	"encoding/json"
+	"fmt"
+
+	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
 )
+
+// format to output
+// can be yaml / yml / json or empty as default
+var Format string
 
 // actually i need a `zip longest` function
 // like in python itertools
@@ -28,4 +36,14 @@ func toTableRows(rows [][]string) []table.Row {
 		rs = append(rs, table.Row(lines))
 	}
 	return rs
+}
+
+func describeAsJSON(o interface{}) {
+	j, _ := json.MarshalIndent(o, "", "  ")
+	fmt.Println(string(j))
+}
+
+func describeAsYAML(o interface{}) {
+	y, _ := yaml.Marshal(o)
+	fmt.Println(string(y))
 }

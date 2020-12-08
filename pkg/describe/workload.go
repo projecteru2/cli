@@ -4,17 +4,29 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-func DescribeWorkloads(containers ...*corepb.Workload) {
+func DescribeWorkloads(workloads ...*corepb.Workload) {
+	switch strings.ToLower(Format) {
+	case "json":
+		describeAsJSON(workloads)
+	case "yaml", "yml":
+		describeAsYAML(workloads)
+	default:
+		describeWorkloads(workloads)
+	}
+}
+
+func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "IP", "Networks"})
 
-	for _, c := range containers {
+	for _, c := range workloads {
 		// publish ip
 		ips := []string{}
 		for networkName, ip := range c.Publish {
@@ -57,12 +69,23 @@ func DescribeWorkloads(containers ...*corepb.Workload) {
 	t.Render()
 }
 
-func DescribeWorkloadStatuses(containerStatuses ...*corepb.WorkloadStatus) {
+func DescribeWorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
+	switch strings.ToLower(Format) {
+	case "json":
+		describeAsJSON(workloadStatuses)
+	case "yaml", "yml":
+		describeAsYAML(workloadStatuses)
+	default:
+		describeWorkloadStatuses(workloadStatuses)
+	}
+}
+
+func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
 
-	for _, s := range containerStatuses {
+	for _, s := range workloadStatuses {
 		// networks
 		ns := []string{}
 		for name, ip := range s.Networks {
