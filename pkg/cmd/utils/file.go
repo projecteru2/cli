@@ -28,16 +28,6 @@ func ReadAllFiles(files []string) map[string][]byte {
 	return m
 }
 
-// Get specs from a remote position
-func GetSpecFromRemote(uri string) ([]byte, error) {
-	resp, err := http.Get(uri) // nolint
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
-}
-
 // SplitFiles transfers a list of
 // src:dst to
 // {src: dst}
@@ -51,4 +41,14 @@ func SplitFiles(files []string) map[string]string {
 		ret[ps[0]] = ps[1]
 	}
 	return ret
+}
+
+// Get specs from a remote position
+func GetSpecFromRemote(uri string) ([]byte, error) {
+	resp, err := http.Get(uri) // nolint
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return ioutil.ReadAll(resp.Body)
 }
