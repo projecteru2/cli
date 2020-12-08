@@ -7,13 +7,14 @@ before:
 
 builds:
   - binary: eru-cli
+    main: ./cmd/erucli/main.go
     env:
       - CGO_ENABLED=0
     ldflags:
       - -s -w
-      - -X github.com/projecteru2/cli/versioninfo.REVISION={{.Commit}}
-      - -X github.com/projecteru2/cli/versioninfo.VERSION={{.Env.VERSION}}
-      - -X github.com/projecteru2/cli/versioninfo.BUILTAT={{.Date}}
+      - -X github.com/projecteru2/cli/pkg/version.REVISION={{.Commit}}
+      - -X github.com/projecteru2/cli/pkg/version.VERSION={{.Tag}}
+      - -X github.com/projecteru2/cli/pkg/version.BUILTAT={{.Date}}
     goos:
       - darwin
       - linux
