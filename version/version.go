@@ -16,8 +16,8 @@ var (
 	BUILTAT = "now"
 )
 
-// VersionString .
-func VersionString() string {
+// String returns string of version information
+func String() string {
 	version := ""
 	version += fmt.Sprintf("Version:        %s\n", VERSION)
 	version += fmt.Sprintf("Git hash:       %s\n", REVISION)

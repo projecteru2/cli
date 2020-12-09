@@ -62,7 +62,7 @@ func getLocalIP() string {
 	return ""
 }
 
-func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) { // nolint
+func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 	podname := c.Args().First()
 	if podname == "" {
 		return nil, fmt.Errorf("podname must not be empty")

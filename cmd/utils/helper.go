@@ -10,6 +10,7 @@ import (
 	"github.com/docker/go-units"
 )
 
+// GetNetworks returns a networkmode -> ip map
 func GetNetworks(network string) map[string]string {
 	var ip string
 	networkInfo := strings.Split(network, "=")
@@ -25,6 +26,8 @@ func GetNetworks(network string) map[string]string {
 	return networks
 }
 
+// ParseRAMInHuman returns int value in bytes of a human readable string
+// e.g. 100KB -> 102400
 func ParseRAMInHuman(ram string) (int64, error) {
 	if ram == "" {
 		return 0, nil

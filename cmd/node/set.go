@@ -54,11 +54,11 @@ func generateSetNodeOptions(c *cli.Context) (*corepb.SetNodeOptions, error) {
 	numaMemoryList := c.StringSlice("delta-numa-memory")
 	numaMemory := map[string]int64{}
 	for nodeID, memoryStr := range numaMemoryList {
-		if memory, err := utils.ParseRAMInHuman(memoryStr); err != nil {
+		memory, err := utils.ParseRAMInHuman(memoryStr)
+		if err != nil {
 			return nil, err
-		} else {
-			numaMemory[strconv.Itoa(nodeID)] = memory
 		}
+		numaMemory[strconv.Itoa(nodeID)] = memory
 	}
 
 	numaList := c.StringSlice("numa-cpu")

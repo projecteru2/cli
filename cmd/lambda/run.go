@@ -19,7 +19,7 @@ type runLambdaOptions struct {
 	count  int
 }
 
-func (o *runLambdaOptions) run(ctx context.Context) error {
+func (o *runLambdaOptions) run(_ context.Context) error {
 	code, err := lambda(o.client, o.opts, o.stdin, o.count)
 	if err == nil {
 		return cli.Exit("", code)

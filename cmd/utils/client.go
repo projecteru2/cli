@@ -7,6 +7,8 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+// NewCoreRPCClient returns an RPC client to use
+// it actually wraps the GetRPCClient method
 func NewCoreRPCClient(c *cli.Context) (corepb.CoreRPCClient, error) {
 	client, err := coreclient.NewClient(c.Context, c.String("eru"), coretypes.AuthConfig{
 		Username: c.String("username"),

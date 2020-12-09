@@ -38,7 +38,7 @@ func setupLog(l string) error {
 
 func main() {
 	cli.VersionPrinter = func(c *cli.Context) {
-		fmt.Print(version.VersionString())
+		fmt.Print(version.String())
 	}
 
 	app := &cli.App{

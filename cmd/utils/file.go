@@ -6,10 +6,9 @@ import (
 	"strings"
 )
 
-// ReadAllFiles
-// files: list of srcfile:dstfile
 // ReadAllFiles open each pair in files
 // and returns a map with key as dstfile, value as content of srcfile
+// files: list of srcfile:dstfile
 func ReadAllFiles(files []string) map[string][]byte {
 	m := map[string][]byte{}
 	for _, file := range files {
@@ -43,7 +42,7 @@ func SplitFiles(files []string) map[string]string {
 	return ret
 }
 
-// Get specs from a remote position
+// GetSpecFromRemote gets specs from a remote position
 func GetSpecFromRemote(uri string) ([]byte, error) {
 	resp, err := http.Get(uri) // nolint
 	if err != nil {

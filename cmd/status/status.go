@@ -3,6 +3,7 @@ package status
 import (
 	"context"
 	"io"
+	"syscall"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -21,10 +22,10 @@ type statusOptions struct {
 }
 
 func (o *statusOptions) run(ctx context.Context) error {
-	ctx, cancel := signalcontext.OnInterrupt()
+	sigCtx, cancel := signalcontext.Wrap(ctx, syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	resp, err := o.client.WorkloadStatusStream(ctx, &corepb.WorkloadStatusStreamOptions{
+	resp, err := o.client.WorkloadStatusStream(sigCtx, &corepb.WorkloadStatusStreamOptions{
 		Appname:    o.name,
 		Entrypoint: o.entry,
 		Nodename:   o.node,
