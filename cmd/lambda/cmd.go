@@ -9,7 +9,7 @@ import (
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "lambda",
-		Usage: "run commands in a container like local",
+		Usage: "run commands in a workload like local",
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "name",
@@ -77,12 +77,12 @@ func Command() *cli.Command {
 			},
 			&cli.IntFlag{
 				Name:  "count",
-				Usage: "how many containers",
+				Usage: "how many workloads",
 				Value: 1,
 			},
 			&cli.BoolFlag{
 				Name:    "stdin",
-				Usage:   "open stdin for container",
+				Usage:   "open stdin for workload",
 				Aliases: []string{"s"},
 				Value:   false,
 			},
@@ -98,7 +98,7 @@ func Command() *cli.Command {
 			},
 			&cli.StringSliceFlag{
 				Name:  "file",
-				Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+				Usage: "copy local file to workload, can use multiple times. src_path:dst_path",
 			},
 			&cli.BoolFlag{
 				Name:  "async",

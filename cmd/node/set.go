@@ -123,6 +123,6 @@ func generateSetNodeOptions(c *cli.Context) (*corepb.SetNodeOptions, error) {
 		DeltaVolume:     volumeMap,
 		Numa:            numa,
 		Labels:          utils.SplitEquality(c.StringSlice("label")),
-		WorkloadsDown:   c.Bool("mark-containers-down"),
+		WorkloadsDown:   c.Bool("mark-workloads-down"),
 	}, nil
 }

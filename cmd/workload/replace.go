@@ -24,7 +24,7 @@ type replaceWorkloadsOptions struct {
 }
 
 func (o *replaceWorkloadsOptions) run(ctx context.Context) error {
-	return doReplaceContainer(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copys)
+	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copys)
 }
 
 func cmdWorkloadReplace(c *cli.Context) error {
@@ -62,7 +62,7 @@ func cmdWorkloadReplace(c *cli.Context) error {
 	return o.run(c.Context)
 }
 
-func doReplaceContainer(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels map[string]string, copys map[string]string) error {
+func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels map[string]string, copys map[string]string) error {
 	opts := &corepb.ReplaceOptions{
 		DeployOpt:      deployOpts,
 		Networkinherit: networkInherit,
@@ -95,11 +95,11 @@ func doReplaceContainer(ctx context.Context, client corepb.CoreRPCClient, deploy
 
 		// 一定会保证有 removeMsg 返回，success 一定为真
 		removeMsg := msg.Remove
-		logrus.Infof("[Replace] Hook container %s removed", removeMsg.Id)
+		logrus.Infof("[Replace] Hook workload %s removed", removeMsg.Id)
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
-		logrus.Infof("[Replace] New container %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Resource.Cpu, createMsg.Resource.CpuQuotaRequest, createMsg.Resource.CpuQuotaLimit, createMsg.Resource.MemoryRequest, createMsg.Resource.MemoryLimit)
+		logrus.Infof("[Replace] New workload %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Resource.Cpu, createMsg.Resource.CpuQuotaRequest, createMsg.Resource.CpuQuotaLimit, createMsg.Resource.MemoryRequest, createMsg.Resource.MemoryLimit)
 		if len(createMsg.Hook) > 0 {
 			logrus.Infof("[Replace] Other output \n%s", createMsg.Hook)
 		}

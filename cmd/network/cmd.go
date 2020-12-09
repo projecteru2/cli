@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	containerArgsUsage = "containerID(s)"
+	workloadArgsUsage = "workloadID(s)"
 )
 
 // Command exports network subommands
@@ -16,8 +16,8 @@ func Command() *cli.Command {
 		Subcommands: []*cli.Command{
 			{
 				Name:      "connect",
-				ArgsUsage: containerArgsUsage,
-				Usage:     "connect containers to network",
+				ArgsUsage: workloadArgsUsage,
+				Usage:     "connect workloads to network",
 				Action:    cmdNetworkConnect,
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -37,8 +37,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "disconnect",
-				ArgsUsage: containerArgsUsage,
-				Usage:     "disconnect containers to network",
+				ArgsUsage: workloadArgsUsage,
+				Usage:     "disconnect workloads to network",
 				Action:    cmdNetworkDisconnect,
 				Flags: []cli.Flag{
 					&cli.StringFlag{

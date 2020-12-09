@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	containerArgsUsage = "containerID(s)"
-	specFileURI        = "<spec file uri>"
-	copyArgsUsage      = "containerID:path1,path2,...,pathn"
-	sendArgsUsage      = "path1,path2,...pathn"
+	workloadArgsUsage = "workloadID(s)"
+	specFileURI       = "<spec file uri>"
+	copyArgsUsage     = "workloadID:path1,path2,...,pathn"
+	sendArgsUsage     = "path1,path2,...pathn"
 )
 
 // Command exports workload subommands
@@ -21,14 +21,14 @@ func Command() *cli.Command {
 		Subcommands: []*cli.Command{
 			{
 				Name:      "get",
-				Usage:     "get container(s)",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "get workload(s)",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadGet,
 			},
 			{
 				Name:      "logs",
-				Usage:     "get container stream logs",
-				ArgsUsage: "containerID",
+				Usage:     "get workload stream logs",
+				ArgsUsage: "workloadID",
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "tail",
@@ -40,14 +40,14 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "get-status",
-				Usage:     "get container status",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "get workload status",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadGetStatus,
 			},
 			{
 				Name:      "set-status",
-				Usage:     "set container status",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "set workload status",
+				ArgsUsage: workloadArgsUsage,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "running",
@@ -75,7 +75,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "list",
-				Usage:     "list container(s) by appname",
+				Usage:     "list workload(s) by appname",
 				ArgsUsage: "[appname]",
 				Action:    cmdWorkloadList,
 				Flags: []cli.Flag{
@@ -99,8 +99,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "stop",
-				Usage:     "stop container(s)",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "stop workload(s)",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadStop,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -113,8 +113,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "start",
-				Usage:     "start container(s)",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "start workload(s)",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadStart,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -127,8 +127,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "restart",
-				Usage:     "restart container(s)",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "restart workload(s)",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadRestart,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -141,8 +141,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "remove",
-				Usage:     "remove container(s)",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "remove workload(s)",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadRemove,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -161,7 +161,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "copy",
-				Usage:     "copy file(s) from container(s)",
+				Usage:     "copy file(s) from workload(s)",
 				ArgsUsage: copyArgsUsage,
 				Action:    cmdWorkloadCopy,
 				Flags: []cli.Flag{
@@ -175,26 +175,26 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "send",
-				Usage:     "send file(s) to container(s)",
+				Usage:     "send file(s) to workload(s)",
 				ArgsUsage: sendArgsUsage,
 				Action:    cmdWorkloadSend,
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local files to container, can use multiple times. src_path:dst_path",
+						Usage: "copy local files to workload, can use multiple times. src_path:dst_path",
 					},
 				},
 			},
 			{
 				Name:      "dissociate",
-				Usage:     "Dissociate container(s) from eru, return it resource but not remove it",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "Dissociate workload(s) from eru, return it resource but not remove it",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadDissociate,
 			},
 			{
 				Name:      "realloc",
-				Usage:     "realloc containers resource",
-				ArgsUsage: containerArgsUsage,
+				Usage:     "realloc workloads resource",
+				ArgsUsage: workloadArgsUsage,
 				Action:    cmdWorkloadRealloc,
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
@@ -225,11 +225,11 @@ func Command() *cli.Command {
 					},
 					&cli.BoolFlag{
 						Name:  "cpu-bind",
-						Usage: `bind fixed cpu(s) with container`,
+						Usage: `bind fixed cpu(s) with workload`,
 					},
 					&cli.BoolFlag{
 						Name:  "cpu-unbind",
-						Usage: `unbind the container relation with cpu`,
+						Usage: `unbind the workload relation with cpu`,
 					},
 					&cli.StringFlag{
 						Name:  "storage-request",
@@ -243,8 +243,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "exec",
-				Usage:     "run a command in a running container",
-				ArgsUsage: "containerID -- cmd1 cmd2 cmd3",
+				Usage:     "run a command in a running workload",
+				ArgsUsage: "workloadID -- cmd1 cmd2 cmd3",
 				Action:    cmdWorkloadExec,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -267,7 +267,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "replace",
-				Usage:     "replace containers by params",
+				Usage:     "replace workloads by params",
 				ArgsUsage: specFileURI,
 				Action:    cmdWorkloadReplace,
 				Flags: []cli.Flag{
@@ -295,7 +295,7 @@ func Command() *cli.Command {
 					},
 					&cli.BoolFlag{
 						Name:  "network-inherit",
-						Usage: "use old container network configuration",
+						Usage: "use old workload network configuration",
 						Value: false,
 					},
 					&cli.StringFlag{
@@ -314,19 +314,19 @@ func Command() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
-						Usage: "filter container by labels",
+						Usage: "filter workload by labels",
 					},
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local files to container, can use multiple times. src_path:dst_path",
+						Usage: "copy local files to workload, can use multiple times. src_path:dst_path",
 					},
 					&cli.StringSliceFlag{
 						Name:  "copy",
-						Usage: "copy old container files to new container, can use multiple times. src_path:dst_path",
+						Usage: "copy old workload files to new workload, can use multiple times. src_path:dst_path",
 					},
 					&cli.BoolFlag{
 						Name:  "debug",
-						Usage: "enable debug mode for container send their logs to default log driver",
+						Usage: "enable debug mode for workload send their logs to default log driver",
 					},
 					&cli.BoolFlag{
 						Name:  "ignore-hook",
@@ -341,7 +341,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "deploy",
-				Usage:     "deploy containers by params",
+				Usage:     "deploy workloads by params",
 				ArgsUsage: specFileURI,
 				Action:    cmdWorkloadDeploy,
 				Flags: []cli.Flag{
@@ -425,7 +425,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local file to container, can use multiple times. src_path:dst_path",
+						Usage: "copy local file to workload, can use multiple times. src_path:dst_path",
 					},
 					&cli.StringSliceFlag{
 						Name:  "after-create",
@@ -433,7 +433,7 @@ func Command() *cli.Command {
 					},
 					&cli.BoolFlag{
 						Name:  "debug",
-						Usage: "enable debug mode for container send their logs to default log driver",
+						Usage: "enable debug mode for workload send their logs to default log driver",
 					},
 					&cli.IntFlag{
 						Name:  "nodes-limit",

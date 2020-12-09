@@ -27,9 +27,9 @@ func Command() *cli.Command {
 				Action:    cmdNodeRemove,
 			},
 			{
-				Name:      "containers",
-				Usage:     "list node containers",
-				Aliases:   []string{"workloads"},
+				Name:      "workloads",
+				Usage:     "list node workloads",
+				Aliases:   []string{"containers"},
 				ArgsUsage: nodeArgsUsage,
 				Action:    cmdNodeListWorkloads,
 			},
@@ -45,7 +45,7 @@ func Command() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "check",
-						Usage: "check node containers are online or not",
+						Usage: "check node workloads are online or not",
 					},
 					&cli.IntFlag{
 						Name:  "check-timeout",
@@ -75,8 +75,8 @@ func Command() *cli.Command {
 				Action:    cmdNodeSet,
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "mark-containers-down",
-						Usage: "mark containers down",
+						Name:  "mark-workloads-down",
+						Usage: "mark workloads down",
 					},
 					&cli.StringFlag{
 						Name:  "delta-memory",

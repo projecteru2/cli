@@ -36,7 +36,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	if !o.autoReplace {
-		return doCreateContainer(ctx, o.client, o.opts)
+		return doCreateWorkload(ctx, o.client, o.opts)
 	}
 
 	lsOpts := &corepb.ListWorkloadsOptions{
@@ -47,19 +47,19 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	}
 	resp, err := o.client.ListWorkloads(ctx, lsOpts)
 	if err != nil {
-		return fmt.Errorf("[Deploy] check container failed %v", err)
+		return fmt.Errorf("[Deploy] check workload failed %v", err)
 	}
 	_, err = resp.Recv()
 	if err == io.EOF {
-		logrus.Warn("[Deploy] there is no containers for replace")
-		return doCreateContainer(ctx, o.client, o.opts)
+		logrus.Warn("[Deploy] there is no Workloads for replace")
+		return doCreateWorkload(ctx, o.client, o.opts)
 	}
 	if err != nil {
 		return err
 	}
 	// 强制继承网络
 	networkInherit := o.opts.Networkmode == ""
-	return doReplaceContainer(ctx, o.client, o.opts, networkInherit, nil, nil)
+	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
 }
 
 func cmdWorkloadDeploy(c *cli.Context) error {
@@ -91,7 +91,7 @@ func cmdWorkloadDeploy(c *cli.Context) error {
 	return o.run(c.Context)
 }
 
-func doCreateContainer(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions) error {
+func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions) error {
 	resp, err := client.CreateWorkload(ctx, deployOpts)
 	if err != nil {
 		return err

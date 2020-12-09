@@ -6,19 +6,19 @@ CLI
 
 CLI for Eru.
 
-Modify resources for eru pods / nodes, manipulate containers and images.
+Modify resources for eru pods / nodes, manipulate workloads and images.
 
 ### Usage
 
 * Use `cli -h` to show commands and subcommands.
 * Currently supported commands are:
-	* `container` subcommands:
-		* `container get {id} ...`
-		* `container remove {id} ...`
-		* `container realloc --cpu {cpu} --memory {memory}`
-		* `container deploy`
-        * `container set-status`
-        * `container get-status`
+	* `workload` subcommands:
+		* `workload get {id} ...`
+		* `workload remove {id} ...`
+		* `workload realloc --cpu {cpu} --memory {memory}`
+		* `workload deploy`
+        * `workload set-status`
+        * `workload get-status`
 	* `pod` subcommands:
 		* `pod list`
 		* `pod add`

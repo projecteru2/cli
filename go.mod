@@ -14,7 +14,7 @@ require (
 	github.com/juju/testing v0.0.0-20201030020617-7189b3728523 // indirect
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20201127093128-11f86cd1c51a
+	github.com/projecteru2/core v0.0.0-20201209093323-2be7ca9d5ed4
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sethvargo/go-signalcontext v0.1.0
 	github.com/sirupsen/logrus v1.6.0

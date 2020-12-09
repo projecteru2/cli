@@ -33,9 +33,9 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error == "" {
-			logrus.Infof("[Dissociate] Dissociate container %s from eru success", msg.Id)
+			logrus.Infof("[Dissociate] Dissociate workload %s from eru success", msg.Id)
 		} else {
-			logrus.Errorf("[Dissociate] Dissociate container %s from eru failed %v", msg.Id, msg.Error)
+			logrus.Errorf("[Dissociate] Dissociate workload %s from eru failed %v", msg.Id, msg.Error)
 		}
 	}
 	return nil
