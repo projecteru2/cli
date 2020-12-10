@@ -1,6 +1,7 @@
 package node
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,26 +19,26 @@ func Command() *cli.Command {
 				Name:      "get",
 				Usage:     "get a node",
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeGet,
+				Action:    utils.ExitCoder(cmdNodeGet),
 			},
 			{
 				Name:      "remove",
 				Usage:     "remove a node",
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeRemove,
+				Action:    utils.ExitCoder(cmdNodeRemove),
 			},
 			{
 				Name:      "workloads",
 				Usage:     "list node workloads",
 				Aliases:   []string{"containers"},
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeListWorkloads,
+				Action:    utils.ExitCoder(cmdNodeListWorkloads),
 			},
 			{
 				Name:      "up",
 				Usage:     "set node up",
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeSetUp,
+				Action:    utils.ExitCoder(cmdNodeSetUp),
 			},
 			{
 				Name:  "down",
@@ -54,7 +55,7 @@ func Command() *cli.Command {
 					},
 				},
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeSetDown,
+				Action:    utils.ExitCoder(cmdNodeSetDown),
 			},
 			{
 				Name:      "resource",
@@ -66,13 +67,13 @@ func Command() *cli.Command {
 						Usage: "fix node resource diff",
 					},
 				},
-				Action: cmdNodeResource,
+				Action: utils.ExitCoder(cmdNodeResource),
 			},
 			{
 				Name:      "set",
 				Usage:     "set node resource",
 				ArgsUsage: nodeArgsUsage,
-				Action:    cmdNodeSet,
+				Action:    utils.ExitCoder(cmdNodeSet),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "mark-workloads-down",
@@ -112,7 +113,7 @@ func Command() *cli.Command {
 				Name:      "add",
 				Usage:     "add node",
 				ArgsUsage: "podname",
-				Action:    cmdNodeAdd,
+				Action:    utils.ExitCoder(cmdNodeAdd),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "nodename",

@@ -1,6 +1,7 @@
 package status
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -24,6 +25,6 @@ func Command() *cli.Command {
 				Usage: "label filter can set multiple times",
 			},
 		},
-		Action: cmdStatus,
+		Action: utils.ExitCoder(cmdStatus),
 	}
 }

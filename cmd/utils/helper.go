@@ -8,6 +8,7 @@ import (
 
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-units"
+	"github.com/urfave/cli/v2"
 )
 
 // GetNetworks returns a networkmode -> ip map
@@ -68,4 +69,15 @@ func EnvParser(b []byte) ([]byte, error) {
 	out := bytes.Buffer{}
 	err = tmpl.Execute(&out, SplitEquality(os.Environ()))
 	return out.Bytes(), err
+}
+
+// ExitCoder wraps a cli Action function into
+// a function with ExitCoder interface
+func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
+	return func(c *cli.Context) error {
+		if err := f(c); err != nil {
+			return cli.Exit(err, -1)
+		}
+		return nil
+	}
 }
