@@ -2,7 +2,6 @@ package workload
 
 import (
 	"context"
-	"fmt"
 	"io"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -58,14 +57,9 @@ func cmdWorkloadList(c *cli.Context) error {
 		return err
 	}
 
-	appname := c.Args().First()
-	if appname == "" {
-		return fmt.Errorf("appname must be specified")
-	}
-
 	o := &listWorkloadsOptions{
 		client:     client,
-		appname:    appname,
+		appname:    c.Args().First(),
 		entrypoint: c.String("entry"),
 		nodename:   c.String("nodename"),
 		labels:     utils.SplitEquality(c.StringSlice("label")),

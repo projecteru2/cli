@@ -28,8 +28,14 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNodeRemove),
 			},
 			{
-				Name:      "workloads",
-				Usage:     "list node workloads",
+				Name:  "workloads",
+				Usage: "list node workloads",
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "labels to filter, e.g, a=1, b=2",
+					},
+				},
 				Aliases:   []string{"containers"},
 				ArgsUsage: nodeArgsUsage,
 				Action:    utils.ExitCoder(cmdNodeListWorkloads),

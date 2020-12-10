@@ -56,6 +56,10 @@ func Command() *cli.Command {
 						Usage: "list all nodes or just living nodes",
 						Value: false,
 					},
+					&cli.StringSliceFlag{
+						Name:  "label",
+						Usage: "labels to filter, e.g, a=1, b=2",
+					},
 				},
 			},
 			{

@@ -13,11 +13,13 @@ import (
 type listNodeWorkloadsOptions struct {
 	client corepb.CoreRPCClient
 	name   string
+	labels map[string]string
 }
 
 func (o *listNodeWorkloadsOptions) run(ctx context.Context) error {
 	resp, err := o.client.ListNodeWorkloads(ctx, &corepb.GetNodeOptions{
 		Nodename: o.name,
+		Labels:   o.labels,
 	})
 	if err != nil {
 		return err
@@ -41,6 +43,7 @@ func cmdNodeListWorkloads(c *cli.Context) error {
 	o := &listNodeWorkloadsOptions{
 		client: client,
 		name:   name,
+		labels: utils.SplitEquality(c.StringSlice("label")),
 	}
 	return o.run(c.Context)
 }
