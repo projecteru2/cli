@@ -1,6 +1,7 @@
 package workload
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
 	"github.com/urfave/cli/v2"
 )
@@ -23,7 +24,7 @@ func Command() *cli.Command {
 				Name:      "get",
 				Usage:     "get workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadGet,
+				Action:    utils.ExitCoder(cmdWorkloadGet),
 			},
 			{
 				Name:      "logs",
@@ -36,13 +37,13 @@ func Command() *cli.Command {
 						Usage: "how many",
 					},
 				},
-				Action: cmdWorkloadLogs,
+				Action: utils.ExitCoder(cmdWorkloadLogs),
 			},
 			{
 				Name:      "get-status",
 				Usage:     "get workload status",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadGetStatus,
+				Action:    utils.ExitCoder(cmdWorkloadGetStatus),
 			},
 			{
 				Name:      "set-status",
@@ -71,13 +72,13 @@ func Command() *cli.Command {
 						Usage: "extension things",
 					},
 				},
-				Action: cmdWorkloadSetStatus,
+				Action: utils.ExitCoder(cmdWorkloadSetStatus),
 			},
 			{
 				Name:      "list",
 				Usage:     "list workload(s) by appname",
 				ArgsUsage: "[appname]",
-				Action:    cmdWorkloadList,
+				Action:    utils.ExitCoder(cmdWorkloadList),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "entry",
@@ -101,7 +102,7 @@ func Command() *cli.Command {
 				Name:      "stop",
 				Usage:     "stop workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadStop,
+				Action:    utils.ExitCoder(cmdWorkloadStop),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "force",
@@ -115,7 +116,7 @@ func Command() *cli.Command {
 				Name:      "start",
 				Usage:     "start workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadStart,
+				Action:    utils.ExitCoder(cmdWorkloadStart),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "force",
@@ -129,7 +130,7 @@ func Command() *cli.Command {
 				Name:      "restart",
 				Usage:     "restart workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadRestart,
+				Action:    utils.ExitCoder(cmdWorkloadRestart),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "force",
@@ -143,7 +144,7 @@ func Command() *cli.Command {
 				Name:      "remove",
 				Usage:     "remove workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadRemove,
+				Action:    utils.ExitCoder(cmdWorkloadRemove),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "force",
@@ -163,7 +164,7 @@ func Command() *cli.Command {
 				Name:      "copy",
 				Usage:     "copy file(s) from workload(s)",
 				ArgsUsage: copyArgsUsage,
-				Action:    cmdWorkloadCopy,
+				Action:    utils.ExitCoder(cmdWorkloadCopy),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:    "dir",
@@ -177,7 +178,7 @@ func Command() *cli.Command {
 				Name:      "send",
 				Usage:     "send file(s) to workload(s)",
 				ArgsUsage: sendArgsUsage,
-				Action:    cmdWorkloadSend,
+				Action:    utils.ExitCoder(cmdWorkloadSend),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:  "file",
@@ -189,13 +190,13 @@ func Command() *cli.Command {
 				Name:      "dissociate",
 				Usage:     "Dissociate workload(s) from eru, return it resource but not remove it",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadDissociate,
+				Action:    utils.ExitCoder(cmdWorkloadDissociate),
 			},
 			{
 				Name:      "realloc",
 				Usage:     "realloc workloads resource",
 				ArgsUsage: workloadArgsUsage,
-				Action:    cmdWorkloadRealloc,
+				Action:    utils.ExitCoder(cmdWorkloadRealloc),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
 						Name:  "cpu-request",
@@ -245,7 +246,7 @@ func Command() *cli.Command {
 				Name:      "exec",
 				Usage:     "run a command in a running workload",
 				ArgsUsage: "workloadID -- cmd1 cmd2 cmd3",
-				Action:    cmdWorkloadExec,
+				Action:    utils.ExitCoder(cmdWorkloadExec),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "interactive",
@@ -269,7 +270,7 @@ func Command() *cli.Command {
 				Name:      "replace",
 				Usage:     "replace workloads by params",
 				ArgsUsage: specFileURI,
-				Action:    cmdWorkloadReplace,
+				Action:    utils.ExitCoder(cmdWorkloadReplace),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "pod",
@@ -343,7 +344,7 @@ func Command() *cli.Command {
 				Name:      "deploy",
 				Usage:     "deploy workloads by params",
 				ArgsUsage: specFileURI,
-				Action:    cmdWorkloadDeploy,
+				Action:    utils.ExitCoder(cmdWorkloadDeploy),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "dry-run",

@@ -1,6 +1,7 @@
 package pod
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,13 +18,13 @@ func Command() *cli.Command {
 			{
 				Name:   "list",
 				Usage:  "list all pods",
-				Action: cmdPodList,
+				Action: utils.ExitCoder(cmdPodList),
 			},
 			{
 				Name:      "add",
 				Usage:     "add new pod",
 				ArgsUsage: podArgsUsage,
-				Action:    cmdPodAdd,
+				Action:    utils.ExitCoder(cmdPodAdd),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "desc",
@@ -36,19 +37,19 @@ func Command() *cli.Command {
 				Name:      "remove",
 				Usage:     "remove pod",
 				ArgsUsage: podArgsUsage,
-				Action:    cmdPodRemove,
+				Action:    utils.ExitCoder(cmdPodRemove),
 			},
 			{
 				Name:      "resource",
 				Usage:     "pod resource usage",
 				ArgsUsage: podArgsUsage,
-				Action:    cmdPodResource,
+				Action:    utils.ExitCoder(cmdPodResource),
 			},
 			{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
 				ArgsUsage: podArgsUsage,
-				Action:    cmdPodListNodes,
+				Action:    utils.ExitCoder(cmdPodListNodes),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "all",
@@ -61,7 +62,7 @@ func Command() *cli.Command {
 				Name:      "networks",
 				Usage:     "list all networks in one pod",
 				ArgsUsage: podArgsUsage,
-				Action:    cmdPodListNetworks,
+				Action:    utils.ExitCoder(cmdPodListNetworks),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:  "driver",

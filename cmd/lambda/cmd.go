@@ -1,6 +1,7 @@
 package lambda
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
 	"github.com/urfave/cli/v2"
 )
@@ -120,6 +121,6 @@ func Command() *cli.Command {
 				Usage: "which node to run",
 			},
 		},
-		Action: cmdLambdaRun,
+		Action: utils.ExitCoder(cmdLambdaRun),
 	}
 }

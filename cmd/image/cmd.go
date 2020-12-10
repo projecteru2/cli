@@ -1,6 +1,7 @@
 package image
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -52,7 +53,7 @@ func Command() *cli.Command {
 						DefaultText: "1",
 					},
 				},
-				Action: cmdImageBuild,
+				Action: utils.ExitCoder(cmdImageBuild),
 			},
 			{
 				Name:      "cache",
@@ -73,7 +74,7 @@ func Command() *cli.Command {
 						Value: 10,
 					},
 				},
-				Action: cmdImageCache,
+				Action: utils.ExitCoder(cmdImageCache),
 			},
 			{
 				Name:      "remove",
@@ -99,7 +100,7 @@ func Command() *cli.Command {
 						Value: false,
 					},
 				},
-				Action: cmdImageClean,
+				Action: utils.ExitCoder(cmdImageClean),
 			},
 		},
 	}

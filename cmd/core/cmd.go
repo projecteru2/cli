@@ -1,6 +1,7 @@
 package core
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -13,7 +14,7 @@ func Command() *cli.Command {
 			{
 				Name:   "info",
 				Usage:  "core info",
-				Action: cmdCoreInfo,
+				Action: utils.ExitCoder(cmdCoreInfo),
 			},
 		},
 	}

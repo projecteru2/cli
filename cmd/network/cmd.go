@@ -1,6 +1,7 @@
 package network
 
 import (
+	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,7 +19,7 @@ func Command() *cli.Command {
 				Name:      "connect",
 				ArgsUsage: workloadArgsUsage,
 				Usage:     "connect workloads to network",
-				Action:    cmdNetworkConnect,
+				Action:    utils.ExitCoder(cmdNetworkConnect),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "network",
@@ -39,7 +40,7 @@ func Command() *cli.Command {
 				Name:      "disconnect",
 				ArgsUsage: workloadArgsUsage,
 				Usage:     "disconnect workloads to network",
-				Action:    cmdNetworkDisconnect,
+				Action:    utils.ExitCoder(cmdNetworkDisconnect),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     "network",
