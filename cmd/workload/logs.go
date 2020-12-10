@@ -16,12 +16,16 @@ type workloadLogsOptions struct {
 	client corepb.CoreRPCClient
 	id     string
 	tail   string
+	since  string
+	until  string
 }
 
 func (o *workloadLogsOptions) run(ctx context.Context) error {
 	opts := &corepb.LogStreamOptions{
-		Id:   o.id,
-		Tail: o.tail,
+		Id:    o.id,
+		Tail:  o.tail,
+		Since: o.since,
+		Until: o.until,
 	}
 	resp, err := o.client.LogStream(ctx, opts)
 	if err != nil {
@@ -62,6 +66,8 @@ func cmdWorkloadLogs(c *cli.Context) error {
 		client: client,
 		id:     id,
 		tail:   c.String("tail"),
+		since:  c.String("since"),
+		until:  c.String("until"),
 	}
 	return o.run(c.Context)
 }

@@ -34,7 +34,15 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "tail",
 						Value: "all",
-						Usage: "how many",
+						Usage: `number of lines to show from the end of the logs (default "all")`,
+					},
+					&cli.StringFlag{
+						Name:  "since",
+						Usage: "show logs since timestamp (e.g. 2013-01-02T13:23:37) or relative (e.g. 42m for 42 minutes)",
+					},
+					&cli.StringFlag{
+						Name:  "until",
+						Usage: "show logs before a timestamp (e.g. 2013-01-02T13:23:37) or relative (e.g. 42m for 42 minutes)",
 					},
 				},
 				Action: utils.ExitCoder(cmdWorkloadLogs),
@@ -188,7 +196,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "dissociate",
-				Usage:     "Dissociate workload(s) from eru, return it resource but not remove it",
+				Usage:     "dissociate workload(s) from eru, return it resource but not remove it",
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadDissociate),
 			},

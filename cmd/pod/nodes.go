@@ -3,7 +3,6 @@ package pod
 import (
 	"context"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -14,12 +13,14 @@ type listPodNodesOptions struct {
 	client corepb.CoreRPCClient
 	name   string
 	all    bool
+	labels map[string]string
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
 	resp, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
 		Podname: o.name,
 		All:     o.all,
+		Labels:  o.labels,
 	})
 	if err != nil {
 		return err
@@ -35,15 +36,11 @@ func cmdPodListNodes(c *cli.Context) error {
 		return err
 	}
 
-	name := c.Args().First()
-	if name == "" {
-		return errors.New("Pod name must be given")
-	}
-
 	o := &listPodNodesOptions{
 		client: client,
-		name:   name,
+		name:   c.Args().First(),
 		all:    c.Bool("all"),
+		labels: utils.SplitEquality(c.StringSlice("label")),
 	}
 	return o.run(c.Context)
 }
