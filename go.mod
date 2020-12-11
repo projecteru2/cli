@@ -3,8 +3,7 @@ module github.com/projecteru2/cli
 go 1.15
 
 require (
-	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
-	github.com/docker/docker v0.0.0-20181113085551-758255791e25
+	github.com/docker/docker v20.10.0+incompatible
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.0
@@ -14,7 +13,7 @@ require (
 	github.com/juju/testing v0.0.0-20201030020617-7189b3728523 // indirect
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/pkg/term v0.0.0-20190109203006-aa71e9d9e942
-	github.com/projecteru2/core v0.0.0-20201209093323-2be7ca9d5ed4
+	github.com/projecteru2/core v0.0.0-20201211090948-f648b9078e0c
 	github.com/sethgrid/curse v0.0.0-20180215154548-b3ce8a719db2
 	github.com/sethvargo/go-signalcontext v0.1.0
 	github.com/sirupsen/logrus v1.6.0

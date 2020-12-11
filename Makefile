@@ -11,7 +11,6 @@ GO_LDFLAGS ?= -s -X $(REPO_PATH)/version.REVISION=$(REVISION) \
 all: binary
 
 binary:
-	mkdir -p bin
 	go build -ldflags "$(GO_LDFLAGS)" -o eru-cli
 
 deps:
