@@ -55,10 +55,10 @@ func describeWorkloads(workloads []*corepb.Workload) {
 				fmt.Sprintf("StorageLimit: %v", c.Resource.StorageLimit),
 				fmt.Sprintf("Privileged: %v", c.Privileged),
 			},
-			c.Resource.VolumesRequest,
-			c.Resource.VolumesLimit,
-			{fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest)},
-			{fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit)},
+			{
+				fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest),
+				fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit),
+			},
 			ips,
 			ns,
 		}
