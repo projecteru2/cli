@@ -44,6 +44,11 @@ func Command() *cli.Command {
 						Name:  "until",
 						Usage: "show logs before a timestamp (e.g. 2013-01-02T13:23:37) or relative (e.g. 42m for 42 minutes)",
 					},
+					&cli.BoolFlag{
+						Name:    "follow",
+						Aliases: []string{"f"},
+						Usage:   "follow log output",
+					},
 				},
 				Action: utils.ExitCoder(cmdWorkloadLogs),
 			},

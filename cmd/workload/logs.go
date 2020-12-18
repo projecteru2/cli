@@ -18,14 +18,16 @@ type workloadLogsOptions struct {
 	tail   string
 	since  string
 	until  string
+	follow bool
 }
 
 func (o *workloadLogsOptions) run(ctx context.Context) error {
 	opts := &corepb.LogStreamOptions{
-		Id:    o.id,
-		Tail:  o.tail,
-		Since: o.since,
-		Until: o.until,
+		Id:     o.id,
+		Tail:   o.tail,
+		Since:  o.since,
+		Until:  o.until,
+		Follow: o.follow,
 	}
 	resp, err := o.client.LogStream(ctx, opts)
 	if err != nil {

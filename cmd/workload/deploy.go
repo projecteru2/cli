@@ -58,7 +58,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 	// 强制继承网络
-	networkInherit := o.opts.Networkmode == ""
+	networkInherit := len(o.opts.Networks) == 0
 	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
 }
 
@@ -234,7 +234,6 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		Count:          int32(c.Int("count")),
 		Env:            c.StringSlice("env"),
 		Networks:       networks,
-		Networkmode:    network,
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,

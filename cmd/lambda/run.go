@@ -117,7 +117,6 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 			Count:          int32(c.Int("count")),
 			Env:            c.StringSlice("env"),
 			Networks:       utils.GetNetworks(network),
-			Networkmode:    network,
 			OpenStdin:      c.Bool("stdin"),
 			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
 			Data:           utils.ReadAllFiles(c.StringSlice("file")),

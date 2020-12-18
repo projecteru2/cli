@@ -48,7 +48,7 @@ func cmdWorkloadReplace(c *cli.Context) error {
 	}
 
 	networkInherit := c.Bool("network-inherit")
-	if opts.Networkmode != "" {
+	if len(opts.Networks) > 0 {
 		logrus.Warnf("[Replace] Network is not empty, so network-inherit will set to false")
 		networkInherit = false
 	}
@@ -202,7 +202,6 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		Count:          int32(c.Int("count")),
 		Env:            c.StringSlice("env"),
 		Networks:       networks,
-		Networkmode:    network,
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
