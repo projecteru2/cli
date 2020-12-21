@@ -26,7 +26,7 @@ func Workloads(workloads ...*corepb.Workload) {
 func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "Networks"})
+	t.AppendHeader(table.Row{"Name/ID/Pod/Node", "Status", "Volume", "Networks"})
 
 	for _, c := range workloads {
 		// networks
@@ -52,9 +52,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 		}
 
 		rows := [][]string{
-			{c.Name, c.Id},
-			{c.Podname},
-			{c.Nodename},
+			{c.Name, c.Id, c.Podname, c.Nodename},
 			{
 				fmt.Sprintf("QuotaRequest: %f", c.Resource.CpuQuotaRequest),
 				fmt.Sprintf("QuotaLimit: %f", c.Resource.CpuQuotaLimit),
