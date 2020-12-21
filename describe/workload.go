@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -25,20 +26,28 @@ func Workloads(workloads ...*corepb.Workload) {
 func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "IP", "Networks"})
+	t.AppendHeader(table.Row{"Name/ID", "Pod", "Node", "Status", "Volume", "Networks"})
 
 	for _, c := range workloads {
-		// publish ip
-		ips := []string{}
-		for networkName, ip := range c.Publish {
-			ips = append(ips, fmt.Sprintf("%s: %s", networkName, ip))
-		}
-
 		// networks
 		ns := []string{}
 		if c.Status != nil {
 			for name, ip := range c.Status.Networks {
-				ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+				if published, ok := c.Publish[name]; ok {
+					addresses := strings.Split(published, ",")
+
+					firstLine := fmt.Sprintf("%s: %s", name, addresses[0])
+					ns = append(ns, firstLine)
+
+					if len(addresses) > 1 {
+						format := fmt.Sprintf("%%%ds", len(firstLine))
+						for _, address := range addresses[1:] {
+							ns = append(ns, fmt.Sprintf(format, address))
+						}
+					}
+				} else {
+					ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+				}
 			}
 		}
 
@@ -59,7 +68,6 @@ func describeWorkloads(workloads []*corepb.Workload) {
 				fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest),
 				fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit),
 			},
-			ips,
 			ns,
 		}
 		t.AppendRows(toTableRows(rows))
