@@ -429,7 +429,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "deploy-strategy",
-						Usage: "deploy method auto/fill/each/global",
+						Usage: "deploy method auto/fill/each/global/fillglobal",
 						Value: strategy.Auto,
 					},
 					&cli.StringFlag{
