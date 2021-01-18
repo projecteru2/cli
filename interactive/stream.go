@@ -18,6 +18,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -44,9 +45,9 @@ type Stream struct {
 func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, err error) {
 	if interactive { // nolint
 		stdinFd := os.Stdin.Fd()
-		terminal := &syscall.Termios{}
+		terminal := &unix.Termios{}
 		_ = termios.Tcgetattr(stdinFd, terminal)
-		terminalBak := &syscall.Termios{}
+		terminalBak := &unix.Termios{}
 		_ = deepcopy.Copy(terminalBak, terminal)
 		defer func() { _ = termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak) }()
 
