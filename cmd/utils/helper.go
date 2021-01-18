@@ -6,7 +6,6 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-units"
 	"github.com/urfave/cli/v2"
 )
@@ -19,9 +18,8 @@ func GetNetworks(network string) map[string]string {
 		network = networkInfo[0]
 		ip = networkInfo[1]
 	}
-	networkmode := container.NetworkMode(network)
 	networks := map[string]string{}
-	if network != "" && networkmode.IsUserDefined() {
+	if network != "" {
 		networks[network] = ip
 	}
 	return networks

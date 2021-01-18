@@ -3,7 +3,6 @@ module github.com/projecteru2/cli
 go 1.15
 
 require (
-	github.com/docker/docker v20.10.0+incompatible
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.0
