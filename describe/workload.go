@@ -103,8 +103,10 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 
 		// extensions
 		extensions := map[string]string{}
-		if err := json.Unmarshal(s.Extension, &extensions); err != nil {
-			continue
+		if len(s.Extension) != 0 {
+			if err := json.Unmarshal(s.Extension, &extensions); err != nil {
+				continue
+			}
 		}
 		es := []string{}
 		for k, v := range extensions {
