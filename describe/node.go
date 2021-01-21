@@ -7,6 +7,7 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/sirupsen/logrus"
 )
 
 // Nodes describes a list of Node
@@ -79,4 +80,27 @@ func describeNodeResources(resources []*corepb.NodeResource) {
 	t.AppendSeparator()
 	t.SetStyle(table.StyleLight)
 	t.Render()
+}
+
+// NodeStatusMessage describes NodeStatusStreamMessage
+// in json / yaml, or just a line in stdout
+func NodeStatusMessage(ms ...*corepb.NodeStatusStreamMessage) {
+	switch {
+	case isJSON():
+		describeAsJSON(ms)
+	case isYAML():
+		describeAsYAML(ms)
+	default:
+		describeNodeStatusMessage(ms)
+	}
+}
+
+func describeNodeStatusMessage(ms []*corepb.NodeStatusStreamMessage) {
+	for _, m := range ms {
+		if m.Error != "" {
+			logrus.Errorf("[WatchNodeStatus] Error when get status for node %s: %s", m.Nodename, m.Error)
+		} else {
+			logrus.Infof("[WatchNodeStatus] Node %s on pod %s, alive: %v", m.Nodename, m.Podname, m.Alive)
+		}
+	}
 }

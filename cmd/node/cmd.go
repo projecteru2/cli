@@ -64,6 +64,30 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNodeSetDown),
 			},
 			{
+				Name:  "set-status",
+				Usage: "set status of node, used for heartbeat",
+				Flags: []cli.Flag{
+					&cli.IntFlag{
+						Name:  "ttl",
+						Usage: "status ttl for node",
+						Value: 180,
+					},
+					&cli.IntFlag{
+						Name:  "interval",
+						Usage: "if given, will set status every INTERVAL seconds",
+						Value: 0,
+					},
+				},
+				ArgsUsage: nodeArgsUsage,
+				Action:    utils.ExitCoder(cmdNodeSetStatus),
+			},
+			{
+				Name:      "watch-status",
+				Usage:     "watch status of node, used for heartbeat",
+				ArgsUsage: nodeArgsUsage,
+				Action:    utils.ExitCoder(cmdNodeWatchStatus),
+			},
+			{
 				Name:      "resource",
 				Usage:     "check node resource",
 				ArgsUsage: nodeArgsUsage,
