@@ -54,8 +54,8 @@ func describeWorkloads(workloads []*corepb.Workload) {
 		rows := [][]string{
 			{c.Name, c.Id, c.Podname, c.Nodename},
 			{
-				fmt.Sprintf("QuotaRequest: %f", c.Resource.CpuQuotaRequest),
-				fmt.Sprintf("QuotaLimit: %f", c.Resource.CpuQuotaLimit),
+				fmt.Sprintf("CPUQuotaRequest: %f", c.Resource.CpuQuotaRequest),
+				fmt.Sprintf("CPUQuotaLimit: %f", c.Resource.CpuQuotaLimit),
 				fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
 				fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
 				fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),
