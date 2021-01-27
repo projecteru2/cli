@@ -16,7 +16,6 @@ import (
 	"github.com/getlantern/deepcopy"
 	"github.com/pkg/term/termios"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
@@ -127,7 +126,6 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 	}
 
 	exited := 0
-	output := map[string][]byte{}
 	for {
 		msg, err := iStream.Recv()
 		if err == io.EOF {
@@ -150,26 +148,10 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 			continue
 		}
 
-		if interactive {
+		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
 			fmt.Printf("%s", msg.Data)
 		} else {
-			id := coreutils.ShortID(msg.WorkloadId)
-			if _, ok := output[id]; !ok {
-				output[id] = []byte{}
-			}
-
-			output[id] = append(output[id], msg.Data...)
-
-			if bytes.HasSuffix(output[id], enter) {
-				fmt.Printf("[%s]: %s", id, output[id])
-				output[id] = []byte{}
-			}
-		}
-	}
-
-	for id, o := range output {
-		if len(o) > 0 {
-			fmt.Printf("[%s]: %s", id, output[id])
+			print(string(msg.Data))
 		}
 	}
 
