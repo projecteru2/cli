@@ -43,7 +43,8 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 		},
 	}
 
-	code, err := interactive.HandleStream(opts.OpenStdin, iStream, 1)
+	code, err := interactive.HandleStream(opts.OpenStdin, iStream, 1, false)
+
 	if err == nil {
 		return cli.Exit("", code)
 	}

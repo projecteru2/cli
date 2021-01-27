@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/signal"
@@ -41,7 +41,7 @@ type Stream struct {
 
 // HandleStream will handle a stream with send and recv method
 // with or without interactive mode
-func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, err error) {
+func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
 	if interactive { // nolint
 		stdinFd := os.Stdin.Fd()
 		terminal := &unix.Termios{}
@@ -125,6 +125,16 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 		}()
 	}
 
+	outputTemplate := `{{printf "%s" .Data}}`
+	if printWorkloadID {
+		outputTemplate = `[{{.WorkloadId}}] {{printf "%s" .Data}}`
+	}
+
+	outputT, err := template.New("output").Parse(outputTemplate)
+	if err != nil {
+		return -1, err
+	}
+
 	exited := 0
 	for {
 		msg, err := iStream.Recv()
@@ -149,9 +159,9 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 		}
 
 		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
-			fmt.Printf("%s", msg.Data)
+			outputT.Execute(os.Stdout, msg)
 		} else {
-			print(string(msg.Data))
+			outputT.Execute(os.Stderr, msg)
 		}
 	}
 
