@@ -5,7 +5,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"fmt"
+	"html/template"
 	"io"
 	"os"
 	"os/signal"
@@ -16,14 +16,12 @@ import (
 	"github.com/getlantern/deepcopy"
 	"github.com/pkg/term/termios"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coreutils "github.com/projecteru2/core/utils"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
 var (
 	exitCode     = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
-	enter        = []byte{10}
 	winchCommand = []byte{0x80}
 )
 
@@ -42,7 +40,7 @@ type Stream struct {
 
 // HandleStream will handle a stream with send and recv method
 // with or without interactive mode
-func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, err error) {
+func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
 	if interactive { // nolint
 		stdinFd := os.Stdin.Fd()
 		terminal := &unix.Termios{}
@@ -126,8 +124,17 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 		}()
 	}
 
+	outputTemplate := `{{printf "%s" .Data}}`
+	if printWorkloadID {
+		outputTemplate = `[{{.WorkloadId}}] {{printf "%s" .Data}}`
+	}
+
+	outputT, err := template.New("output").Parse(outputTemplate)
+	if err != nil {
+		return -1, err
+	}
+
 	exited := 0
-	output := map[string][]byte{}
 	for {
 		msg, err := iStream.Recv()
 		if err == io.EOF {
@@ -150,26 +157,14 @@ func HandleStream(interactive bool, iStream Stream, exitCount int) (code int, er
 			continue
 		}
 
-		if interactive {
-			fmt.Printf("%s", msg.Data)
+		var outStream *os.File
+		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
+			outStream = os.Stdout
 		} else {
-			id := coreutils.ShortID(msg.WorkloadId)
-			if _, ok := output[id]; !ok {
-				output[id] = []byte{}
-			}
-
-			output[id] = append(output[id], msg.Data...)
-
-			if bytes.HasSuffix(output[id], enter) {
-				fmt.Printf("[%s]: %s", id, output[id])
-				output[id] = []byte{}
-			}
+			outStream = os.Stderr
 		}
-	}
-
-	for id, o := range output {
-		if len(o) > 0 {
-			fmt.Printf("[%s]: %s", id, output[id])
+		if err := outputT.Execute(outStream, msg); err != nil {
+			logrus.Errorf("[HandleStream] Render template error: %v", err)
 		}
 	}
 

@@ -70,7 +70,7 @@ func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin b
 		_ = iStream.Send(clrf)
 	}()
 
-	return interactive.HandleStream(stdin, iStream, count)
+	return interactive.HandleStream(stdin, iStream, count, true)
 }
 
 func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
