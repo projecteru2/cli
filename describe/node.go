@@ -2,6 +2,7 @@ package describe
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"strings"
 
@@ -45,6 +46,10 @@ func describeNodes(nodes []*corepb.Node) {
 // NodeResources describes a list of NodeResource
 // output format can be json or yaml or table
 func NodeResources(resources ...*corepb.NodeResource) {
+	for _, resource := range resources {
+		checkNaNForResource(resource)
+	}
+
 	switch {
 	case isJSON():
 		describeAsJSON(resources)
@@ -52,6 +57,21 @@ func NodeResources(resources ...*corepb.NodeResource) {
 		describeAsYAML(resources)
 	default:
 		describeNodeResources(resources)
+	}
+}
+
+func checkNaNForResource(resource *corepb.NodeResource) {
+	if math.IsNaN(resource.VolumePercent) {
+		resource.VolumePercent = 0
+	}
+	if math.IsNaN(resource.MemoryPercent) {
+		resource.MemoryPercent = 0
+	}
+	if math.IsNaN(resource.StoragePercent) {
+		resource.StoragePercent = 0
+	}
+	if math.IsNaN(resource.CpuPercent) {
+		resource.CpuPercent = 0
 	}
 }
 
