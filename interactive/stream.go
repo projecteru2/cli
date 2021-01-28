@@ -22,7 +22,6 @@ import (
 
 var (
 	exitCode     = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
-	enter        = []byte{10}
 	winchCommand = []byte{0x80}
 )
 
@@ -158,10 +157,14 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 			continue
 		}
 
+		var outStream *os.File
 		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
-			outputT.Execute(os.Stdout, msg)
+			outStream = os.Stdout
 		} else {
-			outputT.Execute(os.Stderr, msg)
+			outStream = os.Stderr
+		}
+		if err := outputT.Execute(outStream, msg); err != nil {
+			logrus.Errorf("[HandleStream] Render template error: %v", err)
 		}
 	}
 
