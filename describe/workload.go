@@ -56,6 +56,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 			{
 				fmt.Sprintf("CPUQuotaRequest: %f", c.Resource.CpuQuotaRequest),
 				fmt.Sprintf("CPUQuotaLimit: %f", c.Resource.CpuQuotaLimit),
+				fmt.Sprintf("CPUMap: %v", c.Resource.Cpu),
 				fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
 				fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
 				fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),

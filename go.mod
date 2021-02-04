@@ -10,7 +10,7 @@ require (
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/pkg/term v1.1.0
-	github.com/projecteru2/core v0.0.0-20210128082313-8afc19a0dd7d
+	github.com/projecteru2/core v0.0.0-20210204101538-923b6eedf5e4
 	github.com/sethgrid/curse v0.0.0-20181231162520-d4ee583ebf0f
 	github.com/sethvargo/go-signalcontext v0.1.0
 	github.com/sirupsen/logrus v1.7.0
