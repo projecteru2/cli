@@ -5,12 +5,12 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"html/template"
 	"io"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
+	"text/template"
 	"unsafe"
 
 	"github.com/getlantern/deepcopy"
