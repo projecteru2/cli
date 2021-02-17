@@ -6,6 +6,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/getlantern/deepcopy v0.0.0-20160317154340-7f45deb8130a
 	github.com/ghodss/yaml v1.0.0
+	github.com/google/uuid v1.1.1
 	github.com/jedib0t/go-pretty/v6 v6.0.6
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
