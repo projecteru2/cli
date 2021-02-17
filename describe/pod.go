@@ -17,7 +17,7 @@ type capacityOfNode struct {
 
 type capacityOfPod struct {
 	Total int               `json:"total" yaml:"total"`
-	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes`
+	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
 // Pods describes a list of Pod

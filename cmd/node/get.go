@@ -45,7 +45,7 @@ func (o *getNodeOptions) run(ctx context.Context) error {
 	if node.GetInitStorage() > 0 {
 		logrus.Infof("Storage Used: %d bytes", node.GetStorageUsed())
 	} else {
-		logrus.Infof("Storage Used: %d bytes (%s)", node.GetStorageUsed(), "UNLIMITED")
+		logrus.Infof("No Storage Space Available")
 	}
 	return nil
 }
