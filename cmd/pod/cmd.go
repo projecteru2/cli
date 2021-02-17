@@ -46,6 +46,37 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdPodResource),
 			},
 			{
+				Name:      "capacity",
+				Usage:     "pod remained capacity",
+				ArgsUsage: podArgsUsage,
+				Action:    utils.ExitCoder(cmdPodCapacity),
+				Flags: []cli.Flag{
+					&cli.Float64Flag{
+						Name:     "cpu",
+						Aliases:  []string{"c"},
+						Usage:    "how many cpu to occupy",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "memory",
+						Aliases:  []string{"m", "mem"},
+						Usage:    "how much memory to occupy like 1M or 1G, support K, M, G, T",
+						Required: true,
+					},
+					&cli.StringFlag{
+						Name:     "storage",
+						Aliases:  []string{"s"},
+						Usage:    "how much storage to occupy like 1M or 1G, support K, M, G, T",
+						Required: true,
+					},
+					&cli.BoolFlag{
+						Name:  "cpu-bind",
+						Usage: "bind cpu or not",
+						Value: false,
+					},
+				},
+			},
+			{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
 				ArgsUsage: podArgsUsage,
