@@ -9,9 +9,10 @@ require (
 	github.com/google/uuid v1.1.1
 	github.com/jedib0t/go-pretty/v6 v6.0.6
 	github.com/juju/errors v0.0.0-20200330140219-3fe23663418f
+	github.com/juju/testing v0.0.0-20201216035041-2be42bba85f3 // indirect
 	github.com/kless/term v0.0.0-20161130133337-e551c64f56c0 // indirect
 	github.com/pkg/term v1.1.0
-	github.com/projecteru2/core v0.0.0-20210204101538-923b6eedf5e4
+	github.com/projecteru2/core v0.0.0-20210219074917-cd5681d33415
 	github.com/sethgrid/curse v0.0.0-20181231162520-d4ee583ebf0f
 	github.com/sethvargo/go-signalcontext v0.1.0
 	github.com/sirupsen/logrus v1.7.0
