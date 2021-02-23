@@ -44,6 +44,14 @@ func Command() *cli.Command {
 				Usage:     "pod resource usage",
 				ArgsUsage: podArgsUsage,
 				Action:    utils.ExitCoder(cmdPodResource),
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:    "filter",
+						Aliases: []string{"f"},
+						Usage:   "filter resource value, can be cpu/memory/storage/volume </<=/>/>=/== 40% or 0.4",
+						Value:   "all",
+					},
+				},
 			},
 			{
 				Name:      "capacity",
@@ -84,8 +92,14 @@ func Command() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "all",
-						Usage: "list all nodes or just living nodes",
+						Usage: "DEPRECATED, use --filter instead",
 						Value: false,
+					},
+					&cli.StringFlag{
+						Name:    "filter",
+						Aliases: []string{"f"},
+						Usage:   "filter node status, can be up/down/all",
+						Value:   "all",
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",

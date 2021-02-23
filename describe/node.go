@@ -27,18 +27,25 @@ func Nodes(nodes ...*corepb.Node) {
 func describeNodes(nodes []*corepb.Node) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Endpoint"})
+	t.AppendHeader(table.Row{"Name", "Endpoint", "CPU", "Memory", "Volume", "Storage"})
 
-	nameRow := []string{}
-	endpointRow := []string{}
 	for _, node := range nodes {
-		nameRow = append(nameRow, node.Name)
-		endpointRow = append(endpointRow, node.Endpoint)
+		totalVolumeCap := int64(0)
+		for _, v := range node.InitVolume {
+			totalVolumeCap += v
+		}
+		rows := [][]string{
+			{node.Name},
+			{node.Endpoint},
+			{fmt.Sprintf("%.2f / %d", node.CpuUsed, len(node.InitCpu))},
+			{fmt.Sprintf("%d / %d bytes", node.MemoryUsed, node.InitMemory)},
+			{fmt.Sprintf("%d / %d bytes", node.VolumeUsed, totalVolumeCap)},
+			{fmt.Sprintf("%d / %d bytes", node.StorageUsed, node.InitStorage)},
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
 	}
-	rows := [][]string{nameRow, endpointRow}
 
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
 	t.SetStyle(table.StyleLight)
 	t.Render()
 }
