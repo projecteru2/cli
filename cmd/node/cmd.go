@@ -82,10 +82,9 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNodeSetStatus),
 			},
 			{
-				Name:      "watch-status",
-				Usage:     "watch status of node, used for heartbeat",
-				ArgsUsage: nodeArgsUsage,
-				Action:    utils.ExitCoder(cmdNodeWatchStatus),
+				Name:   "watch-status",
+				Usage:  "watch status of node, used for heartbeat",
+				Action: utils.ExitCoder(cmdNodeWatchStatus),
 			},
 			{
 				Name:      "resource",
