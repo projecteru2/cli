@@ -104,11 +104,11 @@ func main() {
 
 	if err := setupLog(loglevel); err != nil {
 		fmt.Printf("Error setup log: %v\n", err)
-		return
+		os.Exit(-1)
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Printf("Error running eru-cli: %v\n", err)
-		return
+		os.Exit(-1)
 	}
 }
