@@ -109,24 +109,24 @@ func Command() *cli.Command {
 						Usage: "mark workloads down",
 					},
 					&cli.StringFlag{
-						Name:  "delta-memory",
-						Usage: "memory changes like -1M or 1G, support K, M, G, T",
+						Name:  "memory",
+						Usage: "memory value like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "delta-storage",
-						Usage: "storage changes like -1M or 1G, support K, M, G, T",
+						Name:  "storage",
+						Usage: "storage value like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "delta-cpu",
-						Usage: "cpu changes in string, like 0:100,1:200,3:50",
+						Name:  "cpu",
+						Usage: "cpu value in string, like 0:100,1:200,3:50",
 					},
 					&cli.StringSliceFlag{
-						Name:  "delta-numa-memory",
-						Usage: "numa memory changes, can set multiple times, like -1M or 1G, support K, M, G, T",
+						Name:  "numa-memory",
+						Usage: "numa memory values, can set multiple times, like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "delta-volume",
-						Usage: `volume changed in string, like "/data0:-1G,/data1:1G"`,
+						Name:  "volume",
+						Usage: `volume value in string, like "/data0:-1G,/data1:1G"`,
 					},
 					&cli.StringSliceFlag{
 						Name:  "numa-cpu",

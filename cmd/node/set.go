@@ -33,7 +33,7 @@ func cmdNodeSet(c *cli.Context) error {
 		return err
 	}
 
-	opts, err := generateSetNodeOptions(c)
+	opts, err := generateSetNodeOptions(c, client)
 	if err != nil {
 		return err
 	}
@@ -45,80 +45,96 @@ func cmdNodeSet(c *cli.Context) error {
 	return o.run(c.Context)
 }
 
-func generateSetNodeOptions(c *cli.Context) (*corepb.SetNodeOptions, error) {
+func generateSetNodeOptions(c *cli.Context, client corepb.CoreRPCClient) (*corepb.SetNodeOptions, error) {
 	name := c.Args().First()
 	if name == "" {
 		return nil, errors.New("Node name must be given")
 	}
 
-	numaMemoryList := c.StringSlice("delta-numa-memory")
+	node, err := client.GetNode(c.Context, &corepb.GetNodeOptions{Nodename: name})
+	if err != nil {
+		return nil, err
+	}
+
+	numaMemoryList := c.StringSlice("numa-memory")
 	numaMemory := map[string]int64{}
-	for nodeID, memoryStr := range numaMemoryList {
+	for index, memoryStr := range numaMemoryList {
 		memory, err := utils.ParseRAMInHuman(memoryStr)
 		if err != nil {
 			return nil, err
 		}
-		numaMemory[strconv.Itoa(nodeID)] = memory
+		nodeID := strconv.Itoa(index)
+		numaMemory[nodeID] = memory - node.InitNumaMemory[nodeID]
 	}
 
 	numaList := c.StringSlice("numa-cpu")
 	numa := map[string]string{}
-	for nodeID, cpuList := range numaList {
+	for index, cpuList := range numaList {
+		nodeID := strconv.Itoa(index)
 		for _, cpuID := range strings.Split(cpuList, ",") {
-			numa[cpuID] = strconv.Itoa(nodeID)
+			numa[cpuID] = nodeID
 		}
 	}
 
-	cpuList := c.String("delta-cpu")
 	cpuMap := map[string]int32{}
+	cpuList := c.String("cpu")
 	if cpuList != "" {
-		cpuMapList := strings.Split(cpuList, ",")
-		for _, cpus := range cpuMapList {
+		for _, cpus := range strings.Split(cpuList, ",") {
 			cpuConfigs := strings.Split(cpus, ":")
+			if len(cpuConfigs) != 2 {
+				return nil, fmt.Errorf("invalid cpu share")
+			}
 			// G109: Potential Integer overflow made by strconv.Atoi result conversion to int16/32
 			share, err := strconv.Atoi(cpuConfigs[1]) // nolint
 			if err != nil {
 				return nil, err
 			}
 			cpuID := cpuConfigs[0]
-			cpuMap[cpuID] = int32(share)
+			cpuMap[cpuID] = int32(share) - node.InitCpu[cpuID]
 		}
 	}
 
 	volumeMap := map[string]int64{}
-	deltaVolume := c.String("delta-volume")
-	if deltaVolume != "" {
-		for _, volume := range strings.Split(deltaVolume, ",") {
+	volumes := c.String("volume")
+	if volumes != "" {
+		for _, volume := range strings.Split(volumes, ",") {
 			parts := strings.Split(volume, ":")
 			if len(parts) != 2 {
 				return nil, fmt.Errorf("invalid volume")
 			}
-			delta, err := utils.ParseRAMInHuman(parts[1])
+
+			v, err := utils.ParseRAMInHuman(parts[1])
 			if err != nil {
 				return nil, err
 			}
-			volumeMap[parts[0]] = delta
+
+			name := parts[0]
+			volumeMap[name] = v - node.InitVolume[name]
 		}
 	}
 
-	var (
-		deltaMemory  int64
-		deltaStorage int64
-		err          error
-	)
-	if deltaMemory, err = utils.ParseRAMInHuman(c.String("delta-memory")); err != nil {
+	memory, err := utils.ParseRAMInHuman(c.String("memory"))
+	if err != nil {
 		return nil, err
 	}
-	if deltaStorage, err = utils.ParseRAMInHuman(c.String("delta-storage")); err != nil {
+	if memory > 0 {
+		memory = memory - node.InitMemory
+	}
+
+	storage, err := utils.ParseRAMInHuman(c.String("storage"))
+	if err != nil {
 		return nil, err
+	}
+	if storage > 0 {
+		storage = storage - node.InitStorage
 	}
 
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
 		StatusOpt:       corepb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
-		DeltaMemory:     deltaMemory,
-		DeltaStorage:    deltaStorage,
+		DeltaMemory:     memory,
+		DeltaStorage:    storage,
 		DeltaNumaMemory: numaMemory,
 		DeltaVolume:     volumeMap,
 		Numa:            numa,
