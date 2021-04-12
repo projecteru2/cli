@@ -54,11 +54,7 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 		return nil, errors.New("Workload ID must be given")
 	}
 
-	memoryRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
-	if err != nil {
-		return nil, err
-	}
-	memoryLimit, err := utils.ParseRAMInHuman(c.String("memory-limit"))
+	memoryRequest, memoryLimit, err := memoryOption(c)
 	if err != nil {
 		return nil, err
 	}
@@ -84,21 +80,18 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 		bindCPUOpt = corepb.TriOpt_FALSE
 	}
 
-	storageRequest, err := utils.ParseRAMInHuman(c.String("storage-request"))
-	if err != nil {
-		return nil, err
-	}
-	storageLimit, err := utils.ParseRAMInHuman(c.String("storage-limit"))
+	storageRequest, storageLimit, err := storageOption(c)
 	if err != nil {
 		return nil, err
 	}
 
+	cpuRequest, cpuLimit := cpuOption(c)
 	return &corepb.ReallocOptions{
 		Id:         id,
 		BindCpuOpt: bindCPUOpt,
 		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: c.Float64("cpu-request"),
-			CpuQuotaLimit:   c.Float64("cpu-limit"),
+			CpuQuotaRequest: cpuRequest,
+			CpuQuotaLimit:   cpuLimit,
 			MemoryRequest:   memoryRequest,
 			MemoryLimit:     memoryLimit,
 			VolumesRequest:  volumesRequest,
