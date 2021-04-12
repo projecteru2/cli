@@ -118,7 +118,7 @@ func generateSetNodeOptions(c *cli.Context, client corepb.CoreRPCClient) (*corep
 		return nil, err
 	}
 	if memory > 0 {
-		memory = memory - node.InitMemory
+		memory -= node.InitMemory
 	}
 
 	storage, err := utils.ParseRAMInHuman(c.String("storage"))
@@ -126,7 +126,7 @@ func generateSetNodeOptions(c *cli.Context, client corepb.CoreRPCClient) (*corep
 		return nil, err
 	}
 	if storage > 0 {
-		storage = storage - node.InitStorage
+		storage -= node.InitStorage
 	}
 
 	return &corepb.SetNodeOptions{
