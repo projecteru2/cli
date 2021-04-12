@@ -221,6 +221,11 @@ func Command() *cli.Command {
 						Usage: "cpu limit increment/decrement",
 						Value: 0,
 					},
+					&cli.Float64Flag{
+						Name:  "cpu",
+						Usage: "shortcut to set cpu-limit/request equally to this value",
+						Value: 0,
+					},
 					&cli.StringFlag{
 						Name:  "memory-request",
 						Usage: "memory request increment/decrement, like -1M or 1G, support K, M, G, T",
@@ -228,6 +233,10 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "memory-limit",
 						Usage: "memory limit increment/decrement, like -1M or 1G, support K, M, G, T",
+					},
+					&cli.StringFlag{
+						Name:  "memory",
+						Usage: "shortcut to set memory-limit/request equally to this value",
 					},
 					&cli.StringFlag{
 						Name:  "volumes-request",
@@ -252,6 +261,10 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "storage-limit",
 						Usage: `storage limit incr/decr, like "-1G"`,
+					},
+					&cli.StringFlag{
+						Name:  "storage",
+						Usage: "shortcut to set storage-limit/request equally to this value",
 					},
 				},
 			},
