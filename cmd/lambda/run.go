@@ -111,8 +111,10 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 				VolumesRequest:  c.StringSlice("volume-request"),
 				VolumesLimit:    c.StringSlice("volume"),
 			},
-			Podname:        c.String("pod"),
-			Nodenames:      c.StringSlice("node"),
+			Podname: c.String("pod"),
+			NodeFilter: &corepb.NodeFilter{
+				Includes: c.StringSlice("node"),
+			},
 			Image:          c.String("image"),
 			Count:          int32(c.Int("count")),
 			Env:            c.StringSlice("env"),
