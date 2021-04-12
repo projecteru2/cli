@@ -140,22 +140,18 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		return nil, err
 	}
 
-	memLimit, err := utils.ParseRAMInHuman(c.String("memory-limit"))
+	memRequest, memLimit, err := memoryOption(c)
 	if err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
 	}
-	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
-	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
-	}
-	storageLimit, err := utils.ParseRAMInHuman(c.String("storage-limit"))
+
+	storageRequest, storageLimit, err := storageOption(c)
 	if err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
 	}
-	storageRequest, err := utils.ParseRAMInHuman(c.String("storage-request"))
-	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
-	}
+
+	cpuRequest, cpuLimit := cpuOption(c)
+
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] get specs failed %v", err)
@@ -218,8 +214,8 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Sysctls:     entrypoint.Sysctls,
 		},
 		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: c.Float64("cpu-request"),
-			CpuQuotaLimit:   c.Float64("cpu-limit"),
+			CpuQuotaRequest: cpuRequest,
+			CpuQuotaLimit:   cpuLimit,
 			CpuBind:         c.Bool("cpu-bind"),
 			MemoryRequest:   memRequest,
 			MemoryLimit:     memLimit,

@@ -399,6 +399,11 @@ func Command() *cli.Command {
 						Usage: "how many cpu to limit; can specify limit without request",
 						Value: 1.0,
 					},
+					&cli.Float64Flag{
+						Name:  "cpu",
+						Usage: "shortcut for cpu-request/limit, set them equally to this value",
+						Value: 1.0,
+					},
 					&cli.StringFlag{
 						Name:  "memory-request",
 						Usage: "how many memory to request like 1M or 1G, support K, M, G, T",
@@ -410,6 +415,11 @@ func Command() *cli.Command {
 						Value: "512M",
 					},
 					&cli.StringFlag{
+						Name:  "memory",
+						Usage: "shortcut for memory-request/limit, set them equally to this value",
+						Value: "512M",
+					},
+					&cli.StringFlag{
 						Name:  "storage-request",
 						Usage: "how many storage to request quota like 1M or 1G, support K, M, G, T",
 						Value: "",
@@ -417,6 +427,11 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "storage-limit",
 						Usage: "how many storage to limit quota like 1M or 1G, support K, M, G, T; can specify limit without request",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "storage",
+						Usage: "shortcut for storage-request/limit, set them equally to this value",
 						Value: "",
 					},
 					&cli.StringSliceFlag{
@@ -477,4 +492,62 @@ func Command() *cli.Command {
 			},
 		},
 	}
+}
+
+// returns --memory-request, --memory-limit
+// or shortcut --memory to override them
+func memoryOption(c *cli.Context) (int64, int64, error) {
+	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	memLimit, err := utils.ParseRAMInHuman(c.String("memory-limit"))
+	if err != nil {
+		return 0, 0, err
+	}
+	// if cpu shortcut is set, then override the above
+	if c.IsSet("memory") {
+		if memory, err := utils.ParseRAMInHuman(c.String("memory")); err == nil {
+			memRequest = memory
+			memLimit = memory
+		}
+	}
+	return memRequest, memLimit, nil
+}
+
+// returns --storage-request, --storage-limit
+// or shortcut --storage to override them
+func storageOption(c *cli.Context) (int64, int64, error) {
+	storageRequest, err := utils.ParseRAMInHuman(c.String("storage-request"))
+	if err != nil {
+		return 0, 0, err
+	}
+
+	storageLimit, err := utils.ParseRAMInHuman(c.String("storage-limit"))
+	if err != nil {
+		return 0, 0, err
+	}
+	// if storage shortcut is set, then override the above
+	if c.IsSet("storage") {
+		if storage, err := utils.ParseRAMInHuman(c.String("storage")); err == nil {
+			storageRequest = storage
+			storageLimit = storage
+		}
+	}
+	return storageRequest, storageLimit, nil
+}
+
+// returns --cpu-request, --cpu-limit
+// or shortcut --cpu to override them
+func cpuOption(c *cli.Context) (float64, float64) {
+	cpuRequest := c.Float64("cpu-request")
+	cpuLimit := c.Float64("cpu-limit")
+	// if cpu shortcut is set, then override the above
+	if c.IsSet("cpu") {
+		cpu := c.Float64("cpu")
+		cpuRequest = cpu
+		cpuLimit = cpu
+	}
+	return cpuRequest, cpuLimit
 }
