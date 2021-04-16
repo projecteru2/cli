@@ -80,7 +80,6 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 		return nil, errors.New("[Lambda] no commands")
 	}
 
-	commands := c.Args().Slice()
 	network := c.String("network")
 
 	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
@@ -99,7 +98,7 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 			Name: "lambda",
 			Entrypoint: &corepb.EntrypointOptions{
 				Name:       c.String("name"),
-				Command:    strings.Join(commands, " && "),
+				Commands:   c.Args().Slice(),
 				Privileged: c.Bool("privileged"),
 				Dir:        c.String("working-dir"),
 			},

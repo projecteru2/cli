@@ -203,7 +203,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{
 			Name:        entry,
-			Command:     entrypoint.Command,
+			Commands:    entrypoint.GetCommands(),
 			Privileged:  entrypoint.Privileged,
 			Dir:         entrypoint.Dir,
 			Log:         logConfig,
