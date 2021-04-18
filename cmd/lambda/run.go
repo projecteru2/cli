@@ -13,14 +13,15 @@ import (
 )
 
 type runLambdaOptions struct {
-	client corepb.CoreRPCClient
-	opts   *corepb.RunAndWaitOptions
-	stdin  bool
-	count  int
+	client          corepb.CoreRPCClient
+	opts            *corepb.RunAndWaitOptions
+	stdin           bool
+	count           int
+	printWorkloadID bool
 }
 
 func (o *runLambdaOptions) run(_ context.Context) error {
-	code, err := lambda(o.client, o.opts, o.stdin, o.count)
+	code, err := lambda(o.client, o.opts, o.stdin, o.count, o.printWorkloadID)
 	if err == nil {
 		return cli.Exit("", code)
 	}
@@ -39,17 +40,18 @@ func cmdLambdaRun(c *cli.Context) error {
 	}
 
 	o := &runLambdaOptions{
-		client: client,
-		opts:   opts,
-		stdin:  c.Bool("stdin"),
-		count:  c.Int("count"),
+		client:          client,
+		opts:            opts,
+		stdin:           c.Bool("stdin"),
+		count:           c.Int("count"),
+		printWorkloadID: c.Bool("workload-id"),
 	}
 	return o.run(c.Context)
 }
 
 var clrf = []byte{0xa}
 
-func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int) (code int, err error) {
+func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int, printWorkloadID bool) (code int, err error) {
 	resp, err := client.RunAndWait(context.Background())
 	if err != nil {
 		return -1, err
@@ -70,7 +72,7 @@ func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin b
 		_ = iStream.Send(clrf)
 	}()
 
-	return interactive.HandleStream(stdin, iStream, count, true)
+	return interactive.HandleStream(stdin, iStream, count, printWorkloadID)
 }
 
 func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
@@ -99,7 +101,7 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 				Name:       c.String("name"),
 				Command:    strings.Join(commands, " && "),
 				Privileged: c.Bool("privileged"),
-				Dir:        c.String("working_dir"),
+				Dir:        c.String("working-dir"),
 			},
 			ResourceOpts: &corepb.ResourceOptions{
 				CpuQuotaRequest: c.Float64("cpu-request"),

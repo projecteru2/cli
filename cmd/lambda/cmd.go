@@ -37,9 +37,10 @@ func Command() *cli.Command {
 				Usage: "set volume limitcan use multiple times",
 			},
 			&cli.StringFlag{
-				Name:  "working_dir",
-				Usage: "use as current working dir",
-				Value: "/",
+				Name:    "working-dir",
+				Aliases: []string{"working_dir"},
+				Usage:   "use as current working dir",
+				Value:   "/",
 			},
 			&cli.StringFlag{
 				Name:  "image",
@@ -119,6 +120,10 @@ func Command() *cli.Command {
 			&cli.StringSliceFlag{
 				Name:  "node",
 				Usage: "which node to run",
+			},
+			&cli.BoolFlag{
+				Name:  "workload-id",
+				Usage: "whether print workload id as prefix or not",
 			},
 		},
 		Action: utils.ExitCoder(cmdLambdaRun),

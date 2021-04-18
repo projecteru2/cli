@@ -144,6 +144,17 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 			return -1, err
 		}
 
+		// error should be printed and skipped
+		if msg.StdStreamType == corepb.StdStreamType_ERUERROR {
+			logrus.Errorf("[Error From ERU] %s", string(msg.Data))
+			continue
+		}
+
+		if msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID {
+			logrus.Infof("[WorkloadID] %s", string(msg.WorkloadId))
+			continue
+		}
+
 		if bytes.HasPrefix(msg.Data, exitCode) {
 			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
 			code, err = strconv.Atoi(ret)
@@ -158,9 +169,10 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 		}
 
 		var outStream *os.File
-		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
+		switch msg.StdStreamType {
+		case corepb.StdStreamType_STDOUT:
 			outStream = os.Stdout
-		} else {
+		default:
 			outStream = os.Stderr
 		}
 		if err := outputT.Execute(outStream, msg); err != nil {
