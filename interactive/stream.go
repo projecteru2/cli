@@ -151,7 +151,7 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 		}
 
 		if msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID {
-			logrus.Infof("[WorkloadID] %s", string(msg.WorkloadId))
+			logrus.Infof("[WorkloadID] %s", msg.WorkloadId)
 			continue
 		}
 
