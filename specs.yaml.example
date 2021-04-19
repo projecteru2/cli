@@ -2,6 +2,12 @@ appname: "elb"
 entrypoints:
   release:
     cmd: "/usr/local/openresty/bin/openresty -p /elb/server -c /elb/conf/release.conf"
+    commands:
+      - /usr/local/openresty/bin/openresty
+      - -p
+      - /elb/server
+      - -c
+      - /elb/conf/release.conf
     restart: always
     dir: /elb
     publish:
