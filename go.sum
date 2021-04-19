@@ -397,8 +397,8 @@ github.com/projecteru2/core v0.0.0-20210412065234-d0cd929c9739 h1:1KX5LLjQO4iPCR
 github.com/projecteru2/core v0.0.0-20210412065234-d0cd929c9739/go.mod h1:K5MyiUV8JDMSTIFE7CHY6TISS+nVTHV71hHl9aMrBdU=
 github.com/projecteru2/core v0.0.0-20210412071726-d5e8a01c0b78 h1:4C/kJEGcq1s98ZHSlG39EFAAD3WymEyP7czIUUFw/d4=
 github.com/projecteru2/core v0.0.0-20210412071726-d5e8a01c0b78/go.mod h1:K5MyiUV8JDMSTIFE7CHY6TISS+nVTHV71hHl9aMrBdU=
-github.com/projecteru2/core v0.0.0-20210415093154-1f9362198e8a h1:JUSljwOZLDnV0B6PW19qc204QcOlNCtVU798flvmLxc=
-github.com/projecteru2/core v0.0.0-20210415093154-1f9362198e8a/go.mod h1:K5MyiUV8JDMSTIFE7CHY6TISS+nVTHV71hHl9aMrBdU=
+github.com/projecteru2/core v0.0.0-20210419020340-872926788608 h1:tVuf1DTpLiPMTa60CXLUy41xuJeTVV1lXy3rCsPEcw8=
+github.com/projecteru2/core v0.0.0-20210419020340-872926788608/go.mod h1:K5MyiUV8JDMSTIFE7CHY6TISS+nVTHV71hHl9aMrBdU=
 github.com/projecteru2/libyavirt v0.0.0-20201204100854-3646a3f5f5e5 h1:FxDFP3qtEi0RsnB6X2IpHTdklttamesggNCU7wb6rsY=
 github.com/projecteru2/libyavirt v0.0.0-20201204100854-3646a3f5f5e5/go.mod h1:9/SNmdphwl12ubwihkRa9YtOozM6liYLDxsricra1mY=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=

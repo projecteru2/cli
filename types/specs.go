@@ -20,7 +20,7 @@ type Specs struct {
 // Entrypoint is a facade of old stype `cmd` and new stype `commands`
 type Entrypoint struct {
 	types.Entrypoint `yaml:",inline"`
-	Command          string `yaml:"cmd",omitempty"`
+	Command          string `yaml:"cmd,omitempty"`
 }
 
 // GetCommands .
