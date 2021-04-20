@@ -82,6 +82,12 @@ func Command() *cli.Command {
 						Usage: "bind cpu or not",
 						Value: false,
 					},
+					&cli.StringSliceFlag{
+						Name:     "node",
+						Aliases:  []string{"nodename", "n"},
+						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
+						Required: false,
+					},
 				},
 			},
 			{

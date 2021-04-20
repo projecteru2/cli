@@ -13,8 +13,9 @@ import (
 )
 
 type capacityPodOptions struct {
-	client corepb.CoreRPCClient
-	name   string
+	client    corepb.CoreRPCClient
+	podname   string   // podname
+	nodenames []string // node white list
 
 	cpu     float64
 	cpuBind bool
@@ -23,7 +24,7 @@ type capacityPodOptions struct {
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
-	resp, err := o.client.CalculateCapacity(ctx, &corepb.DeployOptions{
+	opts := &corepb.DeployOptions{
 		// resource definitions
 		ResourceOpts: &corepb.ResourceOptions{
 			CpuQuotaLimit:   o.cpu,
@@ -40,8 +41,13 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 			Name: uuid.New().String(),
 		},
 		DeployStrategy: corepb.DeployOptions_DUMMY,
-		Podname:        o.name,
-	})
+		Podname:        o.podname,
+		NodeFilter: &corepb.NodeFilter{
+			Includes: o.nodenames,
+		},
+	}
+
+	resp, err := o.client.CalculateCapacity(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -72,8 +78,9 @@ func cmdPodCapacity(c *cli.Context) error {
 	}
 
 	o := &capacityPodOptions{
-		client: client,
-		name:   name,
+		client:    client,
+		podname:   name,
+		nodenames: c.StringSlice("nodename"),
 
 		cpu:     c.Float64("cpu-limit"),
 		cpuBind: c.Bool("cpu-bind"),
