@@ -65,7 +65,7 @@ func createControlWorkloadsOptions(c *cli.Context, action string) (*controlWorkl
 		client: client,
 		ids:    ids,
 		action: action,
-		force:  c.Bool("Force"),
+		force:  c.Bool("force"),
 	}, nil
 }
 
