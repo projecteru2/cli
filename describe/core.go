@@ -25,9 +25,9 @@ func describeCore(info *corepb.CoreInfo) {
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Description"})
 
-	nameRow := []string{"Version", "Git hash", "Built", "Golang version", "OS/Arch"}
+	nameRow := []string{"Version", "Git hash", "Built", "Golang version", "OS/Arch", "Identifier"}
 	// this stupid Revison typo thing is driving my crazy!!!!!!!!!!!!!!!
-	descRow := []string{info.Version, info.Revison, info.BuildAt, info.GolangVersion, info.OsArch}
+	descRow := []string{info.Version, info.Revison, info.BuildAt, info.GolangVersion, info.OsArch, info.Identifier}
 	rows := [][]string{nameRow, descRow}
 
 	t.AppendRows(toTableRows(rows))
