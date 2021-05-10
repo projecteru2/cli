@@ -109,32 +109,47 @@ func Command() *cli.Command {
 						Usage: "mark workloads down",
 					},
 					&cli.StringFlag{
-						Name:  "memory",
-						Usage: "memory value like -1M or 1G, support K, M, G, T",
+						Name: "memory",
+						Usage: `memory, unit can be K/M/G/T, 
+                          when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                          e.g. --memory -10G --delta, means memory will be the current value - 10`,
 					},
 					&cli.StringFlag{
-						Name:  "storage",
-						Usage: "storage value like -1M or 1G, support K, M, G, T",
+						Name: "storage",
+						Usage: `storage, unit can be K/M/G/T, 
+                    when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                    e.g. --storage -10G --delta, means storage will be the current value - 10`,
 					},
 					&cli.StringFlag{
 						Name:  "cpu",
-						Usage: "cpu value in string, like 0:100,1:200,3:50",
+						Usage: "cpu value in string, e.g. 0:100,1:200,3:50",
 					},
 					&cli.StringSliceFlag{
-						Name:  "numa-memory",
-						Usage: "numa memory values, can set multiple times, like -1M or 1G, support K, M, G, T",
+						Name: "numa-memory",
+						Usage: `numa memory values, unit can be K/M/G/T, 
+                        when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                        e.g. --numa-memory -10G --delta, means the value will be current value - 10
+                        this value can be set multiple times, the index will be the numa node ID,
+                        e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
 					},
 					&cli.StringFlag{
-						Name:  "volume",
-						Usage: `volume value in string, like "/data0:-1G,/data1:1G"`,
+						Name: "volume",
+						Usage: `volume value in string, like "/data0:10G,/data1:10G"
+                   when using --delta flag, this can be a negtive number indicating how much to add to the current value,
+                   e.g. --volume /data0:-10G,/data1:20G, means /data0 will be subtract 10G and /data1 will be added 20G`,
 					},
 					&cli.StringSliceFlag{
-						Name:  "numa-cpu",
-						Usage: "numa cpu list, can set multiple times, use comma separated",
+						Name: "numa-cpu",
+						Usage: `numa cpu list, can be set multiple times, the index will be the numa node ID.
+                     e.g. --numa-cpu 0,1,2,3 --numa-cpu 4,5,6,7 means cpu 0,1,2,3 are bound to node ID 0, cpu 4,5,6,7 are bound to node ID 1`,
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",
-						Usage: "add label for node, like a=1 b=2, can set multiple times",
+						Usage: "label for the node, can set multiple times, e.g. --label a=1 --label b=2",
+					},
+					&cli.BoolFlag{
+						Name:  "delta",
+						Usage: "delta flag for settings, when set, all values will be relative to the current values, refer to each option for details",
 					},
 				},
 			},
