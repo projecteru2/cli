@@ -41,6 +41,8 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	files := make(map[string][]byte)
+
 	for {
 		msg, err := resp.Recv()
 		if err == io.EOF {
@@ -55,7 +57,11 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			continue
 		}
 
-		filename := fmt.Sprintf("%s-%s-%s.tar.gz", coreutils.ShortID(msg.Id), msg.Name, now)
+		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), msg.Name, now)
+		files[filename] = append(files[filename], msg.Data...)
+	}
+
+	for filename, content := range files {
 		storePath := filepath.Join(baseDir, filename)
 		if _, err := os.Stat(storePath); err != nil {
 			f, err := os.Create(storePath)
@@ -63,7 +69,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 				logrus.Errorf("[Copy] Error during create backup file %s: %v", storePath, err)
 				continue
 			}
-			if _, err := f.Write(msg.Data); err != nil {
+			if _, err := f.Write(content); err != nil {
 				logrus.Errorf("[Copy] Write file error %v", err)
 			}
 			f.Close()
