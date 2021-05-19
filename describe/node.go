@@ -27,16 +27,24 @@ func Nodes(nodes ...*corepb.Node) {
 func describeNodes(nodes []*corepb.Node) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Endpoint", "CPU", "Memory", "Volume", "Storage"})
+	t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage"})
 
 	for _, node := range nodes {
 		totalVolumeCap := int64(0)
 		for _, v := range node.InitVolume {
 			totalVolumeCap += v
 		}
+
+		var status string
+		if node.Available {
+			status = "UP"
+		} else {
+			status = "DOWN"
+		}
 		rows := [][]string{
 			{node.Name},
 			{node.Endpoint},
+			{status},
 			{fmt.Sprintf("%.2f / %d", node.CpuUsed, len(node.InitCpu))},
 			{fmt.Sprintf("%d / %d bytes", node.MemoryUsed, node.InitMemory)},
 			{fmt.Sprintf("%d / %d bytes", node.VolumeUsed, totalVolumeCap)},
