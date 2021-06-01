@@ -120,32 +120,38 @@ func generateSetNodeOptionsAbsolute(c *cli.Context, client corepb.CoreRPCClient)
 		}
 	}
 
-	memory, err := utils.ParseRAMInHuman(c.String("memory"))
-	if err != nil {
-		return nil, err
-	}
-	if memory >= 0 {
-		memory -= node.InitMemory
-	} else {
-		return nil, fmt.Errorf("you can't set memory to a negative number when using absolute value")
+	var deltaMemory int64 = 0
+	if c.IsSet("memory") {
+		memory, err := utils.ParseRAMInHuman(c.String("memory"))
+		if err != nil {
+			return nil, err
+		}
+		if memory >= 0 {
+			deltaMemory = memory - node.InitMemory
+		} else {
+			return nil, fmt.Errorf("you can't set memory to a negative number when using absolute value")
+		}
 	}
 
-	storage, err := utils.ParseRAMInHuman(c.String("storage"))
-	if err != nil {
-		return nil, err
-	}
-	if storage >= 0 {
-		storage -= node.InitStorage
-	} else {
-		return nil, fmt.Errorf("you can't set storage to a negative number when using absolute value")
+	var deltaStorage int64 = 0
+	if c.IsSet("storage") {
+		storage, err := utils.ParseRAMInHuman(c.String("storage"))
+		if err != nil {
+			return nil, err
+		}
+		if storage >= 0 {
+			deltaStorage = storage - node.InitStorage
+		} else {
+			return nil, fmt.Errorf("you can't set storage to a negative number when using absolute value")
+		}
 	}
 
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
 		StatusOpt:       corepb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
-		DeltaMemory:     memory,
-		DeltaStorage:    storage,
+		DeltaMemory:     deltaMemory,
+		DeltaStorage:    deltaStorage,
 		DeltaNumaMemory: numaMemory,
 		DeltaVolume:     volumeMap,
 		Numa:            numa,
@@ -160,7 +166,7 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 		return nil, errors.New("Node name must be given")
 	}
 
-	numaMemoryList := c.StringSlice("delta-numa-memory")
+	numaMemoryList := c.StringSlice("numa-memory")
 	numaMemory := map[string]int64{}
 	for nodeID, memoryStr := range numaMemoryList {
 		memory, err := utils.ParseRAMInHuman(memoryStr)
@@ -178,7 +184,7 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 		}
 	}
 
-	cpuList := c.String("delta-cpu")
+	cpuList := c.String("cpu")
 	cpuMap := map[string]int32{}
 	if cpuList != "" {
 		cpuMapList := strings.Split(cpuList, ",")
@@ -195,7 +201,7 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 	}
 
 	volumeMap := map[string]int64{}
-	deltaVolume := c.String("delta-volume")
+	deltaVolume := c.String("volume")
 	if deltaVolume != "" {
 		for _, volume := range strings.Split(deltaVolume, ",") {
 			parts := strings.Split(volume, ":")
@@ -215,10 +221,10 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 		deltaStorage int64
 		err          error
 	)
-	if deltaMemory, err = utils.ParseRAMInHuman(c.String("delta-memory")); err != nil {
+	if deltaMemory, err = utils.ParseRAMInHuman(c.String("memory")); err != nil {
 		return nil, err
 	}
-	if deltaStorage, err = utils.ParseRAMInHuman(c.String("delta-storage")); err != nil {
+	if deltaStorage, err = utils.ParseRAMInHuman(c.String("storage")); err != nil {
 		return nil, err
 	}
 
