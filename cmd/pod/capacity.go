@@ -82,7 +82,7 @@ func cmdPodCapacity(c *cli.Context) error {
 		podname:   name,
 		nodenames: c.StringSlice("nodename"),
 
-		cpu:     c.Float64("cpu-limit"),
+		cpu:     c.Float64("cpu"),
 		cpuBind: c.Bool("cpu-bind"),
 		memory:  mem,
 		storage: storage,
