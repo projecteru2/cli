@@ -8,32 +8,6 @@ CLI for Eru.
 
 Modify resources for eru pods / nodes, manipulate workloads and images.
 
-### Usage
-
-* Use `cli -h` to show commands and subcommands.
-* Currently supported commands are:
-	* `workload` subcommands:
-		* `workload get {id} ...`
-		* `workload remove {id} ...`
-		* `workload realloc --cpu {cpu} --memory {memory}`
-		* `workload deploy`
-        * `workload set-status`
-        * `workload get-status`
-	* `pod` subcommands:
-		* `pod list`
-		* `pod add`
-		* `pod nodes {podname}`
-		* `pod networks {podname}`
-        * `pod resource {podname}`
-	* `node` subcommands:
-		* `node get {nodename}`
-		* `node remove {nodename}`
-		* `node set-status [--available] {nodename}`
-        * `node resource {nodename}`
-	* `image` subcommands:
-		* `image build`
-	* `lambda`
-
 ### Develop
 
 We use `go mod` to manage requirements.  
@@ -57,3 +31,7 @@ docker run -it --rm \
   projecteru2/cli \
   /usr/bin/eru-cli <PARAMS>
 ```
+
+### User Manual
+
+Refer to [this document](https://github.com/projecteru2/cli/blob/master/manual.md)
