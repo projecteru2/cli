@@ -70,6 +70,7 @@ func cmdWorkloadLogs(c *cli.Context) error {
 		tail:   c.String("tail"),
 		since:  c.String("since"),
 		until:  c.String("until"),
+		follow: c.Bool("follow"),
 	}
 	return o.run(c.Context)
 }
