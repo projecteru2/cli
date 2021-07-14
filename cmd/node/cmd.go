@@ -28,6 +28,18 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNodeRemove),
 			},
 			{
+				Name:      "update",
+				Usage:     "update a node",
+				ArgsUsage: nodeArgsUsage,
+				Action:    utils.ExitCoder(cmdNodeUpdate),
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:  "endpoint",
+						Usage: "update node endpoint",
+					},
+				},
+			},
+			{
 				Name:  "workloads",
 				Usage: "list node workloads",
 				Flags: []cli.Flag{
