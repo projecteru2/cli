@@ -36,7 +36,7 @@ func describeNodes(nodes []*corepb.Node) {
 		}
 
 		var status string
-		if node.Available {
+		if !node.Bypass && node.Available {
 			status = "UP"
 		} else {
 			status = "DOWN"
