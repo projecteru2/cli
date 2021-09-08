@@ -109,6 +109,14 @@ func Command() *cli.Command {
 						Name:  "limit",
 						Usage: "limit data size",
 					},
+					&cli.StringSliceFlag{
+						Name:  "match-ip",
+						Usage: "filter by IP",
+					},
+					&cli.StringSliceFlag{
+						Name:  "skip-ip",
+						Usage: "filter out IP",
+					},
 				},
 			},
 			{
