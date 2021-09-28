@@ -18,7 +18,7 @@ import (
 
 type copyWorkloadsOptions struct {
 	client corepb.CoreRPCClient
-	// where to store copied content
+	// where to store copied files
 	dir string
 	// map workloadID -> list of path of files
 	sources map[string][]string

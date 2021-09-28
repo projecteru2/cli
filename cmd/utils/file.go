@@ -1,28 +1,53 @@
 package utils
 
 import (
+	"github.com/projecteru2/core/types"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
 // ReadAllFiles open each pair in files
-// and returns a map with key as dstfile, value as content of srcfile
-// files: list of srcfile:dstfile
-func ReadAllFiles(files []string) map[string][]byte {
-	m := map[string][]byte{}
+// and returns a map with key as dstfile, value as linux file
+// files: list of srcfile:dstfile:mode:uid:gid
+func ReadAllFiles(files []string) map[string]*types.LinuxFile {
+	m := map[string]*types.LinuxFile{}
 	for _, file := range files {
 		ps := strings.Split(file, ":")
-		if len(ps) != 2 {
-			continue
-		}
+		f := &types.LinuxFile{}
+		var err error
 
-		content, err := ioutil.ReadFile(ps[0])
-		if err != nil {
-			continue
+		switch {
+		case len(ps) >= 5:
+			// srcfile:dstfile:mode:uid:gid
+			var uid, gid int64
+			uid, err = strconv.ParseInt(ps[3], 10, 0)
+			if err != nil {
+				break
+			}
+			gid, err = strconv.ParseInt(ps[3], 10, 0)
+			if err != nil {
+				break
+			}
+			f.UID = int(uid)
+			f.GID = int(gid)
+			fallthrough
+		case len(ps) >= 3:
+			// srcfile:dstfile:mode
+			f.Mode, err = strconv.ParseInt(ps[2], 8, 0)
+			if err != nil {
+				break
+			}
+			fallthrough
+		case len(ps) >= 2:
+			// srcfile:dstfile
+			f.Content, err = ioutil.ReadFile(ps[0])
+			if err != nil {
+				break
+			}
+			m[ps[1]] = f
 		}
-
-		m[ps[1]] = content
 	}
 	return m
 }

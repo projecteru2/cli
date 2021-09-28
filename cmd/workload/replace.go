@@ -171,6 +171,8 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		}
 	}
 
+	content, modes, owners := generateFileOptions(c)
+
 	return &corepb.DeployOptions{
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{
@@ -209,7 +211,9 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
 		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[""]),
-		Data:           utils.ReadAllFiles(c.StringSlice("file")),
+		Data:           content,
+		Modes:          modes,
+		Owners:         owners,
 		User:           c.String("user"),
 		Debug:          c.Bool("debug"),
 		NodesLimit:     0,
