@@ -23,6 +23,46 @@ func Workloads(workloads ...*corepb.Workload) {
 	}
 }
 
+// WorkloadsStatistics describes the statistics of the Workloads
+func WorkloadsStatistics(workloads ...*corepb.Workload) {
+	stat := struct {
+		CPUs    float64
+		Memory  int64
+		Storage int64
+	}{}
+	for _, w := range workloads {
+		stat.CPUs += w.Resource.CpuQuotaRequest
+		stat.Memory += w.Resource.MemoryRequest
+		stat.Storage += w.Resource.StorageRequest
+	}
+
+	describeStatistics := func() {
+		t := table.NewWriter()
+		t.SetOutputMirror(os.Stdout)
+		t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
+
+		rows := [][]string{
+			{fmt.Sprintf("%f", stat.CPUs)},
+			{fmt.Sprintf("%d", stat.Memory)},
+			{fmt.Sprintf("%d", stat.Storage)},
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	}
+
+	switch {
+	case isJSON():
+		describeAsJSON(stat)
+	case isYAML():
+		describeAsYAML(stat)
+	default:
+		describeStatistics()
+	}
+}
+
 func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)

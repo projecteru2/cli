@@ -22,6 +22,8 @@ type listWorkloadsOptions struct {
 	labels     map[string]string
 	matchIPs   []string
 	skipIPs    []string
+	podnames   []string
+	statistics bool
 }
 
 func (o *listWorkloadsOptions) run(ctx context.Context) error {
@@ -54,14 +56,23 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 		ips:       o.matchIPs,
 		skipIPs:   o.skipIPs,
 		nodenames: []string{},
+		podnames:  []string{},
 	}
 	if len(o.nodename) > 0 {
 		f.nodenames = append(f.nodenames, o.nodename)
 	}
+	if len(o.podnames) > 0 {
+		f.podnames = append(f.podnames, o.podnames...)
+	}
 
 	workloads = f.filterIn(workloads)
 
-	describe.Workloads(workloads...)
+	if o.statistics {
+		describe.WorkloadsStatistics(workloads...)
+	} else {
+		describe.Workloads(workloads...)
+	}
+
 	return nil
 }
 
@@ -69,6 +80,7 @@ type filter struct {
 	ips       []string
 	skipIPs   []string
 	nodenames []string
+	podnames  []string
 }
 
 func (wf filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
@@ -100,7 +112,8 @@ func (wf filter) skip(workload *corepb.Workload) bool {
 	}
 
 	return (len(wf.ips) > 0 && !wf.hasIntersection(wf.ips, ips)) ||
-		(len(wf.skipIPs) > 0 && wf.hasIntersection(wf.skipIPs, ips))
+		(len(wf.skipIPs) > 0 && wf.hasIntersection(wf.skipIPs, ips)) ||
+		(len(wf.podnames) > 0 && !wf.hasIntersection(wf.podnames, []string{workload.Podname}))
 }
 
 func (wf filter) hasIntersection(a, b []string) bool {
@@ -133,6 +146,8 @@ func cmdWorkloadList(c *cli.Context) error {
 		limit:      c.Int64("limit"),
 		matchIPs:   c.StringSlice("match-ip"),
 		skipIPs:    c.StringSlice("skip-ip"),
+		podnames:   c.StringSlice("pod"),
+		statistics: c.Bool("statistics"),
 	}
 	return o.run(c.Context)
 }

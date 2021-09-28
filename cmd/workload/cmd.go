@@ -117,6 +117,14 @@ func Command() *cli.Command {
 						Name:  "skip-ip",
 						Usage: "filter out IP",
 					},
+					&cli.StringSliceFlag{
+						Name:  "pod",
+						Usage: "filter by Pod",
+					},
+					&cli.BoolFlag{
+						Name:  "statistics",
+						Usage: "Display the statistics of Workloads",
+					},
 				},
 			},
 			{
