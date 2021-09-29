@@ -4,10 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/juju/errors"
 	"github.com/urfave/cli/v2"
 )
 

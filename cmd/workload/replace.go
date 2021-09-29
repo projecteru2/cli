@@ -10,6 +10,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"

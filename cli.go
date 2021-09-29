@@ -14,6 +14,7 @@ import (
 	"github.com/projecteru2/cli/cmd/workload"
 	"github.com/projecteru2/cli/describe"
 	"github.com/projecteru2/cli/version"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

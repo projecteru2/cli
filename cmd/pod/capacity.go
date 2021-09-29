@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/google/uuid"
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/google/uuid"
+	"github.com/juju/errors"
 	"github.com/urfave/cli/v2"
 )
 

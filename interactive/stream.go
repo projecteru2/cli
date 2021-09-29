@@ -13,9 +13,10 @@ import (
 	"text/template"
 	"unsafe"
 
+	corepb "github.com/projecteru2/core/rpc/gen"
+
 	"github.com/getlantern/deepcopy"
 	"github.com/pkg/term/termios"
-	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )

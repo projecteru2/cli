@@ -6,8 +6,9 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 type capacityOfNode struct {

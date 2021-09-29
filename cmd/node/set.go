@@ -6,9 +6,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

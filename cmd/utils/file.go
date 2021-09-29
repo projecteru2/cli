@@ -1,11 +1,12 @@
 package utils
 
 import (
-	"github.com/projecteru2/core/types"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/projecteru2/core/types"
 )
 
 // ReadAllFiles open each pair in files
