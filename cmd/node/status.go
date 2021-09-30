@@ -4,9 +4,10 @@ import (
 	"context"
 	"time"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/juju/errors"
 	"github.com/urfave/cli/v2"
 )
 

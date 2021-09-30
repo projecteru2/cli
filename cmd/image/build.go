@@ -7,10 +7,11 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	dockerengine "github.com/projecteru2/core/engine/docker"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/juju/errors"
 	"github.com/sethgrid/curse"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"

@@ -4,6 +4,7 @@ import (
 	coreclient "github.com/projecteru2/core/client"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coretypes "github.com/projecteru2/core/types"
+
 	"github.com/urfave/cli/v2"
 )
 

@@ -10,6 +10,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
@@ -171,6 +172,8 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		}
 	}
 
+	content, modes, owners := utils.GenerateFileOptions(c)
+
 	return &corepb.DeployOptions{
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{
@@ -209,7 +212,9 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
 		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[""]),
-		Data:           utils.ReadAllFiles(c.StringSlice("file")),
+		Data:           content,
+		Modes:          modes,
+		Owners:         owners,
 		User:           c.String("user"),
 		Debug:          c.Bool("debug"),
 		NodesLimit:     0,

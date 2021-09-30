@@ -2,6 +2,7 @@ package status
 
 import (
 	"github.com/projecteru2/cli/cmd/utils"
+
 	"github.com/urfave/cli/v2"
 )
 

@@ -3,6 +3,7 @@ package workload
 import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
+
 	"github.com/urfave/cli/v2"
 )
 
@@ -211,7 +212,7 @@ func Command() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local files to workload, can use multiple times. src_path:dst_path",
+						Usage: "copy local files to workload, can use multiple times. src_path:dst_path[:mode[:uid:gid]]",
 					},
 				},
 			},

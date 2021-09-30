@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/juju/errors"
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
 	corepb "github.com/projecteru2/core/rpc/gen"
+
+	"github.com/juju/errors"
 	"github.com/urfave/cli/v2"
 )
 
@@ -91,6 +92,8 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
 
+	content, modes, owners := utils.GenerateFileOptions(c)
+
 	return &corepb.RunAndWaitOptions{
 		Async:        c.Bool("async"),
 		AsyncTimeout: int32(c.Int("async-timeout")),
@@ -122,7 +125,9 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 			Networks:       utils.GetNetworks(network),
 			OpenStdin:      c.Bool("stdin"),
 			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
-			Data:           utils.ReadAllFiles(c.StringSlice("file")),
+			Data:           content,
+			Owners:         owners,
+			Modes:          modes,
 			User:           c.String("user"),
 		},
 	}, nil
