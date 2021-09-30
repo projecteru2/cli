@@ -57,7 +57,7 @@ func cmdWorkloadSend(c *cli.Context) error {
 		return err
 	}
 
-	content, modes, owners := generateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(c)
 	if len(content) == 0 {
 		return fmt.Errorf("files should not be empty")
 	}

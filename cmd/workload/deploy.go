@@ -121,21 +121,6 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 	return nil
 }
 
-func generateFileOptions(c *cli.Context) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
-	data := map[string][]byte{}
-	modes := map[string]*corepb.FileMode{}
-	owners := map[string]*corepb.FileOwner{}
-
-	m := utils.ReadAllFiles(c.StringSlice("file"))
-	for dst, file := range m {
-		data[dst] = file.Content
-		modes[dst] = &corepb.FileMode{Mode: file.Mode}
-		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)}
-	}
-
-	return data, modes, owners
-}
-
 func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 	specURI := c.Args().First()
 	if specURI == "" {
@@ -215,7 +200,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		rawArgsByte = []byte(rawArgs)
 	}
 
-	content, modes, owners := generateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(c)
 
 	return &corepb.DeployOptions{
 		Name: specs.Appname,

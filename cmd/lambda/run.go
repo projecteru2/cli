@@ -76,15 +76,6 @@ func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin b
 	return interactive.HandleStream(stdin, iStream, count, printWorkloadID)
 }
 
-func readAllFileContent(c *cli.Context) map[string][]byte {
-	res := map[string][]byte{}
-	m := utils.ReadAllFiles(c.StringSlice("file"))
-	for dst, file := range m {
-		res[dst] = file.Content
-	}
-	return res
-}
-
 func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 	if c.NArg() <= 0 {
 		return nil, errors.New("[Lambda] no commands")
@@ -100,6 +91,8 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 	if err != nil {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
+
+	content, modes, owners := utils.GenerateFileOptions(c)
 
 	return &corepb.RunAndWaitOptions{
 		Async:        c.Bool("async"),
@@ -132,7 +125,9 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 			Networks:       utils.GetNetworks(network),
 			OpenStdin:      c.Bool("stdin"),
 			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
-			Data:           readAllFileContent(c),
+			Data:           content,
+			Owners:         owners,
+			Modes:          modes,
 			User:           c.String("user"),
 		},
 	}, nil

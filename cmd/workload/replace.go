@@ -172,7 +172,7 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		}
 	}
 
-	content, modes, owners := generateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(c)
 
 	return &corepb.DeployOptions{
 		Name: specs.Appname,

@@ -6,7 +6,10 @@ import (
 	"strconv"
 	"strings"
 
+	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
+
+	"github.com/urfave/cli/v2"
 )
 
 // ReadAllFiles open each pair in files
@@ -51,6 +54,22 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 		}
 	}
 	return m
+}
+
+// GenerateFileOptions returns file options
+func GenerateFileOptions(c *cli.Context) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
+	data := map[string][]byte{}
+	modes := map[string]*corepb.FileMode{}
+	owners := map[string]*corepb.FileOwner{}
+
+	m := ReadAllFiles(c.StringSlice("file"))
+	for dst, file := range m {
+		data[dst] = file.Content
+		modes[dst] = &corepb.FileMode{Mode: file.Mode}
+		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)}
+	}
+
+	return data, modes, owners
 }
 
 // SplitFiles transfers a list of
