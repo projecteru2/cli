@@ -5,13 +5,13 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli/v2"
+
 	"github.com/projecteru2/cli/cmd/utils"
 	corecluster "github.com/projecteru2/core/cluster"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
-
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
 )
 
 type controlWorkloadsOptions struct {
@@ -40,7 +40,7 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 
-		logrus.Infof("[ControlWorkload] %s", coreutils.ShortID(msg.Id))
+		logrus.Infof("[ControlWorkload] %s %s", o.action, coreutils.ShortID(msg.Id))
 		if msg.Hook != nil {
 			logrus.Infof("[ControlWorkload] HookOutput %s", string(msg.Hook))
 		}

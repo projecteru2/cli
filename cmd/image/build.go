@@ -70,6 +70,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			}
 		}
 	}
+	logrus.Infof("build image %s complete", o.opts.Name)
 	return nil
 }
 
