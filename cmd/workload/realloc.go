@@ -55,11 +55,6 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 		return nil, errors.New("Workload ID must be given")
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(c)
-	if err != nil {
-		return nil, err
-	}
-
 	var volumesRequest, volumesLimit []string
 	if v := c.String("volumes-request"); v != "" {
 		volumesRequest = strings.Split(v, ",")
@@ -81,24 +76,18 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 		bindCPUOpt = corepb.TriOpt_FALSE
 	}
 
-	storageRequest, storageLimit, err := storageOption(c)
-	if err != nil {
-		return nil, err
-	}
+	stringFlags := []string{"cpu-request", "cpu-limit", "memory-request", "memory-limit", "storage-request", "storage-limit"}
+	overrideStringFlags := []string{"cpu", "memory", "storage"}
+	resourceOpts := utils.GetResourceOpts(c, stringFlags, nil, nil, overrideStringFlags)
 
-	cpuRequest, cpuLimit := cpuOption(c)
+	if bindCPUOpt == corepb.TriOpt_KEEP {
+		resourceOpts["keep-cpu-bind"] = nil
+	}
+	resourceOpts["volume-request"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: volumesRequest}}}
+	resourceOpts["volume-limit"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: volumesLimit}}}
+
 	return &corepb.ReallocOptions{
-		Id:         id,
-		BindCpuOpt: bindCPUOpt,
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: cpuRequest,
-			CpuQuotaLimit:   cpuLimit,
-			MemoryRequest:   memoryRequest,
-			MemoryLimit:     memoryLimit,
-			VolumesRequest:  volumesRequest,
-			VolumesLimit:    volumesLimit,
-			StorageRequest:  storageRequest,
-			StorageLimit:    storageLimit,
-		},
+		Id:           id,
+		ResourceOpts: resourceOpts,
 	}, nil
 }

@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -83,16 +82,16 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 
 	network := c.String("network")
 
-	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
-	if err != nil {
-		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
-	}
-	memLimit, err := utils.ParseRAMInHuman(c.String("memory"))
-	if err != nil {
-		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
-	}
-
 	content, modes, owners := utils.GenerateFileOptions(c)
+
+	stringFlags := []string{"cpu-request", "cpu", "memory-request", "memory", "storage-request", "storage"}
+	stringSliceFlags := []string{"volume-request", "volume"}
+	resourceOpts := utils.GetResourceOpts(c, stringFlags, stringSliceFlags, nil, nil)
+
+	for _, flag := range []string{"cpu", "memory", "storage", "volume"} {
+		resourceOpts[flag+"-limit"] = resourceOpts[flag]
+		delete(resourceOpts, flag)
+	}
 
 	return &corepb.RunAndWaitOptions{
 		Async:        c.Bool("async"),
@@ -105,17 +104,8 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 				Privileged: c.Bool("privileged"),
 				Dir:        c.String("working-dir"),
 			},
-			ResourceOpts: &corepb.ResourceOptions{
-				CpuQuotaRequest: c.Float64("cpu-request"),
-				CpuQuotaLimit:   c.Float64("cpu"),
-				MemoryRequest:   memRequest,
-				MemoryLimit:     memLimit,
-				StorageRequest:  c.Int64("storage-request"),
-				StorageLimit:    c.Int64("storage"),
-				VolumesRequest:  c.StringSlice("volume-request"),
-				VolumesLimit:    c.StringSlice("volume"),
-			},
-			Podname: c.String("pod"),
+			ResourceOpts: resourceOpts,
+			Podname:      c.String("pod"),
 			NodeFilter: &corepb.NodeFilter{
 				Includes: c.StringSlice("node"),
 			},

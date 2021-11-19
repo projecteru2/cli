@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+
+	"github.com/sanity-io/litter"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 
@@ -26,98 +27,102 @@ func Workloads(workloads ...*corepb.Workload) {
 
 // WorkloadsStatistics describes the statistics of the Workloads
 func WorkloadsStatistics(workloads ...*corepb.Workload) {
-	stat := struct {
-		CPUs    float64
-		Memory  int64
-		Storage int64
-	}{}
-	for _, w := range workloads {
-		stat.CPUs += w.Resource.CpuQuotaRequest
-		stat.Memory += w.Resource.MemoryRequest
-		stat.Storage += w.Resource.StorageRequest
-	}
-
-	describeStatistics := func() {
-		t := table.NewWriter()
-		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
-
-		rows := [][]string{
-			{fmt.Sprintf("%f", stat.CPUs)},
-			{fmt.Sprintf("%d", stat.Memory)},
-			{fmt.Sprintf("%d", stat.Storage)},
-		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
-
-		t.SetStyle(table.StyleLight)
-		t.Render()
-	}
-
-	switch {
-	case isJSON():
-		describeAsJSON(stat)
-	case isYAML():
-		describeAsYAML(stat)
-	default:
-		describeStatistics()
-	}
+	//stat := struct {
+	//	CPUs    float64
+	//	Memory  int64
+	//	Storage int64
+	//}{}
+	//for _, w := range workloads {
+	//	stat.CPUs += w.Resource.CpuQuotaRequest
+	//	stat.Memory += w.Resource.MemoryRequest
+	//	stat.Storage += w.Resource.StorageRequest
+	//}
+	//
+	//describeStatistics := func() {
+	//	t := table.NewWriter()
+	//	t.SetOutputMirror(os.Stdout)
+	//	t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
+	//
+	//	rows := [][]string{
+	//		{fmt.Sprintf("%f", stat.CPUs)},
+	//		{fmt.Sprintf("%d", stat.Memory)},
+	//		{fmt.Sprintf("%d", stat.Storage)},
+	//	}
+	//	t.AppendRows(toTableRows(rows))
+	//	t.AppendSeparator()
+	//
+	//	t.SetStyle(table.StyleLight)
+	//	t.Render()
+	//}
+	//
+	//switch {
+	//case isJSON():
+	//	describeAsJSON(stat)
+	//case isYAML():
+	//	describeAsYAML(stat)
+	//default:
+	//	describeStatistics()
+	//}
+	Workloads(workloads...)
 }
 
 func describeWorkloads(workloads []*corepb.Workload) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name/ID/Pod/Node", "Status", "Volume", "Networks"})
-
-	for _, c := range workloads {
-		// networks
-		ns := []string{}
-		if c.Status != nil {
-			for name, ip := range c.Status.Networks {
-				if published, ok := c.Publish[name]; ok {
-					addresses := strings.Split(published, ",")
-
-					firstLine := fmt.Sprintf("%s: %s", name, addresses[0])
-					ns = append(ns, firstLine)
-
-					if len(addresses) > 1 {
-						format := fmt.Sprintf("%%%ds", len(firstLine))
-						for _, address := range addresses[1:] {
-							ns = append(ns, fmt.Sprintf(format, address))
-						}
-					}
-				} else {
-					ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
-				}
-			}
-		}
-
-		rows := [][]string{
-			{c.Name, c.Id, c.Podname, c.Nodename},
-			{
-				fmt.Sprintf("CPUQuotaRequest: %f", c.Resource.CpuQuotaRequest),
-				fmt.Sprintf("CPUQuotaLimit: %f", c.Resource.CpuQuotaLimit),
-				fmt.Sprintf("CPUMap: %v", c.Resource.Cpu),
-				fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
-				fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
-				fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),
-				fmt.Sprintf("StorageLimit: %v", c.Resource.StorageLimit),
-				fmt.Sprintf("Privileged: %v", c.Privileged),
-			},
-			{
-				fmt.Sprintf("VolumesRequest: %+v", c.Resource.VolumesRequest),
-				fmt.Sprintf("VolumesLimit: %+v", c.Resource.VolumesLimit),
-				fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest),
-				fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit),
-			},
-			ns,
-		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
+	//t := table.NewWriter()
+	//t.SetOutputMirror(os.Stdout)
+	//t.AppendHeader(table.Row{"Name/ID/Pod/Node", "Status", "Volume", "Networks"})
+	//
+	//for _, c := range workloads {
+	//	// networks
+	//	ns := []string{}
+	//	if c.Status != nil {
+	//		for name, ip := range c.Status.Networks {
+	//			if published, ok := c.Publish[name]; ok {
+	//				addresses := strings.Split(published, ",")
+	//
+	//				firstLine := fmt.Sprintf("%s: %s", name, addresses[0])
+	//				ns = append(ns, firstLine)
+	//
+	//				if len(addresses) > 1 {
+	//					format := fmt.Sprintf("%%%ds", len(firstLine))
+	//					for _, address := range addresses[1:] {
+	//						ns = append(ns, fmt.Sprintf(format, address))
+	//					}
+	//				}
+	//			} else {
+	//				ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+	//			}
+	//		}
+	//	}
+	//
+	//	rows := [][]string{
+	//		{c.Name, c.Id, c.Podname, c.Nodename},
+	//		{
+	//			fmt.Sprintf("CPUQuotaRequest: %f", c.Resource.CpuQuotaRequest),
+	//			fmt.Sprintf("CPUQuotaLimit: %f", c.Resource.CpuQuotaLimit),
+	//			fmt.Sprintf("CPUMap: %v", c.Resource.Cpu),
+	//			fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
+	//			fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
+	//			fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),
+	//			fmt.Sprintf("StorageLimit: %v", c.Resource.StorageLimit),
+	//			fmt.Sprintf("Privileged: %v", c.Privileged),
+	//		},
+	//		{
+	//			fmt.Sprintf("VolumesRequest: %+v", c.Resource.VolumesRequest),
+	//			fmt.Sprintf("VolumesLimit: %+v", c.Resource.VolumesLimit),
+	//			fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest),
+	//			fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit),
+	//		},
+	//		ns,
+	//	}
+	//	t.AppendRows(toTableRows(rows))
+	//	t.AppendSeparator()
+	//}
+	//
+	//t.SetStyle(table.StyleLight)
+	//t.Render()
+	for _, workload := range workloads {
+		litter.Dump(workload)
 	}
-
-	t.SetStyle(table.StyleLight)
-	t.Render()
 }
 
 // WorkloadStatuses describes a list of WorkloadStatus

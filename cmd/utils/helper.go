@@ -8,6 +8,8 @@ import (
 
 	"github.com/docker/go-units"
 	"github.com/urfave/cli/v2"
+
+	pb "github.com/projecteru2/core/rpc/gen"
 )
 
 // GetNetworks returns a networkmode -> ip map
@@ -78,4 +80,25 @@ func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
 		}
 		return nil
 	}
+}
+
+// GetResourceOpts generates resource opts from a cli
+func GetResourceOpts(c *cli.Context, stringFlags, stringSliceFlags, boolFlags, overrideStringFlags []string) map[string]*pb.RawParam {
+	resourceOpts := map[string]*pb.RawParam{}
+
+	for _, flag := range stringFlags {
+		resourceOpts[flag] = &pb.RawParam{Value: &pb.RawParam_Str{Str: c.String(flag)}}
+	}
+	for _, flag := range stringSliceFlags {
+		resourceOpts[flag] = &pb.RawParam{Value: &pb.RawParam_StringSlice{StringSlice: &pb.StringSlice{Slice: c.StringSlice(flag)}}} // gross!
+	}
+	for _, flag := range boolFlags {
+		resourceOpts[flag] = nil
+	}
+	for _, flag := range overrideStringFlags {
+		if c.IsSet(flag) {
+			resourceOpts[flag] = &pb.RawParam{Value: &pb.RawParam_Str{Str: c.String(flag)}}
+		}
+	}
+	return resourceOpts
 }

@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
@@ -14,29 +13,16 @@ import (
 )
 
 type capacityPodOptions struct {
-	client    corepb.CoreRPCClient
-	podname   string   // podname
-	nodenames []string // node white list
-
-	cpu     float64
-	cpuBind bool
-	memory  int64
-	storage int64
+	client       corepb.CoreRPCClient
+	podname      string   // podname
+	nodenames    []string // node white list
+	resourceOpts map[string]*corepb.RawParam
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
 	opts := &corepb.DeployOptions{
 		// resource definitions
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaLimit:   o.cpu,
-			CpuQuotaRequest: o.cpu,
-			CpuBind:         o.cpuBind,
-			MemoryLimit:     o.memory,
-			MemoryRequest:   o.memory,
-			StorageLimit:    o.storage,
-			StorageRequest:  o.storage,
-		},
-
+		ResourceOpts: o.resourceOpts,
 		// deploy options
 		Entrypoint: &corepb.EntrypointOptions{
 			Name: uuid.New().String(),
@@ -68,25 +54,15 @@ func cmdPodCapacity(c *cli.Context) error {
 		return errors.New("Pod name must be given")
 	}
 
-	mem, err := utils.ParseRAMInHuman(c.String("memory"))
-	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse memory failed %v", err)
-	}
-
-	storage, err := utils.ParseRAMInHuman(c.String("storage"))
-	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse storage failed %v", err)
-	}
+	stringFlags := []string{"cpu", "memory", "storage"}
+	boolFlags := []string{"cpu-bind"}
+	resourceOpts := utils.GetResourceOpts(c, stringFlags, nil, boolFlags, nil)
 
 	o := &capacityPodOptions{
-		client:    client,
-		podname:   name,
-		nodenames: c.StringSlice("nodename"),
-
-		cpu:     c.Float64("cpu"),
-		cpuBind: c.Bool("cpu-bind"),
-		memory:  mem,
-		storage: storage,
+		client:       client,
+		podname:      name,
+		nodenames:    c.StringSlice("nodename"),
+		resourceOpts: resourceOpts,
 	}
 	return o.run(c.Context)
 }

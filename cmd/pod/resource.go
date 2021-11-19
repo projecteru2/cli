@@ -45,18 +45,19 @@ func op(op string, left, right float64) bool {
 }
 
 func attr(nr *corepb.NodeResource, name string) float64 {
-	switch {
-	case name == "cpu":
-		return nr.CpuPercent
-	case name == "memory":
-		return nr.MemoryPercent
-	case name == "storage":
-		return nr.StoragePercent
-	case name == "volume":
-		return nr.VolumePercent
-	default:
-		return 0
-	}
+	//switch {
+	//case name == "cpu":
+	//	return nr.CpuPercent
+	//case name == "memory":
+	//	return nr.MemoryPercent
+	//case name == "storage":
+	//	return nr.StoragePercent
+	//case name == "volume":
+	//	return nr.VolumePercent
+	//default:
+	//	return 0
+	//}
+	return 0
 }
 
 type resourcePodOptions struct {

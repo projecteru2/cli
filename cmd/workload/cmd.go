@@ -419,20 +419,20 @@ func Command() *cli.Command {
 						Usage: "SDN name or host mode",
 						Value: "host",
 					},
-					&cli.Float64Flag{
+					&cli.StringFlag{
 						Name:  "cpu-request",
 						Usage: "how many cpu to request",
-						Value: 0,
+						Value: "0",
 					},
-					&cli.Float64Flag{
+					&cli.StringFlag{
 						Name:  "cpu-limit",
 						Usage: "how many cpu to limit; can specify limit without request",
-						Value: 1.0,
+						Value: "1.0",
 					},
-					&cli.Float64Flag{
+					&cli.StringFlag{
 						Name:  "cpu",
 						Usage: "shortcut for cpu-request/limit, set them equally to this value",
-						Value: 1.0,
+						Value: "1.0",
 					},
 					&cli.StringFlag{
 						Name:  "memory-request",

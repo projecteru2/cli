@@ -198,12 +198,12 @@ func Command() *cli.Command {
 						Usage: "key file of docker server, like /etc/docker/tls/client.key",
 						Value: "",
 					},
-					&cli.IntFlag{
+					&cli.StringFlag{
 						Name:        "cpu",
 						Usage:       "cpu count",
 						DefaultText: "total cpu",
 					},
-					&cli.IntFlag{
+					&cli.StringFlag{
 						Name:        "share",
 						Usage:       "share count",
 						DefaultText: "defined in core",

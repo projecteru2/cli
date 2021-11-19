@@ -100,7 +100,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
-		logrus.Infof("[Replace] New workload %s, cpu %v, quotaRequest %v, quotaLimit %v, memRequest %v, memLimit %v", createMsg.Name, createMsg.Resource.Cpu, createMsg.Resource.CpuQuotaRequest, createMsg.Resource.CpuQuotaLimit, createMsg.Resource.MemoryRequest, createMsg.Resource.MemoryLimit)
+		logrus.Infof("[Replace] New workload %s, resource args %+v", createMsg.Name, createMsg.ResourceArgs)
 		if len(createMsg.Hook) > 0 {
 			logrus.Infof("[Replace] Other output \n%s", createMsg.Hook)
 		}
@@ -174,6 +174,10 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
+	resourceOpts := map[string]*corepb.RawParam{}
+	resourceOpts["volume-request"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: specs.VolumesRequest}}}
+	resourceOpts["volume-limit"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: specs.Volumes}}}
+
 	return &corepb.DeployOptions{
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{
@@ -188,18 +192,8 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Restart:     entrypoint.Restart,
 			Sysctls:     entrypoint.Sysctls,
 		},
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: 0,
-			CpuQuotaLimit:   0,
-			CpuBind:         false,
-			MemoryRequest:   0,
-			MemoryLimit:     0,
-			StorageRequest:  0,
-			StorageLimit:    0,
-			VolumesRequest:  specs.VolumesRequest,
-			VolumesLimit:    specs.Volumes,
-		},
-		Podname: c.String("pod"),
+		ResourceOpts: resourceOpts,
+		Podname:      c.String("pod"),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: c.StringSlice("node"),
 			Labels:   nil,

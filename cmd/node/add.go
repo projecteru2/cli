@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
@@ -139,73 +138,18 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	share := c.Int("share")
-	if share == 0 {
-		share = 100
-	}
-
-	var (
-		err             error
-		memory, storage int64
-	)
-	if memory, err = utils.ParseRAMInHuman(c.String("memory")); err != nil {
-		return nil, err
-	}
-	if storage, err = utils.ParseRAMInHuman(c.String("storage")); err != nil {
-		return nil, err
-	}
-
-	cpu := c.Int("cpu")
-
-	numa := map[string]string{}
-	numaMemory := map[string]int64{}
-
-	for index, cpuList := range c.StringSlice("numa-cpu") {
-		nodeID := fmt.Sprintf("%d", index)
-		for _, cpuID := range strings.Split(cpuList, ",") {
-			numa[cpuID] = nodeID
-		}
-	}
-
-	for index, memoryStr := range c.StringSlice("numa-memory") {
-		nodeID := fmt.Sprintf("%d", index)
-		memory, err := utils.ParseRAMInHuman(memoryStr)
-		if err != nil {
-			return nil, err
-		}
-		numaMemory[nodeID] = memory
-	}
-
-	volumes := map[string]int64{}
-
-	for _, volume := range c.StringSlice("volumes") {
-		parts := strings.Split(volume, ":")
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid volume")
-		}
-
-		capacity, err := utils.ParseRAMInHuman(parts[1])
-		if err != nil {
-			return nil, err
-		}
-		volumes[parts[0]] = capacity
-	}
+	stringFlags := []string{"share", "cpu", "memory", "storage"}
+	stringSliceFlags := []string{"numa-cpu", "numa-memory", "volumes"}
 
 	labels := utils.SplitEquality(c.StringSlice("label"))
 	return &corepb.AddNodeOptions{
-		Nodename:   nodename,
-		Endpoint:   endpoint,
-		Podname:    podname,
-		Ca:         caContent,
-		Cert:       certContent,
-		Key:        keyContent,
-		Cpu:        int32(cpu),
-		Share:      int32(share),
-		Memory:     memory,
-		Storage:    storage,
-		Labels:     labels,
-		Numa:       numa,
-		NumaMemory: numaMemory,
-		VolumeMap:  volumes,
+		Nodename:     nodename,
+		Endpoint:     endpoint,
+		Podname:      podname,
+		Ca:           caContent,
+		Cert:         certContent,
+		Key:          keyContent,
+		ResourceOpts: utils.GetResourceOpts(c, stringFlags, stringSliceFlags, nil, nil),
+		Labels:       labels,
 	}, nil
 }
