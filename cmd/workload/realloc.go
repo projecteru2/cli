@@ -82,6 +82,8 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 
 	if bindCPUOpt == corepb.TriOpt_KEEP {
 		resourceOpts["keep-cpu-bind"] = nil
+	} else if bindCPUOpt == corepb.TriOpt_TRUE {
+		resourceOpts["cpu-bind"] = nil
 	}
 	resourceOpts["volume-request"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: volumesRequest}}}
 	resourceOpts["volume-limit"] = &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: volumesLimit}}}

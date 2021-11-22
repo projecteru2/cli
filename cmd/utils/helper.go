@@ -93,7 +93,9 @@ func GetResourceOpts(c *cli.Context, stringFlags, stringSliceFlags, boolFlags, o
 		resourceOpts[flag] = &pb.RawParam{Value: &pb.RawParam_StringSlice{StringSlice: &pb.StringSlice{Slice: c.StringSlice(flag)}}} // gross!
 	}
 	for _, flag := range boolFlags {
-		resourceOpts[flag] = nil
+		if c.IsSet(flag) {
+			resourceOpts[flag] = nil
+		}
 	}
 	for _, flag := range overrideStringFlags {
 		if c.IsSet(flag) {
