@@ -419,8 +419,8 @@ github.com/opencontainers/go-digest v0.0.0-20180430190053-c9281466c8b2/go.mod h1
 github.com/opencontainers/go-digest v1.0.0-rc1/go.mod h1:cMLVZDEM3+U2I4VmLI6N8jQYUd2OVphdqWwCJHrFt2s=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
-github.com/opencontainers/image-spec v1.0.1 h1:JMemWkRwHx4Zj+fVxWoMCFm/8sYGGrUVojFA6h/TRcI=
-github.com/opencontainers/image-spec v1.0.1/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
+github.com/opencontainers/image-spec v1.0.2 h1:9yCKha/T5XdGtO0q9Q9a6T5NUCsTn/DrBg0D7ufOcFM=
+github.com/opencontainers/image-spec v1.0.2/go.mod h1:BtxoFyWECRxE4U/7sNtV5W15zMzWCbyJoFRP3s7yZA0=
 github.com/opencontainers/runc v0.0.0-20190115041553-12f6a991201f/go.mod h1:qT5XzbpPznkRYVz/mWwUaVBUv2rmF59PVA73FjuZG0U=
 github.com/opencontainers/runc v1.0.0-rc95 h1:RMuWVfY3E1ILlVsC3RhIq38n4sJtlOFwU9gfFZSqrd0=
 github.com/opencontainers/runc v1.0.0-rc95/go.mod h1:z+bZxa/+Tz/FmYVWkhUajJdzFeOqjc5vrqskhVyHGUM=
@@ -444,9 +444,9 @@ github.com/pkg/term v1.1.0/go.mod h1:E25nymQcrSllhX42Ok8MRm1+hyBdHY0dCeiKZ9jpNGw
 github.com/pmezard/go-difflib v0.0.0-20151028094244-d8ed2627bdf0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/posener/complete v1.1.1/go.mod h1:em0nMJCgc9GFtwrmVmEMR/ZL6WyhyjMBndrE9hABlRI=
-github.com/projecteru2/core v0.0.0-20210923162924-912e9f1d49aa h1:/wxjr8H+dpYBNwqPPUiwbIWZpMYYPCtQ6iU5WvgTEXk=
-github.com/projecteru2/core v0.0.0-20210923162924-912e9f1d49aa/go.mod h1:/7fZaf8yXd353d1tDX9KwvXMkptauKGe4zhIpqNetj8=
-github.com/projecteru2/libyavirt v0.0.0-20210920022816-abc7aa0cf6ae/go.mod h1:FOc+hWBMLsMrmx5p3/moizKeSomedZPNwB6LhS+kEnE=
+github.com/projecteru2/core v0.0.0-20211123023700-4c093d1c5b6a h1:04lfeJG46ldlC3gV1FEOyg1TvmKnIQ6c4tlCWX+lDYw=
+github.com/projecteru2/core v0.0.0-20211123023700-4c093d1c5b6a/go.mod h1:pvAHWsHBU+qMK3KX2kL8J0y8lx729bZOltIAGRL/UHU=
+github.com/projecteru2/libyavirt v0.0.0-20211112023512-fbd788e688d5/go.mod h1:FOc+hWBMLsMrmx5p3/moizKeSomedZPNwB6LhS+kEnE=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v0.9.3/go.mod h1:/TN21ttK/J9q6uSwhBd54HahCDft0ttaMvbicHlPoso=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=

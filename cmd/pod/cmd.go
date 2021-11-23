@@ -112,6 +112,15 @@ func Command() *cli.Command {
 						Name:  "label",
 						Usage: "labels to filter, e.g, a=1, b=2",
 					},
+					&cli.IntFlag{
+						Name:  "timeout",
+						Usage: "timeout in second, default value is 10",
+						Value: 10,
+					},
+					&cli.BoolFlag{
+						Name:  "show-info",
+						Usage: "show node info",
+					},
 				},
 			},
 			{

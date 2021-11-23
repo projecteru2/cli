@@ -19,10 +19,12 @@ const (
 )
 
 type listPodNodesOptions struct {
-	client corepb.CoreRPCClient
-	name   string
-	filter string
-	labels map[string]string
+	client          corepb.CoreRPCClient
+	name            string
+	filter          string
+	labels          map[string]string
+	timeoutInSecond int32
+	showInfo        bool
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
@@ -34,18 +36,20 @@ func (o *listPodNodesOptions) run(ctx context.Context) error {
 
 func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 	resp1, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
-		Podname: o.name,
-		All:     true,
-		Labels:  o.labels,
+		Podname:         o.name,
+		All:             true,
+		Labels:          o.labels,
+		TimeoutInSecond: o.timeoutInSecond,
 	})
 	if err != nil {
 		return err
 	}
 
 	resp2, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
-		Podname: o.name,
-		All:     false,
-		Labels:  o.labels,
+		Podname:         o.name,
+		All:             false,
+		Labels:          o.labels,
+		TimeoutInSecond: o.timeoutInSecond,
 	})
 	if err != nil {
 		return err
@@ -64,7 +68,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		nodes = append(nodes, node)
 	}
 
-	describe.Nodes(nodes...)
+	o.describeNodes(nodes)
 	return nil
 }
 
@@ -72,16 +76,25 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	// filter == all, list all nodes
 	// filter == up, list available nodes only
 	resp, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
-		Podname: o.name,
-		All:     o.filter == all,
-		Labels:  o.labels,
+		Podname:         o.name,
+		All:             o.filter == all,
+		Labels:          o.labels,
+		TimeoutInSecond: o.timeoutInSecond,
 	})
 	if err != nil {
 		return err
 	}
 
-	describe.Nodes(resp.GetNodes()...)
+	o.describeNodes(resp.GetNodes())
 	return nil
+}
+
+func (o *listPodNodesOptions) describeNodes(nodes []*corepb.Node) {
+	if o.showInfo {
+		describe.NodesWithInfo(nodes...)
+	} else {
+		describe.Nodes(nodes...)
+	}
 }
 
 func cmdPodListNodes(c *cli.Context) error {
@@ -96,10 +109,12 @@ func cmdPodListNodes(c *cli.Context) error {
 	}
 
 	o := &listPodNodesOptions{
-		client: client,
-		name:   c.Args().First(),
-		filter: filter,
-		labels: utils.SplitEquality(c.StringSlice("label")),
+		client:          client,
+		name:            c.Args().First(),
+		filter:          filter,
+		labels:          utils.SplitEquality(c.StringSlice("label")),
+		timeoutInSecond: int32(c.Int("timeout")),
+		showInfo:        c.Bool("show-info"),
 	}
 	return o.run(c.Context)
 }

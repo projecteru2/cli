@@ -21,14 +21,30 @@ func Nodes(nodes ...*corepb.Node) {
 	case isYAML():
 		describeAsYAML(nodes)
 	default:
-		describeNodes(nodes)
+		describeNodes(nodes, false)
 	}
 }
 
-func describeNodes(nodes []*corepb.Node) {
+// NodesWithInfo describes a list of Node with their info
+func NodesWithInfo(nodes ...*corepb.Node) {
+	switch {
+	case isJSON():
+		describeAsJSON(nodes)
+	case isYAML():
+		describeAsYAML(nodes)
+	default:
+		describeNodes(nodes, true)
+	}
+}
+
+func describeNodes(nodes []*corepb.Node, showInfo bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage"})
+	if showInfo {
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage", "Info"})
+	} else {
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage"})
+	}
 
 	for _, node := range nodes {
 		totalVolumeCap := int64(0)
@@ -50,6 +66,9 @@ func describeNodes(nodes []*corepb.Node) {
 			{fmt.Sprintf("%d / %d bytes", node.MemoryUsed, node.InitMemory)},
 			{fmt.Sprintf("%d / %d bytes", node.VolumeUsed, totalVolumeCap)},
 			{fmt.Sprintf("%d / %d bytes", node.StorageUsed, node.InitStorage)},
+		}
+		if showInfo {
+			rows = append(rows, []string{node.Info})
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
