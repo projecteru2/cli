@@ -21,3 +21,5 @@ require (
 	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
 	gopkg.in/yaml.v2 v2.4.0
 )
+
+replace github.com/projecteru2/core => github.com/aceralon/core v0.0.0-20211210073321-bb68d882cf88

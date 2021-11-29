@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
+
 	dockerengine "github.com/projecteru2/core/engine/docker"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
@@ -37,10 +38,12 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			break
 		}
 		if err != nil {
+			fmt.Printf("Build failed: %s\tErrorDetail: %s\n", msg.Error, msg.ErrorDetail)
 			return err
 		}
 
 		if msg.Error != "" { // nolint
+			fmt.Printf("Build failed: %s\tErrorDetail: %s\n", msg.Error, msg.ErrorDetail)
 			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
@@ -70,7 +73,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			}
 		}
 	}
-	logrus.Infof("build image %s complete", o.opts.Name)
+	fmt.Printf("build image %s complete\n", o.opts.Name)
 	return nil
 }
 
