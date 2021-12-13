@@ -5,50 +5,51 @@
 - [Some Terms](#some-terms)
 - [Global Options](#global-options)
 - [Sub Commands](#sub-commands)
-  - [Core Sub Commands](#core-sub-commands)
-    - [info](#info)
-  - [Image Sub Commands](#image-sub-commands)
-    - [build](#build)
-    - [cache](#cache)
-    - [remove](#remove)
-  - [Lambda Sub Commands](#lambda-sub-commands)
-  - [Node Sub Commands](#node-sub-commands)
-    - [add](#add)
-    - [remove](#remove-1)
-    - [get](#get)
-    - [set](#set)
-    - [workloads, containers](#workloads--containers)
-    - [up](#up)
-    - [down](#down)
-    - [set-status](#set-status)
-    - [watch-status](#watch-status)
-    - [resource](#resource)
-  - [Pod Sub Commands](#pod-sub-commands)
-    - [add](#add-1)
-    - [list](#list)
-    - [remove](#remove-2)
-    - [resource](#resource-1)
-    - [capacity](#capacity)
-    - [nodes](#nodes)
-    - [networks](#networks)
-  - [Status Sub Commands](#status-sub-commands)
-  - [Workload / Container Sub Commands](#workload---container-sub-commands)
-    - [get](#get-1)
-    - [logs](#logs)
-    - [get-status](#get-status)
-    - [set-status](#set-status-1)
-    - [list](#list-1)
-    - [stop](#stop)
-    - [start](#start)
-    - [restart](#restart)
-    - [remove](#remove-3)
-    - [copy](#copy)
-    - [send](#send)
-    - [dissociate](#dissociate)
-    - [realloc](#realloc)
-    - [exec](#exec)
-    - [deploy](#deploy)
-    - [replace](#replace)
+    - [Core Sub Commands](#core-sub-commands)
+        - [info](#info)
+    - [Image Sub Commands](#image-sub-commands)
+        - [build](#build)
+        - [cache](#cache)
+        - [remove](#remove)
+        - [list](#list)
+    - [Lambda Sub Commands](#lambda-sub-commands)
+    - [Node Sub Commands](#node-sub-commands)
+        - [add](#add)
+        - [remove](#remove-1)
+        - [get](#get)
+        - [set](#set)
+        - [workloads, containers](#workloads--containers)
+        - [up](#up)
+        - [down](#down)
+        - [set-status](#set-status)
+        - [watch-status](#watch-status)
+        - [resource](#resource)
+    - [Pod Sub Commands](#pod-sub-commands)
+        - [add](#add-1)
+        - [list](#list-1)
+        - [remove](#remove-2)
+        - [resource](#resource-1)
+        - [capacity](#capacity)
+        - [nodes](#nodes)
+        - [networks](#networks)
+    - [Status Sub Commands](#status-sub-commands)
+    - [Workload / Container Sub Commands](#workload---container-sub-commands)
+        - [get](#get-1)
+        - [logs](#logs)
+        - [get-status](#get-status)
+        - [set-status](#set-status-1)
+        - [list](#list-2)
+        - [stop](#stop)
+        - [start](#start)
+        - [restart](#restart)
+        - [remove](#remove-3)
+        - [copy](#copy)
+        - [send](#send)
+        - [dissociate](#dissociate)
+        - [realloc](#realloc)
+        - [exec](#exec)
+        - [deploy](#deploy)
+        - [replace](#replace)
 
 ## Some Terms
 
@@ -56,19 +57,20 @@ Sometimes it confuses users when an option is given as a flag, or a bool value. 
 
 - When you see `flag`, it means you only need to give this option for a `true` value, or don't give for a `false` value.
 
-  - Assume `eru-cli` supports a flag option `--flag-option`, then:
-  - `eru-cli --flag-option` means `--flag-option` is `true`.
-  - `eru-cli` means `--flag-option` is `false`.
+    - Assume `eru-cli` supports a flag option `--flag-option`, then:
+    - `eru-cli --flag-option` means `--flag-option` is `true`.
+    - `eru-cli` means `--flag-option` is `false`.
 
 - When you see `use this option`, it means you give a value to this option, or give this option when it's a flag.
 
-  - Assume `eru-cli` supports `--use-this-option`, then:
-  - `eru-cli --use-this-option tonic` means the value of `--use-this-option` is `tonic`.
-  - `eru-cli --use-this-option muroq` means the value of `--use-this-option` is `muroq`.
-  - `eru-cli` means the value of `--use-this-option` is the default value, if it has a default value.
-  - For flag case, refer to the former one.
+    - Assume `eru-cli` supports `--use-this-option`, then:
+    - `eru-cli --use-this-option tonic` means the value of `--use-this-option` is `tonic`.
+    - `eru-cli --use-this-option muroq` means the value of `--use-this-option` is `muroq`.
+    - `eru-cli` means the value of `--use-this-option` is the default value, if it has a default value.
+    - For flag case, refer to the former one.
 
-- When you see `define this option`, it means you set a value for this option, either via this cli option, or via environment variables.
+- When you see `define this option`, it means you set a value for this option, either via this cli option, or via
+  environment variables.
 
 Also pay attention to the order of components, it should be:
 
@@ -80,58 +82,62 @@ eru-cli [global options] command [command options] [arguments...]
 
 ## Global Options
 
-Global options are used to define the global settings for eru-cli command. Once defined, options are affected to all sub commands.
+Global options are used to define the global settings for eru-cli command. Once defined, options are affected to all sub
+commands.
 
 We currently have these options:
 
 - `--debug`, `-d`
 
-  - This is a flag.
-  - If given, enables debug mode, debug mode prints more detailed information.
-  - Default value is empty, which means you don't use this option, this will disable debug mode.
+    - This is a flag.
+    - If given, enables debug mode, debug mode prints more detailed information.
+    - Default value is empty, which means you don't use this option, this will disable debug mode.
 
 - `--eru`, `-e`
 
-  - This option defines which eru-core you want to use.
-  - Default value is `localhost:5001`
-  - You can also set environment variable `ERU` to define this option.
-  - Note: eru-cli will try to connect to this eru-core instance, but if there're multiple eru-core instances, service discovery will decide which one is the one to use, it may not be the one you defined in this option.
+    - This option defines which eru-core you want to use.
+    - Default value is `localhost:5001`
+    - You can also set environment variable `ERU` to define this option.
+    - Note: eru-cli will try to connect to this eru-core instance, but if there're multiple eru-core instances, service
+      discovery will decide which one is the one to use, it may not be the one you defined in this option.
 
 - `--username`, `-u`
 
-  - This option defines the username of the target eru-core (as defined in `--eru` / `-e`).
-  - If your eru-core instance doesn't require a username, don't use this option.
-  - You can also set environment variable `ERU_USERNAME` to define this option.
+    - This option defines the username of the target eru-core (as defined in `--eru` / `-e`).
+    - If your eru-core instance doesn't require a username, don't use this option.
+    - You can also set environment variable `ERU_USERNAME` to define this option.
 
 - `--password`, `-p`
 
-  - This option defines the password of the target eru-core (as defined in `--eru`/ `-e`).
-  - If your eru-core instance doesn't require a password, dont' use this option.
-  - You can also set environment variable `ERU_PASSWORD` to define this option.
+    - This option defines the password of the target eru-core (as defined in `--eru`/ `-e`).
+    - If your eru-core instance doesn't require a password, dont' use this option.
+    - You can also set environment variable `ERU_PASSWORD` to define this option.
 
 - `--output`, `-o`
 
-  - This option defines the output format of eru-cli.
-  - Possible values are `json`, `yaml`, or don't use this option.
-  - Format `json` will print result in JSON format.
-  - Format `yaml` will print result in Yaml format.
-  - The default value is empty, which means you don't use this option, then the result will be printed as a table.
-  - Table format will only print some user friendly information, for details, `json` / `yaml` format is suggested.
-  - You can also set environment variable `ERU_OUTPUT_FORMAT` to define this option.
+    - This option defines the output format of eru-cli.
+    - Possible values are `json`, `yaml`, or don't use this option.
+    - Format `json` will print result in JSON format.
+    - Format `yaml` will print result in Yaml format.
+    - The default value is empty, which means you don't use this option, then the result will be printed as a table.
+    - Table format will only print some user friendly information, for details, `json` / `yaml` format is suggested.
+    - You can also set environment variable `ERU_OUTPUT_FORMAT` to define this option.
 
 - `--help`, `-h`
 
-  - When this option is used, eru-cli will print help message and exit.
-  - This option is also supported by all the sub commands. Hence when introducing sub commands, we will skip this `--help` / `-h` option.
+    - When this option is used, eru-cli will print help message and exit.
+    - This option is also supported by all the sub commands. Hence when introducing sub commands, we will skip
+      this `--help` / `-h` option.
 
 - `--version`, `-v`
-  - When this option is used, eru-cli will print version and exit.
+    - When this option is used, eru-cli will print version and exit.
 
 ## Sub Commands
 
 ### Core Sub Commands
 
-Core sub commands are started with `core` command. The format should be `eru-cli core [sub command] [command options] [arguments...]`
+Core sub commands are started with `core` command. The format should
+be `eru-cli core [sub command] [command options] [arguments...]`
 
 These sub commands are supported:
 
@@ -173,7 +179,8 @@ $ eru-cli --output json core info
 
 ### Image Sub Commands
 
-Image sub commands are started with `image` command. The format should be `eru-cli image [sub command] [command options] [arguments...]`.
+Image sub commands are started with `image` command. The format should
+be `eru-cli image [sub command] [command options] [arguments...]`.
 
 The image sub commands are only supported by docker engine, systemd and virtual machine are not supported.
 
@@ -182,6 +189,7 @@ These sub commands are supported:
 - `build`
 - `cache`
 - `remove`
+- `list`
 
 #### build
 
@@ -193,69 +201,74 @@ Command options are:
 
 - `--name`
 
-  - Defines the name of the image.
-  - MUST be given
+    - Defines the name of the image.
+    - MUST be given
 
 - `--tag`
 
-  - Defines the tag of the image.
-  - MUST be given
+    - Defines the tag of the image.
+    - MUST be given
 
 - `--raw`
 
-  - This is a flag.
-  - If this option is defined, `eru-cli image build --name ${name} --tag ${tag} path/to/content` acts like `docker build -t ${name}:${tag} path/to/content`.
-  - You need to make sure the content in `path/to/content` is exactly like when you are using `docker build`, for example, there is a default Dockerfile.
-  - This flag conflicts with `--exist`.
+    - This is a flag.
+    - If this option is defined, `eru-cli image build --name ${name} --tag ${tag} path/to/content` acts
+      like `docker build -t ${name}:${tag} path/to/content`.
+    - You need to make sure the content in `path/to/content` is exactly like when you are using `docker build`, for
+      example, there is a default Dockerfile.
+    - This flag conflicts with `--exist`.
 
 - `--exist`
 
-  - This is a flag.
-  - If this option is defined, `eru-cli image build --name ${name} --tag ${tag} ${containerID}` acts like `docker commit ${containerID} ${name}:${tag}`.
-  - This flag conflicts with `--raw`.
-  - This is useful when you want to create an image from existing ERU container.
+    - This is a flag.
+    - If this option is defined, `eru-cli image build --name ${name} --tag ${tag} ${containerID}` acts
+      like `docker commit ${containerID} ${name}:${tag}`.
+    - This flag conflicts with `--raw`.
+    - This is useful when you want to create an image from existing ERU container.
 
 - `--user` and `--uid`
 
-  - Defines the default user and uid of the image, equivalent to `USER` in Dockerfile.
-  - Default value of user is `root`.
-  - Default value of uid is `1`.
+    - Defines the default user and uid of the image, equivalent to `USER` in Dockerfile.
+    - Default value of user is `root`.
+    - Default value of uid is `1`.
 
 - `--stop-signal`
-  - Defines the signal sent to the workload for docker.
-  - Equivalent to `STOPSIGNAL` in Dockerfile.
-  - You can set the signal number or the signal name, `--stop-signal SIGKILL` and `--stop-signal 9` both work.
+    - Defines the signal sent to the workload for docker.
+    - Equivalent to `STOPSIGNAL` in Dockerfile.
+    - You can set the signal number or the signal name, `--stop-signal SIGKILL` and `--stop-signal 9` both work.
 
 Command arguments are:
 
 - `<buildargument>`
 
-  - This argument has multiple meanings.
-  - If `--exist` is defined, this argument refers to a working workload ID, note that workload type can only be docker container currently.
-  - If `--raw` is defined, this argument refers to a path that contains all the files for `docker build` command.
-  - If neither `--exist` nor `--raw` is defined, this argument refers to either a URL contains the specification file, or a path to the specification file.
-  - An example of specification file is:
+    - This argument has multiple meanings.
+    - If `--exist` is defined, this argument refers to a working workload ID, note that workload type can only be docker
+      container currently.
+    - If `--raw` is defined, this argument refers to a path that contains all the files for `docker build` command.
+    - If neither `--exist` nor `--raw` is defined, this argument refers to either a URL contains the specification file,
+      or a path to the specification file.
+    - An example of specification file is:
 
-    ```
-    stages:
-      - test
-      - build
-
-    builds:
-      test:
-        base: tonic/ubuntu:phistage
-        commands:
-          - echo tested
-      build:
-        base: tonic/ubuntu:phistage
-        repo: git@github.com:tonicbupt/phistage.git
-        version: "HEAD"
-        commands:
-          - echo built
-          - echo test > testfile
-        cache:
-          "testfile": "/usr/local/testfile
-    ```
+      ```
+      stages:
+        - test
+        - build
+  
+      builds:
+        test:
+          base: tonic/ubuntu:phistage
+          commands:
+            - echo tested
+        build:
+          base: tonic/ubuntu:phistage
+          repo: git@github.com:tonicbupt/phistage.git
+          version: "HEAD"
+          commands:
+            - echo built
+            - echo test > testfile
+          cache:
+            "testfile": "/usr/local/testfile
+      ```
 
 #### cache
 
@@ -263,25 +276,26 @@ This command will cache an image to all the nodes or pods specified.
 
 The format is `eru-cli image cache [command options] <cacheargument...>`.
 
-The `<cacheargument...>` refers to the images to pull, can be given multiple times, like `eru-cli image cache --podname pod img1 img2 img3`.
+The `<cacheargument...>` refers to the images to pull, can be given multiple times,
+like `eru-cli image cache --podname pod img1 img2 img3`.
 
 Command options are:
 
 - `--nodename`
 
-  - This option can be defined multiple times, like `--nodename n1 --nodename n2`
-  - Defines the name of the node.
-  - If you only want to pre pull an image on some nodes, use this option.
+    - This option can be defined multiple times, like `--nodename n1 --nodename n2`
+    - Defines the name of the node.
+    - If you only want to pre pull an image on some nodes, use this option.
 
 - `--podname`
 
-  - Defines the name of the pod.
-  - If you want to pre pull an image on all nodes of a pod, use this option.
+    - Defines the name of the pod.
+    - If you want to pre pull an image on all nodes of a pod, use this option.
 
 - `--concurrent`
 
-  - Defines how many workers to pull image concurrently.
-  - Default value is `10`.
+    - Defines how many workers to pull image concurrently.
+    - Default value is `10`.
 
 #### remove
 
@@ -289,34 +303,60 @@ This command will remove an image from all the nodes or pods specified.
 
 The format is `eru-cli image remove [command options] <removeargument...>`.
 
-The `<removeargument...>` refers to the images to remove, can be given multiple times, like `eru-cli image remove --podname pod img1 img2 img3`.
+The `<removeargument...>` refers to the images to remove, can be given multiple times,
+like `eru-cli image remove --podname pod img1 img2 img3`.
 
 Command options are:
 
 - `--nodename`
 
-  - This option can be defined multiple times, like `--nodename n1 --nodename n2`
-  - Defines the name of the node.
-  - If you only want to remove an image from some nodes, use this option.
+    - This option can be defined multiple times, like `--nodename n1 --nodename n2`
+    - Defines the name of the node.
+    - If you only want to remove an image from some nodes, use this option.
 
 - `--podname`
 
-  - Defines the name of the pod.
-  - If you want to remove an image from all nodes of a pod, use this option.
+    - Defines the name of the pod.
+    - If you want to remove an image from all nodes of a pod, use this option.
 
 - `--concurrent`
 
-  - Defines how many workers to remove image concurrently.
-  - Default value is `10`.
+    - Defines how many workers to remove image concurrently.
+    - Default value is `10`.
 
 - `--prune`
 
-  - This is a flag.
-  - If this flag is defined, will also remove unused images on the nodes.
+    - This is a flag.
+    - If this flag is defined, will also remove unused images on the nodes.
+
+#### list
+
+This command will list images from a pod or some nodes specified. Either `--nodename` or `--podname` should be set.
+
+The format is `eru-cli image list [command options]`.
+
+Command options are:
+
+- `--nodename`
+
+    - This option can be defined multiple times, like `--nodename n1 --nodename n2`
+    - Defines the name of the node.
+    - If you only want to list images from some nodes, use this option.
+    - Setting this will ignore `--podname`
+
+- `--podname`
+
+    - Defines the name of the pod.
+    - If you want to lis all image from all nodes of a pod, use this option.
+
+- `--filter`
+
+    - To filter the image name.
 
 ### Lambda Sub Commands
 
-Lambda sub commands are started with `lambda` command, and only contains one command: `eru-cli lambda`. The format should be `eru-cli lambda [command options] <commands...>`
+Lambda sub commands are started with `lambda` command, and only contains one command: `eru-cli lambda`. The format
+should be `eru-cli lambda [command options] <commands...>`
 
 `<commands...>` refers to the command to execute, for example, `sh -c "ls ~ && echo done"`.
 
@@ -324,68 +364,74 @@ Command options are:
 
 - `--name`
 
-  - This option defines the name of this lambda.
-  - MUST be given.
+    - This option defines the name of this lambda.
+    - MUST be given.
 
 - `--network`
 
-  - This option defines the network for this lambda workload.
-  - The format can be a single string representing the network name, like `--network calico` or `--network host`,
-  - Or can be a string contains a ":" to specify the network name and IPv4 IP address, like `--network calico:10.233.12.41`.
-  - If this value is not defined, an empty string will be used, the network will depend on the settings of eru-core engine.
+    - This option defines the network for this lambda workload.
+    - The format can be a single string representing the network name, like `--network calico` or `--network host`,
+    - Or can be a string contains a ":" to specify the network name and IPv4 IP address,
+      like `--network calico:10.233.12.41`.
+    - If this value is not defined, an empty string will be used, the network will depend on the settings of eru-core
+      engine.
 
 - `--pod`, `--node`
 
-  - This option defines the pod or the node for this lambda to run.
-  - Note that if pod and node are both defined, will take node for priority. For example if you define `--pod podname --node nodename` and `nodename` doesn't belong to `podname`, `nodename` will still be used while `podname` is ignored.
+    - This option defines the pod or the node for this lambda to run.
+    - Note that if pod and node are both defined, will take node for priority. For example if you
+      define `--pod podname --node nodename` and `nodename` doesn't belong to `podname`, `nodename` will still be used
+      while `podname` is ignored.
 
 - `--env`
 
-  - This option defines the environment variable for this lambda runtime.
-  - This option can be defined multiple times, like `--env A=1 --env B=2 --env C=3`.
+    - This option defines the environment variable for this lambda runtime.
+    - This option can be defined multiple times, like `--env A=1 --env B=2 --env C=3`.
 
 - `--working-dir`, `--working_dir`
 
-  - This option defines the working directory for this lambda runtime.
-  - The default value is `/`.
-  - `--working_dir` is only a compat, it looks so ugly...
+    - This option defines the working directory for this lambda runtime.
+    - The default value is `/`.
+    - `--working_dir` is only a compat, it looks so ugly...
 
 - `--image`
 
-  - This option defines the image for this lambda runtime.
-  - The default value is `alpine:latest`.
+    - This option defines the image for this lambda runtime.
+    - The default value is `alpine:latest`.
 
 - `--count`
 
-  - This option defines how many workloads to run this lambda concurrently.
-  - The default value is `1`, in most cases, you only need one lambda runtime.
+    - This option defines how many workloads to run this lambda concurrently.
+    - The default value is `1`, in most cases, you only need one lambda runtime.
 
 - `--stdin`
 
-  - This is a flag.
-  - If this flag is defined, stdin for this lambda runtime is open, you can interact with this lambda workload.
+    - This is a flag.
+    - If this flag is defined, stdin for this lambda runtime is open, you can interact with this lambda workload.
 
 - `--user`
 
-  - This option defines the user for this lambda runtime.
-  - The default value is `root`.
+    - This option defines the user for this lambda runtime.
+    - The default value is `root`.
 
 - `--file`
 
-  - This option defines the files for lambda runtime.
-  - This option can be defined multiple times, like `--file localpath1:remotepath1 --file path/to/local:path/to/remote`.
-  - Files will be sent to lambda runtime before the execution of commands.
+    - This option defines the files for lambda runtime.
+    - This option can be defined multiple times,
+      like `--file localpath1:remotepath1 --file path/to/local:path/to/remote`.
+    - Files will be sent to lambda runtime before the execution of commands.
 
 - `--async`, `--async-timeout`
 
-  - `--async` is a flag, if it's defined, eru-cli will not wait for the termination of lambda runtime.
-  - If `--async` is defined, you can use `--async-timeout` to define the timeout of this lambda runtime, default value is `30`, which means 30 seconds.
-  - The lambda runtime will terminate after `--async-timeout` seconds.
+    - `--async` is a flag, if it's defined, eru-cli will not wait for the termination of lambda runtime.
+    - If `--async` is defined, you can use `--async-timeout` to define the timeout of this lambda runtime, default value
+      is `30`, which means 30 seconds.
+    - The lambda runtime will terminate after `--async-timeout` seconds.
 
 - `--privileged`, `-p`
-  - This is a flag.
-  - If this option is defined, the extended privileges are given to this lambda runtime.
-  - Default value is `false`, which means if you don't use this option, no more extended privileges are given.
+    - This is a flag.
+    - If this option is defined, the extended privileges are given to this lambda runtime.
+    - Default value is `false`, which means if you don't use this option, no more extended privileges are given.
 
 An example is:
 
@@ -411,7 +457,8 @@ mesg n || true
 
 ### Node Sub Commands
 
-Node sub commands are started with `node` command. The format should be `eru-cli node [sub command] [command options] [arguments...]`.
+Node sub commands are started with `node` command. The format should
+be `eru-cli node [sub command] [command options] [arguments...]`.
 
 These sub commands are supported:
 
@@ -438,47 +485,47 @@ Command options are:
 
 - `--nodename`
 
-  - Defines the name of the node.
-  - The default value is the hostname of the server (`$HOSTNAME` in environment variables).
-  - You can use a customized name to over write this.
+    - Defines the name of the node.
+    - The default value is the hostname of the server (`$HOSTNAME` in environment variables).
+    - You can use a customized name to over write this.
 
 - `--endpoint`
 
-  - Defines the endpoint of the node engine.
-  - For docker engine, this should be like `tcp://10.233.10.43:2376`.
-  - For systemd engine, this should be like `systemd://10.233.10.44:22`.
-  - For virtual machines controlled by yavirtd, this should be like `virt-grpc://10.233.10.45:9697`.
+    - Defines the endpoint of the node engine.
+    - For docker engine, this should be like `tcp://10.233.10.43:2376`.
+    - For systemd engine, this should be like `systemd://10.233.10.44:22`.
+    - For virtual machines controlled by yavirtd, this should be like `virt-grpc://10.233.10.45:9697`.
 
 - `--ca`, `--cert`, `--key`
 
-  - Defines the certificates for docker server.
-  - If you are not using docker engine, or your docker engine doesn't require certificates, don't use these options.
+    - Defines the certificates for docker server.
+    - If you are not using docker engine, or your docker engine doesn't require certificates, don't use these options.
 
 - `--cpu`
 
-  - Defines how many cores this node has.
-  - Usually this can be detected automatically, don't set this manually if you have no idea what you are doing.
+    - Defines how many cores this node has.
+    - Usually this can be detected automatically, don't set this manually if you have no idea what you are doing.
 
 - `--share`
 
-  - Defines the share of cores.
-  - Default value is `100`, usually default value is good, no need to change it.
+    - Defines the share of cores.
+    - Default value is `100`, usually default value is good, no need to change it.
 
 - `--memory`
 
-  - Defines how much memory this node has.
-  - Usually this can be detected automatically, don't set this manually if you have no idea what you are doing.
-  - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
+    - Defines how much memory this node has.
+    - Usually this can be detected automatically, don't set this manually if you have no idea what you are doing.
+    - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
 
 - `--label`
 
-  - Defines the labels to this node.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - Defines the labels to this node.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
 
 - `--volumes`
 
-  - Defines the volumes of this node.
-  - This option can be defined multiple times, like `--volumes /data0:500G --volumes /data1:8T`.
+    - Defines the volumes of this node.
+    - This option can be defined multiple times, like `--volumes /data0:500G --volumes /data1:8T`.
 
 An example is:
 
@@ -566,66 +613,69 @@ Command options are:
 
 - `--delta`
 
-  - This is a flag.
-  - If this flag is defined, `--memory`, `--storage`, `--volume` are using delta mode, the values of these options are relative to the current values.
-  - If this flag is not defined, the values of `--memory`, `--storage`, `--volume` are absolute values, regardless of the current values.
-  - This flag is very **IMPORTANT** as it can change the behavior of `eru-cli node set`.
+    - This is a flag.
+    - If this flag is defined, `--memory`, `--storage`, `--volume` are using delta mode, the values of these options are
+      relative to the current values.
+    - If this flag is not defined, the values of `--memory`, `--storage`, `--volume` are absolute values, regardless of
+      the current values.
+    - This flag is very **IMPORTANT** as it can change the behavior of `eru-cli node set`.
 
 - `--mark-workloads-down`
 
-  - This is a flag.
-  - If this flag is defined, all workloads of this node will be marked as unavailable.
-  - It's only a mark, the workloads may still work well.
+    - This is a flag.
+    - If this flag is defined, all workloads of this node will be marked as unavailable.
+    - It's only a mark, the workloads may still work well.
 
 - `--memory`
 
-  - Defines memory of this node.
-  - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
-  - For example, if the current memory is `128G`:
+    - Defines memory of this node.
+    - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
+    - For example, if the current memory is `128G`:
 
-    - `--memory 128G` will make it still `128G`;
-    - `--memory 256G` will make it `256G`;
-    - `--memory 0` will set it to `0`;
-    - `--memory 128G --delta` will make it `256G`;
-    - `--memory 0 --delta` will make it still `128G`;
-    - `--memory -128G --delta` will set it to `0`;
+        - `--memory 128G` will make it still `128G`;
+        - `--memory 256G` will make it `256G`;
+        - `--memory 0` will set it to `0`;
+        - `--memory 128G --delta` will make it `256G`;
+        - `--memory 0 --delta` will make it still `128G`;
+        - `--memory -128G --delta` will set it to `0`;
 
 - `--storage`
 
-  - Defines storage of this node.
-  - Units are supported, you can use `--storage 512G` or `--storage 8T` to set the value.
-  - For example, if the current storage is `1T`:
+    - Defines storage of this node.
+    - Units are supported, you can use `--storage 512G` or `--storage 8T` to set the value.
+    - For example, if the current storage is `1T`:
 
-    - `--storage 1T` will make it still `1T`;
-    - `--storage 2T` will make it `2T`;
-    - `--storage 0` will set it to `0`;
-    - `--storage 1T --delta` will make it `2T`;
-    - `--storage 0 --delta` will make it still `1T`;
-    - `--storage -1T --delta` will set it to `0`;
+        - `--storage 1T` will make it still `1T`;
+        - `--storage 2T` will make it `2T`;
+        - `--storage 0` will set it to `0`;
+        - `--storage 1T --delta` will make it `2T`;
+        - `--storage 0 --delta` will make it still `1T`;
+        - `--storage -1T --delta` will set it to `0`;
 
 - `--volumes`
 
-  - Defines the volumes of this node.
-  - The format is `PATH0:SIZE0,PATH1:SIZE1,...`, for example `--volume /data0:100G,/data1:200G`.
-  - Units are supported, you can use `--volume /data0:512G` or `--volume /data1:8T` to set the value.
-  - For example, if the current volume is `/data0:500G` and `/data1:300G`:
+    - Defines the volumes of this node.
+    - The format is `PATH0:SIZE0,PATH1:SIZE1,...`, for example `--volume /data0:100G,/data1:200G`.
+    - Units are supported, you can use `--volume /data0:512G` or `--volume /data1:8T` to set the value.
+    - For example, if the current volume is `/data0:500G` and `/data1:300G`:
 
-    - `--volume /data0:500G,/data1:300G,/data2:100G` will make it `/data0:500G`, `/data1:300G`, `/data2:100G`;
-    - `--volume /data0:800G,/data1:200G,/data2:100G` will make it `/data0:800G`, `/data1:200G`, `/data2:100G`;
-    - `--volume /data0:0,/data1:0,/data2:0` will make it `/data0:0`, `/data1:0`, `/data2:0`;
-    - `--volume /data0:500G,/data1:300G,/data2:100G --delta` will make it `/data0:1000G`, `/data1:600G`, `/data2:100G`;
-    - `--volume /data0:0,/data1:0,/data2:0 --delta` will make it `/data0:500G`, `/data1:300G`, `/data2:0`;
-    - `--volume /data0:-500G,/data1:-300G,/data2:100G --delta` will make it `/data0:0`, `/data1:0`, `/data2:100G`;
+        - `--volume /data0:500G,/data1:300G,/data2:100G` will make it `/data0:500G`, `/data1:300G`, `/data2:100G`;
+        - `--volume /data0:800G,/data1:200G,/data2:100G` will make it `/data0:800G`, `/data1:200G`, `/data2:100G`;
+        - `--volume /data0:0,/data1:0,/data2:0` will make it `/data0:0`, `/data1:0`, `/data2:0`;
+        - `--volume /data0:500G,/data1:300G,/data2:100G --delta` will make it `/data0:1000G`, `/data1:600G`
+          , `/data2:100G`;
+        - `--volume /data0:0,/data1:0,/data2:0 --delta` will make it `/data0:500G`, `/data1:300G`, `/data2:0`;
+        - `--volume /data0:-500G,/data1:-300G,/data2:100G --delta` will make it `/data0:0`, `/data1:0`, `/data2:100G`;
 
 - `--cpu`
 
-  - Defines the cores and shares of this node.
-  - The format is `CPUNO0:CPUSHARE0,CPUNO1:CPUSHARE1,CPUNO2:CPUSHARE2,...`, for example `--cpu 0:100,1:50,2:50,3:100`
+    - Defines the cores and shares of this node.
+    - The format is `CPUNO0:CPUSHARE0,CPUNO1:CPUSHARE1,CPUNO2:CPUSHARE2,...`, for example `--cpu 0:100,1:50,2:50,3:100`
 
 - `--label`
 
-  - Defines the labels to this node.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - Defines the labels to this node.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
 
 An example is:
 
@@ -672,8 +722,8 @@ Command options are:
 
 - `--label`
 
-  - Defines the labels of the workloads.
-  - This option can be defined multiple times, like `--label runtime=ubuntu --label ERU=1`.
+    - Defines the labels of the workloads.
+    - This option can be defined multiple times, like `--label runtime=ubuntu --label ERU=1`.
 
 An example is:
 
@@ -771,12 +821,13 @@ Command options are:
 
 - `--check`
 
-  - This is a flag.
-  - If this flag is defined, `eru-cli node down` will check if the node is really down before set node to DOWN, if the node is healthy, will not set it to DOWN.
+    - This is a flag.
+    - If this flag is defined, `eru-cli node down` will check if the node is really down before set node to DOWN, if the
+      node is healthy, will not set it to DOWN.
 
 - `--check-timeout`
 
-  - Defines the timeout for checking the node.
+    - Defines the timeout for checking the node.
 
 An example is:
 
@@ -853,14 +904,14 @@ Command options are:
 
 - `--ttl`
 
-  - Defines the TTL of the status data.
-  - Default value is `180`, which means the status data will be alive for 180 seconds, it not refreshed.
+    - Defines the TTL of the status data.
+    - Default value is `180`, which means the status data will be alive for 180 seconds, it not refreshed.
 
 - `--interval`
 
-  - Defines the interval of the set action.
-  - Default value is `0`, which means don't set the status periodically.
-  - If this option is defined, like `--interval 30`, eru-cli will set the status every 30 seconds.
+    - Defines the interval of the set action.
+    - Default value is `0`, which means don't set the status periodically.
+    - If this option is defined, like `--interval 30`, eru-cli will set the status every 30 seconds.
 
 #### watch-status
 
@@ -890,8 +941,8 @@ Command options are:
 
 - `--fix`
 
-  - This is a flag.
-  - If this flag is defined, eru-cli will try to fix the resource inconsistency as well as print the current resource.
+    - This is a flag.
+    - If this flag is defined, eru-cli will try to fix the resource inconsistency as well as print the current resource.
 
 An example is:
 
@@ -908,7 +959,8 @@ This command can sometimes help to fix the resource inconsistency of nodes, it's
 
 ### Pod Sub Commands
 
-Pod sub commands are started with `pod` command. The format should be `eru-cli pod [sub command] [command options] [arguments...]`.
+Pod sub commands are started with `pod` command. The format should
+be `eru-cli pod [sub command] [command options] [arguments...]`.
 
 These sub commands are supported:
 
@@ -932,8 +984,8 @@ Command options are:
 
 - `--desc`
 
-  - Defines the description of the pod.
-  - If not defined, an empty description will be used.
+    - Defines the description of the pod.
+    - If not defined, an empty description will be used.
 
 An example is:
 
@@ -1003,11 +1055,11 @@ Command options are:
 
 - `--filter`
 
-  - Defines the filter to filter resource value.
-  - The filtered resource can be `cpu`, `memory`, `storage`, `volume`.
-  - The comparator can be `<`, `<=`, `>`, `>=`, `==`.
-  - The compare target can be like `40%` or `0.4`.
-  - The default value is `all`, which means no filter is used, will show resource of all nodes.
+    - Defines the filter to filter resource value.
+    - The filtered resource can be `cpu`, `memory`, `storage`, `volume`.
+    - The comparator can be `<`, `<=`, `>`, `>=`, `==`.
+    - The compare target can be like `40%` or `0.4`.
+    - The default value is `all`, which means no filter is used, will show resource of all nodes.
 
 An example is:
 
@@ -1045,28 +1097,28 @@ Command options are:
 
 - `--cpu`, `-c`
 
-  - Defines the CPU the target workload requires.
-  - If the target workload doesn't require an exclusive CPU, define this option to `0` like `--cpu 0`.
+    - Defines the CPU the target workload requires.
+    - If the target workload doesn't require an exclusive CPU, define this option to `0` like `--cpu 0`.
 
 - `--memory`, `-m`, `--mem`
 
-  - Defines the memory the target workload requires.
-  - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
+    - Defines the memory the target workload requires.
+    - Units are supported, you can use `--memory 128G` or `--memory 1024M` to set the value.
 
 - `--storage`, `-s`
 
-  - Defines the storage the target workload requires.
-  - Units are supported, you can use `--storage 500G` or `--storage 1T` to set the value.
+    - Defines the storage the target workload requires.
+    - Units are supported, you can use `--storage 500G` or `--storage 1T` to set the value.
 
 - `--cpu-bind`
 
-  - This is a flag.
-  - If this flag is defined, the CPU will be bound to workloads.
+    - This is a flag.
+    - If this flag is defined, the CPU will be bound to workloads.
 
 - `--nodename`, `--node`, `-n`
 
-  - Defines the nodes to join calculation.
-  - This option can be defined multiple times, like `--nodename node1 --nodename node2`.
+    - Defines the nodes to join calculation.
+    - This option can be defined multiple times, like `--nodename node1 --nodename node2`.
 
 An example is:
 
@@ -1122,16 +1174,16 @@ Command options are:
 
 - `--filter`, `-f`
 
-  - Defines the filter for filtering the nodes.
-  - The value of this option can be defined as `up`, `down`, or `all`, default value is `all`.
-  - `--filter up` will only show those nodes with state UP.
-  - `--filter down` will only show those nodes with state DOWN.
-  - `--filter all` will show all nodes regardless of the state.
+    - Defines the filter for filtering the nodes.
+    - The value of this option can be defined as `up`, `down`, or `all`, default value is `all`.
+    - `--filter up` will only show those nodes with state UP.
+    - `--filter down` will only show those nodes with state DOWN.
+    - `--filter all` will show all nodes regardless of the state.
 
 - `--label`
 
-  - Defines the labels to filter.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - Defines the labels to filter.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
 
 An example is:
 
@@ -1176,8 +1228,8 @@ Command options are:
 
 - `--driver`
 
-  - Defines the network driver to filter.
-  - If this option is not defined, will show all networks.
+    - Defines the network driver to filter.
+    - If this option is not defined, will show all networks.
 
 An example is:
 
@@ -1200,7 +1252,8 @@ root@tonic-eru-test:~# eru-cli pod networks --driver calico muroq
 
 ### Status Sub Commands
 
-Status sub commands are started with `status` command, and only contains one command: `eru-cli status`. The format should be `eru-cli status [command options] <appname>`.
+Status sub commands are started with `status` command, and only contains one command: `eru-cli status`. The format
+should be `eru-cli status [command options] <appname>`.
 
 This command will show the events of the corresponding workloads. Usually used for debugging.
 
@@ -1210,18 +1263,18 @@ Command options are:
 
 - `--entry`
 
-  - Defines the entrypoint of the workloads.
-  - If this option is not defined, will not filter events by entrypoint.
+    - Defines the entrypoint of the workloads.
+    - If this option is not defined, will not filter events by entrypoint.
 
 - `--node`
 
-  - Defines the node of the workloads.
-  - If this option is not defined, will not filter events by node.
+    - Defines the node of the workloads.
+    - If this option is not defined, will not filter events by node.
 
 - `--label`
 
-  - Defines the labels to filter.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - Defines the labels to filter.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
 
 An example is:
 
@@ -1236,9 +1289,11 @@ WARN[2021-06-17 17:32:09] 5b8129e deleted
 
 ### Workload / Container Sub Commands
 
-Workload / container sub commands are started with `workload` command. The format should be `eru-cli workload [sub command] [command options] [arguments...]`.
+Workload / container sub commands are started with `workload` command. The format should
+be `eru-cli workload [sub command] [command options] [arguments...]`.
 
-For legacy reasons, `container` sub commands are still supported, just use `container` instead of `workload`, but will be removed in the future version.
+For legacy reasons, `container` sub commands are still supported, just use `container` instead of `workload`, but will
+be removed in the future version.
 
 These sub commands are supported:
 
@@ -1308,25 +1363,27 @@ Command options are:
 
 - `--tail`
 
-  - Defines the number of lines to show from the end, works just like `tail -n`.
-  - If this option is not defined, will show all logs from the beginning.
+    - Defines the number of lines to show from the end, works just like `tail -n`.
+    - If this option is not defined, will show all logs from the beginning.
 
 - `--since`
 
-  - Defines the timestamp for the log to show.
-  - Works just like `docker logs --since`.
-  - The value can be an absolute timestamp (e.g. `2013-01-02T13:23:37`) or relative time period (e.g. `42m` for 42 minutes).
+    - Defines the timestamp for the log to show.
+    - Works just like `docker logs --since`.
+    - The value can be an absolute timestamp (e.g. `2013-01-02T13:23:37`) or relative time period (e.g. `42m` for 42
+      minutes).
 
 - `--until`
 
-  - Defines the timestamp for the log to show.
-  - Works just like `docker logs --until`.
-  - The value can be an absolute timestamp (e.g. `2013-01-02T13:23:37`) or relative time period (e.g. `42m` for 42 minutes).
+    - Defines the timestamp for the log to show.
+    - Works just like `docker logs --until`.
+    - The value can be an absolute timestamp (e.g. `2013-01-02T13:23:37`) or relative time period (e.g. `42m` for 42
+      minutes).
 
 - `--follow`, `-f`
 
-  - This is a flag.
-  - If this flag is defined, will follow the log output.
+    - This is a flag.
+    - If this flag is defined, will follow the log output.
 
 An example is:
 
@@ -1374,27 +1431,30 @@ Command options are:
 
 - `--running`
 
-  - Defines the running status of workloads.
-  - `--running=true` means set the running status to `true`, `--running=false` means set the running status to `false`.
+    - Defines the running status of workloads.
+    - `--running=true` means set the running status to `true`, `--running=false` means set the running status to `false`
+      .
 
 - `--healthy`
 
-  - Defines the healthy status of workloads.
-  - `--healthy=true` means set the healthy status to `true`, `--healthy=false` means set the healthy status to `false`.
+    - Defines the healthy status of workloads.
+    - `--healthy=true` means set the healthy status to `true`, `--healthy=false` means set the healthy status to `false`
+      .
 
 - `--ttl`
 
-  - Defines the TTL of this status value.
+    - Defines the TTL of this status value.
 
 - `--network`
 
-  - Defines the network for this workload.
-  - The format can be a single string representing the network name, like `--network calico` or `--network host`,
-  - Or can be a string contains a ":" to specify the network name and IPv4 IP address, like `--network calico:10.233.12.41`.
+    - Defines the network for this workload.
+    - The format can be a single string representing the network name, like `--network calico` or `--network host`,
+    - Or can be a string contains a ":" to specify the network name and IPv4 IP address,
+      like `--network calico:10.233.12.41`.
 
 - `--extension`
 
-  - Defines the `extension` field of workload.
+    - Defines the `extension` field of workload.
 
 An example is:
 
@@ -1422,24 +1482,24 @@ Command options are:
 
 - `--entry`
 
-  - Defines the entrypoint of workloads.
-  - If defined, this will be used to filter the workloads.
+    - Defines the entrypoint of workloads.
+    - If defined, this will be used to filter the workloads.
 
 - `--nodename`
 
-  - Defines the node of workloads.
-  - If defined, this will be used to filter the workloads.
+    - Defines the node of workloads.
+    - If defined, this will be used to filter the workloads.
 
 - `--label`
 
-  - Defines the labels to filter.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
-  - If defined, labels will be used to filter workloads, act like `AND` operator.
+    - Defines the labels to filter.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - If defined, labels will be used to filter workloads, act like `AND` operator.
 
 - `--limit`
 
-  - Defines the number of results returned.
-  - If not defined, will show all results.
+    - Defines the number of results returned.
+    - If not defined, will show all results.
 
 An example is:
 
@@ -1481,9 +1541,10 @@ Command options are:
 
 - `--force`
 
-  - This is a flag.
-  - If this option is defined, stopping docker workloads will send SIGTERM then immediately SIGKILL, stopping yavirtd workloads will shutdown immediately.
-  - No matter this option is defined or not, the `BEFORE_STOP` hooks will be executed anyway.
+    - This is a flag.
+    - If this option is defined, stopping docker workloads will send SIGTERM then immediately SIGKILL, stopping yavirtd
+      workloads will shutdown immediately.
+    - No matter this option is defined or not, the `BEFORE_STOP` hooks will be executed anyway.
 
 #### start
 
@@ -1499,8 +1560,8 @@ Command options are:
 
 - `--force`
 
-  - This is a flag.
-  - If this option is defined, any errors from `AFTER_START` hooks will be ignored, otherwise errors will be returned.
+    - This is a flag.
+    - If this option is defined, any errors from `AFTER_START` hooks will be ignored, otherwise errors will be returned.
 
 #### restart
 
@@ -1516,8 +1577,8 @@ Command options are:
 
 - `--force`
 
-  - This is a flag.
-  - Refer to `stop` and `start` for the effect of this flag, this will affect both of them.
+    - This is a flag.
+    - Refer to `stop` and `start` for the effect of this flag, this will affect both of them.
 
 #### remove
 
@@ -1531,13 +1592,13 @@ Command options are:
 
 - `--force`
 
-  - This is a flag.
-  - If this option is defined, the workloads will be removed regardless of their status.
+    - This is a flag.
+    - If this option is defined, the workloads will be removed regardless of their status.
 
 - `--step`
 
-  - Defines the concurrent step.
-  - The default value is `1`, which means the workloads will be removed one by one.
+    - Defines the concurrent step.
+    - The default value is `1`, which means the workloads will be removed one by one.
 
 #### copy
 
@@ -1555,8 +1616,8 @@ Command options are:
 
 - `--dir`
 
-  - Defines the directory to store the copied files.
-  - Default value is `/tmp`.
+    - Defines the directory to store the copied files.
+    - Default value is `/tmp`.
 
 An example is:
 
@@ -1593,8 +1654,9 @@ Command options are:
 
 - `--file`
 
-  - Defines the file to send.
-  - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times, like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
+    - Defines the file to send.
+    - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times,
+      like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
 
 An example is:
 
@@ -1608,7 +1670,9 @@ root@tonic-eru-test:~/copy# docker exec 47ae97833e3042c57763206901b348c1956e5392
 fae mage did 7 flame strikes in combustion!
 ```
 
-Note: The directory of the file path will not be created automatically, hence the path in the workload MUST exist, otherwise you will get an error. For example, if you specify `--file localfile:/a/nonexisting/path/file`, the `/a/nonexisting/path` should be created before.
+Note: The directory of the file path will not be created automatically, hence the path in the workload MUST exist,
+otherwise you will get an error. For example, if you specify `--file localfile:/a/nonexisting/path/file`,
+the `/a/nonexisting/path` should be created before.
 
 #### dissociate
 
@@ -1618,7 +1682,10 @@ The format is `eru-cli workload send [command options] workloadID(s)`.
 
 `workloadID(s)` refers to the IDs of the workloads.
 
-Dissociating the workloads will release the bindings of workloads and ERU system. Sometimes you may find that ERU claims it has the record of a workload, but the workload doesn't exist on any nodes, now dissociating this workload will return its resources back to ERU system without removing it. Later you can remove it or keep it for debugging. Since the actual workload has gone away, we usually remove it.
+Dissociating the workloads will release the bindings of workloads and ERU system. Sometimes you may find that ERU claims
+it has the record of a workload, but the workload doesn't exist on any nodes, now dissociating this workload will return
+its resources back to ERU system without removing it. Later you can remove it or keep it for debugging. Since the actual
+workload has gone away, we usually remove it.
 
 Also sometimes you may want to release a workload from ERU system, you can use this command too.
 
@@ -1636,66 +1703,69 @@ Command options are:
 
 - `--cpu-request`, `--cpu-limit`
 
-  - Defines the CPU request and limit **delta** value.
-  - Default value is `0`, means don't change the CPU request / limit value.
-  - For example, currently the workload has occupied 2 cores:
+    - Defines the CPU request and limit **delta** value.
+    - Default value is `0`, means don't change the CPU request / limit value.
+    - For example, currently the workload has occupied 2 cores:
 
-    - `--cpu-request 1` will reallocate 1 more core to this workload, it currently occupied 3 cores.
-    - `--cpu-request -1` will reallocate to 1 less core to this workload, it currently occupied 1 core.
-    - `--cpu-request 0` will not reallocate cores to this workload, it still occupied 2 cores.
+        - `--cpu-request 1` will reallocate 1 more core to this workload, it currently occupied 3 cores.
+        - `--cpu-request -1` will reallocate to 1 less core to this workload, it currently occupied 1 core.
+        - `--cpu-request 0` will not reallocate cores to this workload, it still occupied 2 cores.
 
 - `--cpu`
 
-  - This is a shortcut for `--cpu-request` and `--cpu-limit`
-  - If you define `--cpu 1`, it's equivalent to `--cpu-request 1 --cpu-limit 1`
+    - This is a shortcut for `--cpu-request` and `--cpu-limit`
+    - If you define `--cpu 1`, it's equivalent to `--cpu-request 1 --cpu-limit 1`
 
 - `--cpu-bind`
 
-  - This is a flag.
-  - If this flag is defined, workloads will bind fixed CPUs.
-  - If workload has already bound to fixed CPUs, this flag takes no effect.
+    - This is a flag.
+    - If this flag is defined, workloads will bind fixed CPUs.
+    - If workload has already bound to fixed CPUs, this flag takes no effect.
 
 - `--cpu-unbind`
 
-  - This is a flag.
-  - If this flag is defined, workloads will release the bound fixed CPUs.
-  - If workload has not bound to any fixed CPUs, this flag takes no effect.
+    - This is a flag.
+    - If this flag is defined, workloads will release the bound fixed CPUs.
+    - If workload has not bound to any fixed CPUs, this flag takes no effect.
 
 - `--memory-request`, `--memory-limit`
 
-  - Defines the memory request and limit **delta** value.
-  - Default value is `0`, means don't change the memory request / limit value.
-  - Units are supported, you can use `--memory-request 128G` or `--memory-limit 1024M` to set the value.
-  - It works just like `--cpu-request` and `--cpu-limit`
+    - Defines the memory request and limit **delta** value.
+    - Default value is `0`, means don't change the memory request / limit value.
+    - Units are supported, you can use `--memory-request 128G` or `--memory-limit 1024M` to set the value.
+    - It works just like `--cpu-request` and `--cpu-limit`
 
 - `--memory`
 
-  - This is a shortcut for `--memory-request` and `--memory-limit`
-  - If you define `--memory 10G`, it's equivalent to `--memory-request 10G --memory-limit 10G`
+    - This is a shortcut for `--memory-request` and `--memory-limit`
+    - If you define `--memory 10G`, it's equivalent to `--memory-request 10G --memory-limit 10G`
 
 - `--storage-request`, `--storage-limit`
 
-  - Defines the storage request and limit **delta** value.
-  - Default value is `0`, means don't change the storage request / limit value.
-  - Units are supported, you can use `--storage-request 128G` or `--storage-limit 1024M` to set the value.
-  - It works just like `--cpu-request` and `--cpu-limit`
+    - Defines the storage request and limit **delta** value.
+    - Default value is `0`, means don't change the storage request / limit value.
+    - Units are supported, you can use `--storage-request 128G` or `--storage-limit 1024M` to set the value.
+    - It works just like `--cpu-request` and `--cpu-limit`
 
 - `--storage`
 
-  - This is a shortcut for `--storage-request` and `--storage-limit`
-  - If you define `--storage 10G`, it's equivalent to `--storage-request 10G --storage-limit 10G`
+    - This is a shortcut for `--storage-request` and `--storage-limit`
+    - If you define `--storage 10G`, it's equivalent to `--storage-request 10G --storage-limit 10G`
 
 - `--volumes-request`, `--volumes-limit`
 
-  - Defines the volumes request and limit **delta** value.
-  - Default value is `0`, means don't change the volumes request / limit value.
-  - Format is `AUTO:{path}:{mode}:{size}` or `{workloadpath}:{hostpath}`
+    - Defines the volumes request and limit **delta** value.
+    - Default value is `0`, means don't change the volumes request / limit value.
+    - Format is `AUTO:{path}:{mode}:{size}` or `{workloadpath}:{hostpath}`
 
-    - `AUTO:/data:rw:-1G` means automatically choose a volume from host and bind it with `/data` in workload, the mode is `rw` which means read and write, the size is decreased by 1G, for how this AUTO thing works, refer to eru-core documents.
-    - `/tmp:/tmp` means still keep `/tmp` to `/tmp` in workload.
+        - `AUTO:/data:rw:-1G` means automatically choose a volume from host and bind it with `/data` in workload, the
+          mode is `rw` which means read and write, the size is decreased by 1G, for how this AUTO thing works, refer to
+          eru-core documents.
+        - `/tmp:/tmp` means still keep `/tmp` to `/tmp` in workload.
 
-  - Units are supported, you can use `--volumes-request AUTO:/data:rw:-10G` or `--volumes-limit AUTO:/data:rw:-10240M` to set the value.
-  - It will increase or decrease the size of the volumes.
+    - Units are supported, you can use `--volumes-request AUTO:/data:rw:-10G` or `--volumes-limit AUTO:/data:rw:-10240M`
+      to set the value.
+    - It will increase or decrease the size of the volumes.
 
 #### exec
 
@@ -1711,18 +1781,19 @@ Command options are:
 
 - `--interactive`, `-i`
 
-  - This is a flag.
-  - If this flag is defined, you can interact from stdin with the workload, otherwise you can only see the output of your defined commands but can not send new commands to the workload.
+    - This is a flag.
+    - If this flag is defined, you can interact from stdin with the workload, otherwise you can only see the output of
+      your defined commands but can not send new commands to the workload.
 
 - `--env`, `-e`
 
-  - Defines the environment variables for this execution.
-  - This option can be defined multiple times, like `--env A=1 --env B=2`.
+    - Defines the environment variables for this execution.
+    - This option can be defined multiple times, like `--env A=1 --env B=2`.
 
 - `--workdir`, `-w`
 
-  - Defines the current working directory for this execution.
-  - Default value is `/`.
+    - Defines the current working directory for this execution.
+    - Default value is `/`.
 
 An example is:
 
@@ -1754,117 +1825,125 @@ Command options are:
 
 - `--dry-run`
 
-  - This is a flag.
-  - If this flag is defined, eru-cli will not really deploy the workloads, but only shows the deployment plan instead.
+    - This is a flag.
+    - If this flag is defined, eru-cli will not really deploy the workloads, but only shows the deployment plan instead.
 
 - `--pod`
 
-  - Defines which pod to deploy.
+    - Defines which pod to deploy.
 
 - `--node`
 
-  - Defines which nodes to deploy.
-  - This option can be defined multiple times, like `--node node1 --node node2`.
-  - When this option is defined, `--pod` is ignored, which means the nodes specified in `--node` don't have to belong to the pod `--pod` specified.
+    - Defines which nodes to deploy.
+    - This option can be defined multiple times, like `--node node1 --node node2`.
+    - When this option is defined, `--pod` is ignored, which means the nodes specified in `--node` don't have to belong
+      to the pod `--pod` specified.
 
 - `--nodelabel`
 
-  - Defines the labels to filter nodes.
-  - This option can be defined multiple times, like `--nodelabel key1=value1 --nodelabel key2=value2`.
-  - If this option is defined, only the nodes with all the labels defined are selected.
+    - Defines the labels to filter nodes.
+    - This option can be defined multiple times, like `--nodelabel key1=value1 --nodelabel key2=value2`.
+    - If this option is defined, only the nodes with all the labels defined are selected.
 
 - `--entry`
 
-  - Defines the entrypoint.
-  - Entrypoint must exist in the specification file.
+    - Defines the entrypoint.
+    - Entrypoint must exist in the specification file.
 
 - `--image`
 
-  - Defines which image to use.
+    - Defines which image to use.
 
 - `--count`
 
-  - Defines how many workloads to deploy.
-  - Default value is `1`.
+    - Defines how many workloads to deploy.
+    - Default value is `1`.
 
 - `--network`
 
-  - Defines the network of workload.
-  - The format can be a single string representing the network name, like `--network calico` or `--network host`,
-  - Or can be a string contains a ":" to specify the network name and IPv4 IP address, like `--network calico:10.233.12.41`.
+    - Defines the network of workload.
+    - The format can be a single string representing the network name, like `--network calico` or `--network host`,
+    - Or can be a string contains a ":" to specify the network name and IPv4 IP address,
+      like `--network calico:10.233.12.41`.
 
 - `--cpu-request`, `--cpu-limit`, `--cpu`
 
-  - Defines the CPU request and limit value.
-  - Default value is `0`, means don't limit CPU request, and share CPU with other workloads.
-  - `--cpu` is a shortcut for `--cpu-request` and `--cpu-limit`, `--cpu 2` is equivalent to `--cpu-request 2 --cpu-limit 2`.
+    - Defines the CPU request and limit value.
+    - Default value is `0`, means don't limit CPU request, and share CPU with other workloads.
+    - `--cpu` is a shortcut for `--cpu-request` and `--cpu-limit`, `--cpu 2` is equivalent
+      to `--cpu-request 2 --cpu-limit 2`.
 
 - `--cpu-bind`
 
-  - This is a flag.
-  - If this flag is defined, workload will bind to fixed CPUs exclusively.
+    - This is a flag.
+    - If this flag is defined, workload will bind to fixed CPUs exclusively.
 
 - `--memory-request`, `--memory-limit`, `--memory`
 
-  - Defines the memory request and limit value.
-  - Default value is `0`, means don't limit memory request, and share memory with other workloads (which may lead to OOM killed).
-  - `--memory` is a shortcut for `--memory-request` and `--memory-limit`, `--memory 2G` is equivalent to `--memory-request 2G --memory-limit 2G`.
-  - Units are supported, you can use `--memory-request 128G` or `--memory-limit 1024M` to set the value.
+    - Defines the memory request and limit value.
+    - Default value is `0`, means don't limit memory request, and share memory with other workloads (which may lead to
+      OOM killed).
+    - `--memory` is a shortcut for `--memory-request` and `--memory-limit`, `--memory 2G` is equivalent
+      to `--memory-request 2G --memory-limit 2G`.
+    - Units are supported, you can use `--memory-request 128G` or `--memory-limit 1024M` to set the value.
 
 - `--storage-request`, `--storage-limit`, `--storage`
 
-  - Defines the storage request and limit value.
-  - Default value is `0`, means don't limit storage request, and share storage with other workloads.
-  - `--storage` is a shortcut for `--storage-request` and `--storage-limit`, `--storage 100G` is equivalent to `--storage-request 100G --storage-limit 100G`.
-  - Units are supported, you can use `--storage-request 100G` or `--storage-limit 1T` to set the value.
+    - Defines the storage request and limit value.
+    - Default value is `0`, means don't limit storage request, and share storage with other workloads.
+    - `--storage` is a shortcut for `--storage-request` and `--storage-limit`, `--storage 100G` is equivalent
+      to `--storage-request 100G --storage-limit 100G`.
+    - Units are supported, you can use `--storage-request 100G` or `--storage-limit 1T` to set the value.
 
 - `--env`
 
-  - Defines the environment variables for this workload.
-  - This option can be defined multiple times, like `--env A=1 --env B=2`.
+    - Defines the environment variables for this workload.
+    - This option can be defined multiple times, like `--env A=1 --env B=2`.
 
 - `--file`
 
-  - Defines the file to send to workloads.
-  - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times, like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
+    - Defines the file to send to workloads.
+    - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times,
+      like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
 
 - `--user`
 
-  - Defines the user to run the process in workloads.
+    - Defines the user to run the process in workloads.
 
 - `--deploy-strategy`
 
-  - Defines the deploy strategy.
-  - Possible choices are `AUTO`, `FILL`, `EACH`, `GLOBAL`.
-  - Default value is `AUTO`.
-  - For details of each strategy, refer to eru-core documents.
+    - Defines the deploy strategy.
+    - Possible choices are `AUTO`, `FILL`, `EACH`, `GLOBAL`.
+    - Default value is `AUTO`.
+    - For details of each strategy, refer to eru-core documents.
 
 - `--auto-replace`
 
-  - This is a flag.
-  - If this flag is defined, eru-core will create workloads if there're none, or replace the workloads of specified `appname`, `entrypoint` with new `image`, and `entrypoint`, etc.
+    - This is a flag.
+    - If this flag is defined, eru-core will create workloads if there're none, or replace the workloads of
+      specified `appname`, `entrypoint` with new `image`, and `entrypoint`, etc.
 
 Command arguments are:
 
 - `<specification-file>`
 
-  - This can be a local path to the file, or a remove URL to the file.
-  - An example of a specification file is like:
+    - This can be a local path to the file, or a remove URL to the file.
+    - An example of a specification file is like:
 
-    ```
-    appname: "test"
-    entrypoints:
-      http:
-        cmd: "python3 -m http.server"
-        restart: always
-        publish:
-          - "8000"
-        healthcheck:
-          tcp_ports:
+      ```
+      appname: "test"
+      entrypoints:
+        http:
+          cmd: "python3 -m http.server"
+          restart: always
+          publish:
             - "8000"
-      ping:
-        cmd: "ping 127.0.0.1"
-    ```
+          healthcheck:
+            tcp_ports:
+              - "8000"
+        ping:
+          cmd: "ping 127.0.0.1"
+      ```
 
 An example is:
 
@@ -1897,70 +1976,76 @@ The format is `eru-cli workload replace [command options] <specification-file>`.
 
 `<specification-file>` refers to the path of local specification file, or a remote URL of specification file.
 
-Replace will replace all workloads filtered by `--pod`, `--node`, `--entry` and `appname` in specification file, with new `--image`, `--count`, `--env`, `--user`... etc.
+Replace will replace all workloads filtered by `--pod`, `--node`, `--entry` and `appname` in specification file, with
+new `--image`, `--count`, `--env`, `--user`... etc.
 
 Command options are:
 
 - `--pod`
 
-  - Defines which pod to filter.
+    - Defines which pod to filter.
 
 - `--node`
 
-  - Defines which nodes to filter.
-  - This option can be defined multiple times, like `--node node1 --node node2`.
-  - When this option is defined, only the workloads on these nodes and also in pod specified by `--pod` will be selected to replace.
+    - Defines which nodes to filter.
+    - This option can be defined multiple times, like `--node node1 --node node2`.
+    - When this option is defined, only the workloads on these nodes and also in pod specified by `--pod` will be
+      selected to replace.
 
 - `--entry`
 
-  - Defines the entrypoint to filter.
-  - Entrypoint must exist in the specification file.
+    - Defines the entrypoint to filter.
+    - Entrypoint must exist in the specification file.
 
 - `--image`
 
-  - Defines new image to use.
+    - Defines new image to use.
 
 - `--count`
 
-  - Defines how many workloads to replace at the sametime.
-  - Default value is `1`, which means workloads are replaced one by one.
+    - Defines how many workloads to replace at the sametime.
+    - Default value is `1`, which means workloads are replaced one by one.
 
 - `--network`
 
-  - Defines the network of workload.
-  - The format can be a single string representing the network name, like `--network calico` or `--network host`,
-  - Or can be a string contains a ":" to specify the network name and IPv4 IP address, like `--network calico:10.233.12.41`.
+    - Defines the network of workload.
+    - The format can be a single string representing the network name, like `--network calico` or `--network host`,
+    - Or can be a string contains a ":" to specify the network name and IPv4 IP address,
+      like `--network calico:10.233.12.41`.
 
 - `--network-inherit`
 
-  - This is a flag.
-  - If this flag is defined, `--network` will be ignored, the original networks are used in new workloads.
-  - This is actually the design target for `replace`.
+    - This is a flag.
+    - If this flag is defined, `--network` will be ignored, the original networks are used in new workloads.
+    - This is actually the design target for `replace`.
 
 - `--env`
 
-  - Defines the environment variables for this workload.
-  - This option can be defined multiple times, like `--env A=1 --env B=2`.
+    - Defines the environment variables for this workload.
+    - This option can be defined multiple times, like `--env A=1 --env B=2`.
 
 - `--file`
 
-  - Defines the file to send to workloads.
-  - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times, like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
+    - Defines the file to send to workloads.
+    - Format is `SRC_PATH:DEST_PATH`, can be defined multiple times,
+      like `--file localfile1:/path/in/workload/file1 --file localfile2:/path/in/workload/file2`
 
 - `--user`
 
-  - Defines the user to run the process in workloads.
+    - Defines the user to run the process in workloads.
 
 - `--label`
 
-  - Defines the labels to filter.
-  - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
-  - If defined, labels will be used to filter workloads, only the workloads with all labels will be selected to replace.
+    - Defines the labels to filter.
+    - This option can be defined multiple times, like `--label rack=rack1 --label cluster=cluster3`.
+    - If defined, labels will be used to filter workloads, only the workloads with all labels will be selected to
+      replace.
 
 - `--copy`
 
-  - Defines the files copied from original workload to new workload.
-  - Format is `SRC_PATH:DEST_PATH`, this option can be defined multiple times, like `--copy /old/path/file1:/new/path/file1 --copy /old/path/file2:/new/path/file2`.
+    - Defines the files copied from original workload to new workload.
+    - Format is `SRC_PATH:DEST_PATH`, this option can be defined multiple times,
+      like `--copy /old/path/file1:/new/path/file1 --copy /old/path/file2:/new/path/file2`.
 
 An example is:
 

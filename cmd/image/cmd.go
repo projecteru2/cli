@@ -103,6 +103,28 @@ func Command() *cli.Command {
 				},
 				Action: utils.ExitCoder(cmdImageClean),
 			},
+			{
+				Name:      "list",
+				Aliases:   []string{"ls"},
+				Usage:     "list image(s) by podname or nodename(s)",
+				ArgsUsage: "[podname/nodenames]",
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "nodename",
+						Usage: "nodename if you just want to list on specific nodes",
+					},
+					&cli.StringFlag{
+						Name:  "podname",
+						Usage: "name of pod, if you want to list on all nodes in one pod",
+					},
+					&cli.StringFlag{
+						Name:     "filter",
+						Usage:    "filter the name of image",
+						Required: false,
+					},
+				},
+				Action: utils.ExitCoder(cmdImageList),
+			},
 		},
 	}
 }
