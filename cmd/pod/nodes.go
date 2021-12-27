@@ -40,6 +40,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		All:             true,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
 	})
 	if err != nil {
 		return err
@@ -50,6 +51,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		All:             false,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
 	})
 	if err != nil {
 		return err
@@ -80,6 +82,7 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 		All:             o.filter == all,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
 	})
 	if err != nil {
 		return err
