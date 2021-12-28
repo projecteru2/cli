@@ -121,6 +121,10 @@ func Command() *cli.Command {
 						Name:  "show-info",
 						Usage: "show node info",
 					},
+					&cli.BoolFlag{
+						Name:  "stream",
+						Usage: "fetch streaming data",
+					},
 				},
 			},
 			{

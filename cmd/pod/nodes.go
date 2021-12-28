@@ -70,7 +70,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		nodes = append(nodes, node)
 	}
 
-	o.describeNodes(nodes)
+	o.describeNodes(describe.ToNodeChan(nodes...))
 	return nil
 }
 
@@ -88,15 +88,15 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 		return err
 	}
 
-	o.describeNodes(resp.GetNodes())
+	o.describeNodes(describe.ToNodeChan(resp.GetNodes()...))
 	return nil
 }
 
-func (o *listPodNodesOptions) describeNodes(nodes []*corepb.Node) {
+func (o *listPodNodesOptions) describeNodes(nodes chan *corepb.Node) {
 	if o.showInfo {
-		describe.NodesWithInfo(nodes...)
+		describe.NodesWithInfo(nodes, false)
 	} else {
-		describe.Nodes(nodes...)
+		describe.Nodes(nodes, false)
 	}
 }
 

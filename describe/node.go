@@ -14,58 +14,61 @@ import (
 
 // Nodes describes a list of Node
 // output format can be json or yaml or table
-func Nodes(nodes ...*corepb.Node) {
+func Nodes(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
 		describeAsJSON(nodes)
 	case isYAML():
 		describeAsYAML(nodes)
 	default:
-		describeNodes(nodes, false)
+		describeNodes(nodes, false, stream)
 	}
 }
 
 // NodesWithInfo describes a list of Node with their info
-func NodesWithInfo(nodes ...*corepb.Node) {
+func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
 		describeAsJSON(nodes)
 	case isYAML():
 		describeAsYAML(nodes)
 	default:
-		describeNodes(nodes, true)
+		describeNodes(nodes, true, stream)
 	}
 }
 
-func describeNodes(nodes []*corepb.Node, showInfo bool) {
+func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	if showInfo {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage", "Info"})
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources", "Info"})
 	} else {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage"})
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources"})
 	}
 
-	for _, node := range nodes {
+	for node := range nodes {
+		status := "DOWN"
+		if !node.Bypass && node.Available {
+			status = "UP"
+		}
+		status += fmt.Sprintf("\nbypass %v\navailable %v", node.Bypass, node.Available)
+
 		totalVolumeCap := int64(0)
 		for _, v := range node.InitVolume {
 			totalVolumeCap += v
 		}
+		resources := strings.Join([]string{
+			fmt.Sprintf("CPU: %.2f/%d", node.CpuUsed, len(node.InitCpu)),
+			fmt.Sprintf("Mem: %d/%d bytes", node.MemoryUsed, node.InitMemory),
+			fmt.Sprintf("Vol: %d / %d bytes", node.VolumeUsed, totalVolumeCap),
+			fmt.Sprintf("Storage: %d / %d bytes", node.StorageUsed, node.InitStorage),
+		}, "\n")
 
-		var status string
-		if !node.Bypass && node.Available {
-			status = "UP"
-		} else {
-			status = "DOWN"
-		}
 		rows := [][]string{
 			{node.Name},
 			{node.Endpoint},
 			{status},
-			{fmt.Sprintf("%.2f / %d", node.CpuUsed, len(node.InitCpu))},
-			{fmt.Sprintf("%d / %d bytes", node.MemoryUsed, node.InitMemory)},
-			{fmt.Sprintf("%d / %d bytes", node.VolumeUsed, totalVolumeCap)},
-			{fmt.Sprintf("%d / %d bytes", node.StorageUsed, node.InitStorage)},
+			{resources},
 		}
 		if showInfo {
 			rows = append(rows, []string{node.Info})
