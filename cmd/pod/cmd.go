@@ -52,6 +52,10 @@ func Command() *cli.Command {
 						Usage:   "filter resource value, can be cpu/memory/storage/volume </<=/>/>=/== 40% or 0.4",
 						Value:   "all",
 					},
+					&cli.BoolFlag{
+						Name:  "stream",
+						Usage: "fetch streaming data",
+					},
 				},
 			},
 			{
