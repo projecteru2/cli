@@ -75,10 +75,14 @@ func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
+		if stream {
+			t.SetStyle(table.StyleLight)
+			t.Render()
+		}
 	}
-
 	t.SetStyle(table.StyleLight)
 	t.Render()
+
 }
 
 // NodeResources describes a list of NodeResource
