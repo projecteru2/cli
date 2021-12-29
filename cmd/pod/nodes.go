@@ -80,7 +80,7 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	// filter == all, list all nodes
 	// filter == up, list available nodes only
 	var ch chan *corepb.Node
-	if o.stream {
+	if o.stream { // nolint
 		resp, err := o.client.PodNodesStream(ctx, &corepb.ListNodesOptions{
 			Podname:         o.name,
 			All:             o.filter == all,

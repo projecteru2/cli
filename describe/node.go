@@ -17,9 +17,9 @@ import (
 func Nodes(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeChAsJSON(nodes)
+		describeChNodeAsJSON(nodes)
 	case isYAML():
-		describeChAsYAML(nodes)
+		describeChNodeAsYAML(nodes)
 	default:
 		describeNodes(nodes, false, stream)
 	}
@@ -29,9 +29,9 @@ func Nodes(nodes chan *corepb.Node, stream bool) {
 func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeChAsJSON(nodes)
+		describeChNodeAsJSON(nodes)
 	case isYAML():
-		describeChAsYAML(nodes)
+		describeChNodeAsYAML(nodes)
 	default:
 		describeNodes(nodes, true, stream)
 	}
@@ -92,9 +92,9 @@ func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 func NodeResources(resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
-		describeChAsJSON(resources)
+		describeChNodeResourceAsJSON(resources)
 	case isYAML():
-		describeChAsYAML(resources)
+		describeChNodeResourceAsYAML(resources)
 	default:
 		describeNodeResources(resources, stream)
 	}

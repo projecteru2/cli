@@ -55,7 +55,13 @@ func describeAsJSON(o interface{}) {
 	fmt.Println(string(j))
 }
 
-func describeChAsJSON[T any](ch chan T) {
+func describeChNodeAsJSON(ch chan *corepb.Node) {
+	for t := range ch {
+		j, _ := json.MarshalIndent(t, "", "  ")
+		fmt.Println(string(j))
+	}
+}
+func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
 	for t := range ch {
 		j, _ := json.MarshalIndent(t, "", "  ")
 		fmt.Println(string(j))
@@ -67,7 +73,13 @@ func describeAsYAML(o interface{}) {
 	fmt.Println(string(y))
 }
 
-func describeChAsYAML[T any](ch chan T) {
+func describeChNodeAsYAML(ch chan *corepb.Node) {
+	for t := range ch {
+		j, _ := yaml.Marshal(t)
+		fmt.Println(string(j))
+	}
+}
+func describeChNodeResourceAsYAML(ch chan *corepb.NodeResource) {
 	for t := range ch {
 		j, _ := yaml.Marshal(t)
 		fmt.Println(string(j))
@@ -86,6 +98,7 @@ func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
 	return ch
 }
 
+// ToNodeResourceChan is to be rewritten using generic
 func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeResource {
 	ch := make(chan *corepb.NodeResource)
 	go func() {

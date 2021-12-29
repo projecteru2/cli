@@ -106,7 +106,7 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
 	var ch chan *corepb.NodeResource
-	if o.stream {
+	if o.stream { // nolint
 		resp, err := o.client.PodResourceStream(ctx, &corepb.GetPodOptions{
 			Name: o.name,
 		})
