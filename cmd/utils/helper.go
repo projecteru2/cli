@@ -79,3 +79,9 @@ func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
 		return nil
 	}
 }
+
+// GetHostname .
+func GetHostname() string {
+	hostname, _ := os.Hostname()
+	return hostname
+}
