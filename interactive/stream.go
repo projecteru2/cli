@@ -86,7 +86,7 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 			if err != nil {
 				return err
 			}
-			command := append(winchCommand, opts...) // nolint
+			command := append(winchCommand, opts...)
 			return iStream.Send(command)
 		}
 
