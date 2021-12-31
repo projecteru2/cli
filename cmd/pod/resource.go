@@ -2,6 +2,7 @@ package pod
 
 import (
 	"context"
+	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -63,12 +64,13 @@ type resourcePodOptions struct {
 	client corepb.CoreRPCClient
 	name   string
 	expr   string
+	stream bool
 }
 
-func (o *resourcePodOptions) filter(nrs []*corepb.NodeResource) ([]*corepb.NodeResource, error) {
+func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.NodeResource, error) {
 	filter := match(o.expr)
 	if len(filter) == 0 {
-		return nrs, nil
+		return ch, nil
 	}
 
 	var (
@@ -88,31 +90,60 @@ func (o *resourcePodOptions) filter(nrs []*corepb.NodeResource) ([]*corepb.NodeR
 		v /= 100
 	}
 
-	rv := []*corepb.NodeResource{}
-	for _, nr := range nrs {
-		l := attr(nr, filter["name"])
-		if !op(filter["op"], l, v) {
-			continue
+	rv := make(chan *corepb.NodeResource)
+	go func() {
+		defer close(rv)
+		for nr := range ch {
+			l := attr(nr, filter["name"])
+			if !op(filter["op"], l, v) {
+				continue
+			}
+			rv <- nr
 		}
-		rv = append(rv, nr)
-	}
+	}()
 	return rv, nil
 }
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
-	resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
-		Name: o.name,
-	})
+	var ch chan *corepb.NodeResource
+	if o.stream { // nolint
+		resp, err := o.client.PodResourceStream(ctx, &corepb.GetPodOptions{
+			Name: o.name,
+		})
+		if err != nil {
+			return err
+		}
+
+		ch = make(chan *corepb.NodeResource)
+		go func() {
+			defer close(ch)
+			for {
+				resource, err := resp.Recv()
+				if err != nil {
+					if err != io.EOF {
+						println(err.Error())
+					}
+					return
+				}
+				ch <- resource
+			}
+		}()
+	} else {
+		resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
+			Name: o.name,
+		})
+		if err != nil {
+			return err
+		}
+		ch = describe.ToNodeResourceChan(resp.NodesResource...)
+	}
+
+	ch, err := o.filter(ch)
 	if err != nil {
 		return err
 	}
 
-	nrs, err := o.filter(resp.NodesResource)
-	if err != nil {
-		return err
-	}
-
-	describe.NodeResources(nrs...)
+	describe.NodeResources(ch, o.stream)
 	return nil
 }
 
@@ -131,6 +162,7 @@ func cmdPodResource(c *cli.Context) error {
 		client: client,
 		name:   name,
 		expr:   c.String("filter"),
+		stream: c.Bool("stream"),
 	}
 	return o.run(c.Context)
 }

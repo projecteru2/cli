@@ -73,7 +73,7 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 		_ = termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
 
 		// capture SIGWINCH and measure window size
-		sigs := make(chan os.Signal)
+		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGWINCH)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()

@@ -27,7 +27,7 @@ func (o *nodeResourceOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.NodeResources(resource)
+	describe.NodeResources(describe.ToNodeResourceChan(resource), false)
 	return nil
 }
 

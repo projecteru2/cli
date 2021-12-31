@@ -14,84 +14,89 @@ import (
 
 // Nodes describes a list of Node
 // output format can be json or yaml or table
-func Nodes(nodes ...*corepb.Node) {
+func Nodes(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeAsJSON(nodes)
+		describeChNodeAsJSON(nodes)
 	case isYAML():
-		describeAsYAML(nodes)
+		describeChNodeAsYAML(nodes)
 	default:
-		describeNodes(nodes, false)
+		describeNodes(nodes, false, stream)
 	}
 }
 
 // NodesWithInfo describes a list of Node with their info
-func NodesWithInfo(nodes ...*corepb.Node) {
+func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeAsJSON(nodes)
+		describeChNodeAsJSON(nodes)
 	case isYAML():
-		describeAsYAML(nodes)
+		describeChNodeAsYAML(nodes)
 	default:
-		describeNodes(nodes, true)
+		describeNodes(nodes, true, stream)
 	}
 }
 
-func describeNodes(nodes []*corepb.Node, showInfo bool) {
+func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	if showInfo {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage", "Info"})
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources", "Info"})
 	} else {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "CPU", "Memory", "Volume", "Storage"})
+		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources"})
 	}
 
-	for _, node := range nodes {
+	for node := range nodes {
+		status := "DOWN"
+		if !node.Bypass && node.Available {
+			status = "UP"
+		}
+		status += fmt.Sprintf("\nbypass %v\navailable %v", node.Bypass, node.Available)
+
 		totalVolumeCap := int64(0)
 		for _, v := range node.InitVolume {
 			totalVolumeCap += v
 		}
+		resources := strings.Join([]string{
+			fmt.Sprintf("CPU: %.2f/%d", node.CpuUsed, len(node.InitCpu)),
+			fmt.Sprintf("Mem: %d/%d bytes", node.MemoryUsed, node.InitMemory),
+			fmt.Sprintf("Vol: %d / %d bytes", node.VolumeUsed, totalVolumeCap),
+			fmt.Sprintf("Storage: %d / %d bytes", node.StorageUsed, node.InitStorage),
+		}, "\n")
 
-		var status string
-		if !node.Bypass && node.Available {
-			status = "UP"
-		} else {
-			status = "DOWN"
-		}
 		rows := [][]string{
 			{node.Name},
 			{node.Endpoint},
 			{status},
-			{fmt.Sprintf("%.2f / %d", node.CpuUsed, len(node.InitCpu))},
-			{fmt.Sprintf("%d / %d bytes", node.MemoryUsed, node.InitMemory)},
-			{fmt.Sprintf("%d / %d bytes", node.VolumeUsed, totalVolumeCap)},
-			{fmt.Sprintf("%d / %d bytes", node.StorageUsed, node.InitStorage)},
+			{resources},
 		}
 		if showInfo {
 			rows = append(rows, []string{node.Info})
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
+		if stream {
+			t.SetStyle(table.StyleLight)
+			t.Render()
+			t.ResetRows()
+		}
 	}
-
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	if !stream {
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	}
 }
 
 // NodeResources describes a list of NodeResource
 // output format can be json or yaml or table
-func NodeResources(resources ...*corepb.NodeResource) {
-	for _, resource := range resources {
-		checkNaNForResource(resource)
-	}
-
+func NodeResources(resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
-		describeAsJSON(resources)
+		describeChNodeResourceAsJSON(resources)
 	case isYAML():
-		describeAsYAML(resources)
+		describeChNodeResourceAsYAML(resources)
 	default:
-		describeNodeResources(resources)
+		describeNodeResources(resources, stream)
 	}
 }
 
@@ -110,31 +115,32 @@ func checkNaNForResource(resource *corepb.NodeResource) {
 	}
 }
 
-func describeNodeResources(resources []*corepb.NodeResource) {
+func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})
 
-	nodeRow := []string{}
-	cpuRow := []string{}
-	memoryRow := []string{}
-	storageRow := []string{}
-	volumeRow := []string{}
-	diffsRow := []string{}
-	for _, resource := range resources {
-		nodeRow = append(nodeRow, resource.Name)
-		cpuRow = append(cpuRow, fmt.Sprintf("%.2f%%", resource.CpuPercent*100))
-		memoryRow = append(memoryRow, fmt.Sprintf("%.2f%%", resource.MemoryPercent*100))
-		storageRow = append(storageRow, fmt.Sprintf("%.2f%%", resource.StoragePercent*100))
-		volumeRow = append(volumeRow, fmt.Sprintf("%.2f%%", resource.VolumePercent*100))
-		diffsRow = append(diffsRow, strings.Join(resource.Diffs, "\n"))
+	for resource := range resources {
+		rows := [][]string{
+			{resource.Name},
+			{fmt.Sprintf("%.2f%%", resource.CpuPercent*100)},
+			{fmt.Sprintf("%.2f%%", resource.MemoryPercent*100)},
+			{fmt.Sprintf("%.2f%%", resource.StoragePercent*100)},
+			{fmt.Sprintf("%.2f%%", resource.VolumePercent*100)},
+			{strings.Join(resource.Diffs, "\n")},
+		}
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+		if stream {
+			t.SetStyle(table.StyleLight)
+			t.Render()
+			t.ResetRows()
+		}
 	}
-	rows := [][]string{nodeRow, cpuRow, memoryRow, storageRow, volumeRow, diffsRow}
-
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	if !stream {
+		t.SetStyle(table.StyleLight)
+		t.Render()
+	}
 }
 
 // NodeStatusMessage describes NodeStatusStreamMessage

@@ -2,6 +2,7 @@ package pod
 
 import (
 	"context"
+	"io"
 	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -25,6 +26,7 @@ type listPodNodesOptions struct {
 	labels          map[string]string
 	timeoutInSecond int32
 	showInfo        bool
+	stream          bool
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
@@ -40,6 +42,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		All:             true,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
 	})
 	if err != nil {
 		return err
@@ -50,6 +53,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		All:             false,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
 	})
 	if err != nil {
 		return err
@@ -68,32 +72,64 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		nodes = append(nodes, node)
 	}
 
-	o.describeNodes(nodes)
+	o.describeNodes(describe.ToNodeChan(nodes...), o.stream)
 	return nil
 }
 
 func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	// filter == all, list all nodes
 	// filter == up, list available nodes only
-	resp, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
-		Podname:         o.name,
-		All:             o.filter == all,
-		Labels:          o.labels,
-		TimeoutInSecond: o.timeoutInSecond,
-	})
-	if err != nil {
-		return err
+	var ch chan *corepb.Node
+	if o.stream { // nolint
+		resp, err := o.client.PodNodesStream(ctx, &corepb.ListNodesOptions{
+			Podname:         o.name,
+			All:             o.filter == all,
+			Labels:          o.labels,
+			TimeoutInSecond: o.timeoutInSecond,
+			SkipInfo:        !o.showInfo,
+		})
+		if err != nil {
+			return err
+		}
+		ch = make(chan *corepb.Node)
+		go func() {
+			defer close(ch)
+			for {
+				node, err := resp.Recv()
+				if err != nil {
+					if err != io.EOF {
+						println(err.Error())
+					}
+					return
+				}
+				ch <- node
+			}
+		}()
+
+	} else {
+		resp, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
+			Podname:         o.name,
+			All:             o.filter == all,
+			Labels:          o.labels,
+			TimeoutInSecond: o.timeoutInSecond,
+			SkipInfo:        !o.showInfo,
+		})
+		if err != nil {
+			return err
+		}
+		ch = describe.ToNodeChan(resp.GetNodes()...)
+
 	}
 
-	o.describeNodes(resp.GetNodes())
+	o.describeNodes(ch, o.stream)
 	return nil
 }
 
-func (o *listPodNodesOptions) describeNodes(nodes []*corepb.Node) {
+func (o *listPodNodesOptions) describeNodes(nodes chan *corepb.Node, stream bool) {
 	if o.showInfo {
-		describe.NodesWithInfo(nodes...)
+		describe.NodesWithInfo(nodes, stream)
 	} else {
-		describe.Nodes(nodes...)
+		describe.Nodes(nodes, stream)
 	}
 }
 
@@ -115,6 +151,7 @@ func cmdPodListNodes(c *cli.Context) error {
 		labels:          utils.SplitEquality(c.StringSlice("label")),
 		timeoutInSecond: int32(c.Int("timeout")),
 		showInfo:        c.Bool("show-info"),
+		stream:          c.Bool("stream"),
 	}
 	return o.run(c.Context)
 }

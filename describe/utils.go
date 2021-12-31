@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 // Format indicates the output format
@@ -54,7 +55,58 @@ func describeAsJSON(o interface{}) {
 	fmt.Println(string(j))
 }
 
+func describeChNodeAsJSON(ch chan *corepb.Node) {
+	for t := range ch {
+		j, _ := json.MarshalIndent(t, "", "  ")
+		fmt.Println(string(j))
+	}
+}
+func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
+	for t := range ch {
+		j, _ := json.MarshalIndent(t, "", "  ")
+		fmt.Println(string(j))
+	}
+}
+
 func describeAsYAML(o interface{}) {
 	y, _ := yaml.Marshal(o)
 	fmt.Println(string(y))
+}
+
+func describeChNodeAsYAML(ch chan *corepb.Node) {
+	for t := range ch {
+		j, _ := yaml.Marshal(t)
+		fmt.Println(string(j))
+	}
+}
+func describeChNodeResourceAsYAML(ch chan *corepb.NodeResource) {
+	for t := range ch {
+		j, _ := yaml.Marshal(t)
+		fmt.Println(string(j))
+	}
+}
+
+// ToNodeChan is to be rewritten using generic
+func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
+	ch := make(chan *corepb.Node)
+	go func() {
+		defer close(ch)
+		for _, node := range nodes {
+			ch <- node
+		}
+	}()
+	return ch
+}
+
+// ToNodeResourceChan is to be rewritten using generic
+func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeResource {
+	ch := make(chan *corepb.NodeResource)
+	go func() {
+		defer close(ch)
+		for _, resource := range resources {
+			checkNaNForResource(resource)
+			ch <- resource
+		}
+	}()
+	return ch
 }
