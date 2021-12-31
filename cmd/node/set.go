@@ -147,6 +147,14 @@ func generateSetNodeOptionsAbsolute(c *cli.Context, client corepb.CoreRPCClient)
 		}
 	}
 
+	var (
+		ca, cert, key string
+	)
+	ca, cert, key, err = readTLSConfigs(c)
+	if err != nil {
+		return nil, err
+	}
+
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
 		StatusOpt:       corepb.TriOpt_KEEP,
@@ -158,6 +166,10 @@ func generateSetNodeOptionsAbsolute(c *cli.Context, client corepb.CoreRPCClient)
 		Numa:            numa,
 		Labels:          utils.SplitEquality(c.StringSlice("label")),
 		WorkloadsDown:   c.Bool("mark-workloads-down"),
+		Endpoint:        c.String("endpoint"),
+		Ca:              ca,
+		Cert:            cert,
+		Key:             key,
 	}, nil
 }
 
@@ -229,6 +241,14 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 		return nil, err
 	}
 
+	var (
+		ca, cert, key string
+	)
+	ca, cert, key, err = readTLSConfigs(c)
+	if err != nil {
+		return nil, err
+	}
+
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
 		StatusOpt:       corepb.TriOpt_KEEP,
@@ -240,5 +260,9 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 		Numa:            numa,
 		Labels:          utils.SplitEquality(c.StringSlice("label")),
 		WorkloadsDown:   c.Bool("mark-workloads-down"),
+		Endpoint:        c.String("endpoint"),
+		Ca:              ca,
+		Cert:            cert,
+		Key:             key,
 	}, nil
 }

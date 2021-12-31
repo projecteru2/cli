@@ -63,21 +63,7 @@ func getLocalIP() string {
 	return ""
 }
 
-func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
-	podname := c.Args().First()
-	if podname == "" {
-		return nil, fmt.Errorf("podname must not be empty")
-	}
-
-	nodename := c.String("nodename")
-	if nodename == "" {
-		n, err := os.Hostname()
-		if err != nil {
-			return nil, err
-		}
-		nodename = n
-	}
-
+func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, err error) {
 	ca := c.String("ca")
 	if ca == "" {
 		defaultPath := "/etc/docker/tls/ca.crt"
@@ -85,11 +71,10 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 			ca = defaultPath
 		}
 	}
-	caContent := ""
 	if ca != "" {
 		f, err := ioutil.ReadFile(ca)
 		if err != nil {
-			return nil, fmt.Errorf("Error during reading %s: %v", ca, err)
+			return "", "", "", fmt.Errorf("Error during reading %s: %v", ca, err)
 		}
 		caContent = string(f)
 	}
@@ -101,11 +86,10 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 			cert = defaultPath
 		}
 	}
-	certContent := ""
 	if cert != "" {
 		f, err := ioutil.ReadFile(cert)
 		if err != nil {
-			return nil, fmt.Errorf("Error during reading %s: %v", cert, err)
+			return "", "", "", fmt.Errorf("Error during reading %s: %v", cert, err)
 		}
 		certContent = string(f)
 	}
@@ -117,13 +101,27 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 			key = defaultPath
 		}
 	}
-	keyContent := ""
 	if key != "" {
 		f, err := ioutil.ReadFile(key)
 		if err != nil {
-			return nil, fmt.Errorf("Error during reading %s: %v", key, err)
+			return "", "", "", fmt.Errorf("Error during reading %s: %v", key, err)
 		}
 		keyContent = string(f)
+	}
+	return caContent, certContent, keyContent, nil
+}
+
+func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
+	podname := c.Args().First()
+	if podname == "" {
+		return nil, fmt.Errorf("podname must not be empty")
+	}
+
+	nodename := c.String("nodename")
+
+	ca, cert, key, err := readTLSConfigs(c)
+	if err != nil {
+		return nil, err
 	}
 
 	endpoint := c.String("endpoint")
@@ -133,7 +131,7 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 			return nil, fmt.Errorf("unable to get local ip")
 		}
 		port := 2376
-		if caContent == "" {
+		if ca == "" {
 			port = 2375
 		}
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
@@ -145,7 +143,6 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 	}
 
 	var (
-		err             error
 		memory, storage int64
 	)
 	if memory, err = utils.ParseRAMInHuman(c.String("memory")); err != nil {
@@ -196,9 +193,9 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		Nodename:   nodename,
 		Endpoint:   endpoint,
 		Podname:    podname,
-		Ca:         caContent,
-		Cert:       certContent,
-		Key:        keyContent,
+		Ca:         ca,
+		Cert:       cert,
+		Key:        key,
 		Cpu:        int32(cpu),
 		Share:      int32(share),
 		Memory:     memory,

@@ -29,18 +29,6 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNodeRemove),
 			},
 			{
-				Name:      "update",
-				Usage:     "update a node",
-				ArgsUsage: nodeArgsUsage,
-				Action:    utils.ExitCoder(cmdNodeUpdate),
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "endpoint",
-						Usage: "update node endpoint",
-					},
-				},
-			},
-			{
 				Name:  "workloads",
 				Usage: "list node workloads",
 				Flags: []cli.Flag{
@@ -113,6 +101,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "set",
+				Aliases:   []string{"update"},
 				Usage:     "set node resource",
 				ArgsUsage: nodeArgsUsage,
 				Action:    utils.ExitCoder(cmdNodeSet),
@@ -164,6 +153,25 @@ func Command() *cli.Command {
 						Name:  "delta",
 						Usage: "delta flag for settings, when set, all values will be relative to the current values, refer to each option for details",
 					},
+					&cli.StringFlag{
+						Name:  "endpoint",
+						Usage: "update node endpoint",
+					},
+					&cli.StringFlag{
+						Name:  "ca",
+						Usage: "ca file, like /etc/docker/tls/ca.crt",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "cert",
+						Usage: "cert file, like /etc/docker/tls/client.crt",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "key",
+						Usage: "key file, like /etc/docker/tls/client.key",
+						Value: "",
+					},
 				},
 			},
 			{
@@ -176,7 +184,7 @@ func Command() *cli.Command {
 						Name:    "nodename",
 						Usage:   "name of this node, use `hostname` as default",
 						EnvVars: []string{"HOSTNAME"},
-						Value:   "",
+						Value:   utils.GetHostname(),
 					},
 					&cli.StringFlag{
 						Name:  "endpoint",
