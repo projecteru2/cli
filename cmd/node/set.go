@@ -157,7 +157,6 @@ func generateSetNodeOptionsAbsolute(c *cli.Context, client corepb.CoreRPCClient)
 
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
-		StatusOpt:       corepb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,
@@ -251,7 +250,6 @@ func generateSetNodeOptionsDelta(c *cli.Context, _ corepb.CoreRPCClient) (*corep
 
 	return &corepb.SetNodeOptions{
 		Nodename:        name,
-		StatusOpt:       corepb.TriOpt_KEEP,
 		DeltaCpu:        cpuMap,
 		DeltaMemory:     deltaMemory,
 		DeltaStorage:    deltaStorage,

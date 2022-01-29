@@ -37,8 +37,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	now := time.Now().Format("2006.01.02.15.04.05")
-	baseDir := filepath.Join(o.dir)
-	if err := os.MkdirAll(baseDir, os.FileMode(0700)); err != nil {
+	if err := os.MkdirAll(o.dir, os.FileMode(0700)); err != nil {
 		return err
 	}
 
@@ -63,7 +62,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	for filename, content := range files {
-		storePath := filepath.Join(baseDir, filename)
+		storePath := filepath.Join(o.dir, filename)
 		if _, err := os.Stat(storePath); err != nil {
 			f, err := os.Create(storePath)
 			if err != nil {
