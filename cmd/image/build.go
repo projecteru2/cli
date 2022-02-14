@@ -38,7 +38,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			fmt.Printf("Build failed: %s\tErrorDetail: %s\n", msg.Error, msg.ErrorDetail)
+			fmt.Printf("Build failed: %+v\n", err)
 			return err
 		}
 
