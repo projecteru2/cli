@@ -1,10 +1,13 @@
 package describe
 
 import (
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
+	"sort"
 	"strings"
+	"sync"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 
@@ -40,13 +43,19 @@ func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
 func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	if showInfo {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources", "Info"})
-	} else {
-		t.AppendHeader(table.Row{"Name", "Endpoint", "Status", "Resources"})
-	}
+
+	var once sync.Once
 
 	for node := range nodes {
+		header, cells := parseNodePluginResources(node)
+		once.Do(func() {
+			header = append([]interface{}{"Name", "Endpoint", "Status"}, header...)
+			if showInfo {
+				header = append(header, "Info")
+			}
+			t.AppendHeader(header)
+		})
+
 		status := "DOWN"
 		if !node.Bypass && node.Available {
 			status = "UP"
@@ -57,21 +66,14 @@ func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 		for _, v := range node.InitVolume {
 			totalVolumeCap += v
 		}
-		resources := strings.Join([]string{
-			fmt.Sprintf("CPU: %.2f/%d", node.CpuUsed, len(node.InitCpu)),
-			fmt.Sprintf("Mem: %d/%d bytes", node.MemoryUsed, node.InitMemory),
-			fmt.Sprintf("Vol: %d / %d bytes", node.VolumeUsed, totalVolumeCap),
-			fmt.Sprintf("Storage: %d / %d bytes", node.StorageUsed, node.InitStorage),
-		}, "\n")
 
 		rows := [][]string{
 			{node.Name},
 			{node.Endpoint},
 			{status},
-			{resources},
 		}
-		if showInfo {
-			rows = append(rows, []string{node.Info})
+		for _, v := range cells {
+			rows = append(rows, v)
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
@@ -85,6 +87,68 @@ func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 		t.SetStyle(table.StyleLight)
 		t.Render()
 	}
+}
+
+func toJSON(v interface{}) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+func parse(key, value interface{}) []string {
+	res := []string{}
+	if m, ok := value.(map[string]interface{}); ok {
+		for k, v := range m {
+			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v)))
+		}
+	} else if s, ok := value.([]interface{}); ok {
+		for i, v := range s {
+			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(v)))
+		}
+	} else {
+		res = append(res, fmt.Sprintf("%s: %v", key, toJSON(value)))
+	}
+	return res
+}
+
+func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells [][]string) {
+	capacityMap := map[string]map[string]interface{}{}
+	usageMap := map[string]map[string]interface{}{}
+	if len(node.ResourceCapacity) > 0 {
+		_ = json.Unmarshal([]byte(node.ResourceCapacity), &capacityMap)
+	}
+	if len(node.ResourceUsage) > 0 {
+		_ = json.Unmarshal([]byte(node.ResourceUsage), &usageMap)
+	}
+
+	for plugin := range capacityMap {
+		header = append(header, plugin)
+	}
+	sort.Slice(header, func(i, j int) bool {
+		return header[i].(string) < header[j].(string)
+	})
+
+	for _, plugin := range header {
+		row := []string{}
+		capacity := capacityMap[plugin.(string)]
+		usage := usageMap[plugin.(string)]
+
+		capRows := []string{}
+		usageRows := []string{}
+
+		for key, value := range capacity {
+			capRows = append(capRows, parse(key, value)...)
+			if usage != nil && usage[key] != nil {
+				usageRows = append(usageRows, parse(key, usage[key])...)
+			}
+		}
+		row = append(row, "Capacity:")
+		row = append(row, capRows...)
+		row = append(row, "------------")
+		row = append(row, "Usage:")
+		row = append(row, usageRows...)
+		cells = append(cells, row)
+	}
+	return header, cells
 }
 
 // NodeResources describes a list of NodeResource

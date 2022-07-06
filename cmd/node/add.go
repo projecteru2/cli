@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net"
 	"os"
-	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
@@ -137,72 +136,44 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	share := c.Int("share")
-	if share == 0 {
-		share = 100
+	resourceOpts := map[string]*corepb.RawParam{}
+	if c.IsSet("cpu") {
+		resourceOpts["cpu"] = utils.ToPBRawParamsString(c.String("cpu"))
 	}
-
-	var (
-		memory, storage int64
-	)
-	if memory, err = utils.ParseRAMInHuman(c.String("memory")); err != nil {
-		return nil, err
+	if c.IsSet("share") {
+		resourceOpts["share"] = utils.ToPBRawParamsString(c.String("share"))
 	}
-	if storage, err = utils.ParseRAMInHuman(c.String("storage")); err != nil {
-		return nil, err
+	if c.IsSet("memory") {
+		resourceOpts["memory"] = utils.ToPBRawParamsString(c.String("memory"))
 	}
-
-	cpu := c.Int("cpu")
-
-	numa := map[string]string{}
-	numaMemory := map[string]int64{}
-
-	for index, cpuList := range c.StringSlice("numa-cpu") {
-		nodeID := fmt.Sprintf("%d", index)
-		for _, cpuID := range strings.Split(cpuList, ",") {
-			numa[cpuID] = nodeID
-		}
+	if c.IsSet("storage") {
+		resourceOpts["storage"] = utils.ToPBRawParamsString(c.String("storage"))
 	}
-
-	for index, memoryStr := range c.StringSlice("numa-memory") {
-		nodeID := fmt.Sprintf("%d", index)
-		memory, err := utils.ParseRAMInHuman(memoryStr)
-		if err != nil {
-			return nil, err
-		}
-		numaMemory[nodeID] = memory
+	if c.IsSet("volumes") {
+		resourceOpts["volumes"] = utils.ToPBRawParamsStringSlice(c.StringSlice("volumes"))
 	}
-
-	volumes := map[string]int64{}
-
-	for _, volume := range c.StringSlice("volumes") {
-		parts := strings.Split(volume, ":")
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid volume")
-		}
-
-		capacity, err := utils.ParseRAMInHuman(parts[1])
-		if err != nil {
-			return nil, err
-		}
-		volumes[parts[0]] = capacity
+	if c.IsSet("numa-cpu") {
+		resourceOpts["numa-cpu"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa-cpu"))
+	}
+	if c.IsSet("numa-memory") {
+		resourceOpts["numa-memory"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa-memory"))
+	}
+	if c.IsSet("disk") {
+		resourceOpts["disks"] = utils.ToPBRawParamsStringSlice(c.StringSlice("disk"))
+	}
+	if c.IsSet("workload-limit") {
+		resourceOpts["workload-limit"] = utils.ToPBRawParamsStringSlice(c.StringSlice("workload-limit"))
 	}
 
 	labels := utils.SplitEquality(c.StringSlice("label"))
 	return &corepb.AddNodeOptions{
-		Nodename:   nodename,
-		Endpoint:   endpoint,
-		Podname:    podname,
-		Ca:         ca,
-		Cert:       cert,
-		Key:        key,
-		Cpu:        int32(cpu),
-		Share:      int32(share),
-		Memory:     memory,
-		Storage:    storage,
-		Labels:     labels,
-		Numa:       numa,
-		NumaMemory: numaMemory,
-		VolumeMap:  volumes,
+		Nodename:     nodename,
+		Endpoint:     endpoint,
+		Podname:      podname,
+		Ca:           ca,
+		Cert:         cert,
+		Key:          key,
+		Labels:       labels,
+		ResourceOpts: resourceOpts,
 	}, nil
 }

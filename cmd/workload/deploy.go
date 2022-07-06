@@ -7,13 +7,13 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/types"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 	"gopkg.in/yaml.v2"
+
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/types"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 type deployWorkloadsOptions struct {
@@ -107,7 +107,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 		}
 
 		if msg.Success {
-			logrus.Infof("[Deploy] Success %s %s %s %v %v %v %d %d %v %v", msg.Id, msg.Name, msg.Nodename, msg.Resource.CpuQuotaRequest, msg.Resource.CpuQuotaLimit, msg.Resource.Cpu, msg.Resource.MemoryRequest, msg.Resource.MemoryLimit, msg.Resource.VolumePlanRequest, msg.Resource.VolumePlanLimit)
+			logrus.Infof("[Deploy] Success %s %s %s %s", msg.Id, msg.Name, msg.Nodename, msg.ResourceArgs)
 			if len(msg.Hook) > 0 {
 				logrus.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}
@@ -202,6 +202,20 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
+	resourceOpts := map[string]*corepb.RawParam{
+		"cpu-request":     utils.ToPBRawParamsString(cpuRequest),
+		"cpu-limit":       utils.ToPBRawParamsString(cpuLimit),
+		"memory-request":  utils.ToPBRawParamsString(memRequest),
+		"memory-limit":    utils.ToPBRawParamsString(memLimit),
+		"storage-request": utils.ToPBRawParamsString(storageRequest),
+		"storage-limit":   utils.ToPBRawParamsString(storageLimit),
+		"volumes-request": utils.ToPBRawParamsStringSlice(specs.VolumesRequest),
+		"volumes-limit":   utils.ToPBRawParamsStringSlice(specs.Volumes),
+	}
+	if c.Bool("cpu-bind") {
+		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+	}
+
 	return &corepb.DeployOptions{
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{
@@ -216,18 +230,8 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Restart:     entrypoint.Restart,
 			Sysctls:     entrypoint.Sysctls,
 		},
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: cpuRequest,
-			CpuQuotaLimit:   cpuLimit,
-			CpuBind:         c.Bool("cpu-bind"),
-			MemoryRequest:   memRequest,
-			MemoryLimit:     memLimit,
-			StorageRequest:  storageRequest,
-			StorageLimit:    storageLimit,
-			VolumesRequest:  specs.VolumesRequest,
-			VolumesLimit:    specs.Volumes,
-		},
-		Podname: c.String("pod"),
+		ResourceOpts: resourceOpts,
+		Podname:      c.String("pod"),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: c.StringSlice("node"),
 			Labels:   utils.SplitEquality(c.StringSlice("nodelabel")),

@@ -23,7 +23,6 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 	opts := &corepb.RemoveWorkloadOptions{
 		Ids:   o.ids,
 		Force: o.force,
-		Step:  o.step,
 	}
 	resp, err := o.client.RemoveWorkload(ctx, opts)
 	if err != nil {

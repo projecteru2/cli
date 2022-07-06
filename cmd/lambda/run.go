@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/juju/errors"
+	"github.com/urfave/cli/v2"
+
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
 	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
 type runLambdaOptions struct {
@@ -94,6 +94,17 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
+	resourceOpts := map[string]*corepb.RawParam{
+		"cpu-request":     utils.ToPBRawParamsString(c.Float64("cpu-request")),
+		"cpu-limit":       utils.ToPBRawParamsString(c.Float64("cpu")),
+		"memory-request":  utils.ToPBRawParamsString(memRequest),
+		"memory-limit":    utils.ToPBRawParamsString(memLimit),
+		"storage-request": utils.ToPBRawParamsString(c.Int64("storage-request")),
+		"storage-limit":   utils.ToPBRawParamsString(c.Int64("storage")),
+		"volumes-request": utils.ToPBRawParamsStringSlice(c.StringSlice("volumes-request")),
+		"volumes-limit":   utils.ToPBRawParamsStringSlice(c.StringSlice("volumes")),
+	}
+
 	return &corepb.RunAndWaitOptions{
 		Async:        c.Bool("async"),
 		AsyncTimeout: int32(c.Int("async-timeout")),
@@ -105,17 +116,8 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 				Privileged: c.Bool("privileged"),
 				Dir:        c.String("working-dir"),
 			},
-			ResourceOpts: &corepb.ResourceOptions{
-				CpuQuotaRequest: c.Float64("cpu-request"),
-				CpuQuotaLimit:   c.Float64("cpu"),
-				MemoryRequest:   memRequest,
-				MemoryLimit:     memLimit,
-				StorageRequest:  c.Int64("storage-request"),
-				StorageLimit:    c.Int64("storage"),
-				VolumesRequest:  c.StringSlice("volume-request"),
-				VolumesLimit:    c.StringSlice("volume"),
-			},
-			Podname: c.String("pod"),
+			ResourceOpts: resourceOpts,
+			Podname:      c.String("pod"),
 			NodeFilter: &corepb.NodeFilter{
 				Includes: c.StringSlice("node"),
 			},

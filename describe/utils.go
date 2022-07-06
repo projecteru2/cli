@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
+	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
-	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 // Format indicates the output format
