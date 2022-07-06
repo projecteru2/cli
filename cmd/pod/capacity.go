@@ -25,17 +25,18 @@ type capacityPodOptions struct {
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
+	resourceOpts := map[string]*corepb.RawParam{
+		"cpu":     utils.ToPBRawParamsString(o.cpu),
+		"memory":  utils.ToPBRawParamsString(o.memory),
+		"storage": utils.ToPBRawParamsString(o.storage),
+	}
+	if o.cpuBind {
+		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+	}
+
 	opts := &corepb.DeployOptions{
 		// resource definitions
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaLimit:   o.cpu,
-			CpuQuotaRequest: o.cpu,
-			CpuBind:         o.cpuBind,
-			MemoryLimit:     o.memory,
-			MemoryRequest:   o.memory,
-			StorageLimit:    o.storage,
-			StorageRequest:  o.storage,
-		},
+		ResourceOpts: resourceOpts,
 
 		// deploy options
 		Entrypoint: &corepb.EntrypointOptions{

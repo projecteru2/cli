@@ -4,9 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"sort"
 	"strings"
+	"sync"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 )
@@ -32,9 +35,16 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		Storage int64
 	}{}
 	for _, w := range workloads {
-		stat.CPUs += w.Resource.CpuQuotaRequest
-		stat.Memory += w.Resource.MemoryRequest
-		stat.Storage += w.Resource.StorageRequest
+		rawResourceArgs := map[string]map[string]interface{}{}
+		if err := json.Unmarshal([]byte(w.ResourceArgs), &rawResourceArgs); err != nil {
+			continue
+		}
+		cpu := rawResourceArgs["cpumem"]["cpu_request"].(float64)
+		mem := rawResourceArgs["cpumem"]["memory_request"].(float64)
+		storage := rawResourceArgs["volume"]["storage_request"].(float64)
+		stat.CPUs += cpu
+		stat.Memory += int64(coreutils.Round(mem))
+		stat.Storage += int64(coreutils.Round(storage))
 	}
 
 	describeStatistics := func() {
@@ -67,9 +77,16 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name/ID/Pod/Node", "Status", "Volume", "Networks"})
+
+	var once sync.Once
 
 	for _, c := range workloads {
+		header, cells := parseWorkloadPluginResources(c)
+		once.Do(func() {
+			header = append([]interface{}{"Name/ID/Pod/Node/Priviledged", "Networks"}, header...)
+			t.AppendHeader(header)
+		})
+
 		// networks
 		ns := []string{}
 		if c.Status != nil {
@@ -93,31 +110,41 @@ func describeWorkloads(workloads []*corepb.Workload) {
 		}
 
 		rows := [][]string{
-			{c.Name, c.Id, c.Podname, c.Nodename},
-			{
-				fmt.Sprintf("CPUQuotaRequest: %f", c.Resource.CpuQuotaRequest),
-				fmt.Sprintf("CPUQuotaLimit: %f", c.Resource.CpuQuotaLimit),
-				fmt.Sprintf("CPUMap: %v", c.Resource.Cpu),
-				fmt.Sprintf("MemoryRequest: %v", c.Resource.MemoryRequest),
-				fmt.Sprintf("MemoryLimit: %v", c.Resource.MemoryLimit),
-				fmt.Sprintf("StorageRequest: %v", c.Resource.StorageRequest),
-				fmt.Sprintf("StorageLimit: %v", c.Resource.StorageLimit),
-				fmt.Sprintf("Privileged: %v", c.Privileged),
-			},
-			{
-				fmt.Sprintf("VolumesRequest: %+v", c.Resource.VolumesRequest),
-				fmt.Sprintf("VolumesLimit: %+v", c.Resource.VolumesLimit),
-				fmt.Sprintf("VolumePlanRequest: %+v", c.Resource.VolumePlanRequest),
-				fmt.Sprintf("VolumePlanLimit: %+v", c.Resource.VolumePlanLimit),
-			},
+			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Priviledged: %v", c.Privileged)},
 			ns,
 		}
+		rows = append(rows, cells...)
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
 	}
 
 	t.SetStyle(table.StyleLight)
 	t.Render()
+}
+
+func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface{}, cells [][]string) {
+	usageMap := map[string]map[string]interface{}{}
+	if len(workload.ResourceArgs) > 0 {
+		_ = json.Unmarshal([]byte(workload.ResourceArgs), &usageMap)
+	}
+
+	for plugin := range usageMap {
+		header = append(header, plugin)
+	}
+	sort.Slice(header, func(i, j int) bool {
+		return header[i].(string) < header[j].(string)
+	})
+
+	for _, plugin := range header {
+		row := []string{}
+		usage := usageMap[plugin.(string)]
+
+		for key, value := range usage {
+			row = append(row, parse(key, value)...)
+		}
+		cells = append(cells, row)
+	}
+	return
 }
 
 // WorkloadStatuses describes a list of WorkloadStatus

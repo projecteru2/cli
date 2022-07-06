@@ -327,10 +327,9 @@ func Command() *cli.Command {
 						Name:  "image",
 						Usage: "which to replace",
 					},
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name:  "node",
 						Usage: "which node to replace",
-						Value: "",
 					},
 					&cli.IntFlag{
 						Name:  "count",

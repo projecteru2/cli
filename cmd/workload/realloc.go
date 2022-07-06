@@ -87,18 +87,26 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 	}
 
 	cpuRequest, cpuLimit := cpuOption(c)
+
+	resourceOpts := map[string]*corepb.RawParam{
+		"cpu-request":     utils.ToPBRawParamsString(cpuRequest),
+		"cpu-limit":       utils.ToPBRawParamsString(cpuLimit),
+		"memory-request":  utils.ToPBRawParamsString(memoryRequest),
+		"memory-limit":    utils.ToPBRawParamsString(memoryLimit),
+		"storage-request": utils.ToPBRawParamsString(storageRequest),
+		"storage-limit":   utils.ToPBRawParamsString(storageLimit),
+		"volumes-request": utils.ToPBRawParamsStringSlice(volumesRequest),
+		"volumes-limit":   utils.ToPBRawParamsStringSlice(volumesLimit),
+	}
+	switch bindCPUOpt {
+	case corepb.TriOpt_KEEP:
+		resourceOpts["keep-cpu-bind"] = utils.ToPBRawParamsString("true")
+	case corepb.TriOpt_TRUE:
+		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+	}
+
 	return &corepb.ReallocOptions{
-		Id:         id,
-		BindCpuOpt: bindCPUOpt,
-		ResourceOpts: &corepb.ResourceOptions{
-			CpuQuotaRequest: cpuRequest,
-			CpuQuotaLimit:   cpuLimit,
-			MemoryRequest:   memoryRequest,
-			MemoryLimit:     memoryLimit,
-			VolumesRequest:  volumesRequest,
-			VolumesLimit:    volumesLimit,
-			StorageRequest:  storageRequest,
-			StorageLimit:    storageLimit,
-		},
+		Id:           id,
+		ResourceOpts: resourceOpts,
 	}, nil
 }
