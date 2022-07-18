@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
+
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
@@ -56,16 +57,20 @@ func describeAsJSON(o interface{}) {
 }
 
 func describeChNodeAsJSON(ch chan *corepb.Node) {
+	nodes := []*corepb.Node{}
 	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
+		nodes = append(nodes, t)
 	}
+	j, _ := json.MarshalIndent(nodes, "", "  ")
+	fmt.Println(string(j))
 }
 func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
+	nodes := []*corepb.NodeResource{}
 	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
+		nodes = append(nodes, t)
 	}
+	j, _ := json.MarshalIndent(nodes, "", "  ")
+	fmt.Println(string(j))
 }
 
 func describeAsYAML(o interface{}) {
