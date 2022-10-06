@@ -23,8 +23,8 @@ type cleanImageOptions struct {
 
 func (o *cleanImageOptions) run(ctx context.Context) error {
 	opts := &corepb.RemoveImageOptions{
-		Images:    o.images,
-		Step:      o.step,
+		Images: o.images,
+		// Step:      o.step,
 		Podname:   o.podname,
 		Nodenames: o.nodenames,
 		Prune:     o.prune,

@@ -21,7 +21,7 @@ type getNodeOptions struct {
 func (o *getNodeOptions) run(ctx context.Context) error {
 	node, err := o.client.GetNode(ctx, &corepb.GetNodeOptions{
 		Nodename: o.name,
-		Plugins:  o.plugins,
+		// Plugins:  o.plugins,
 	})
 	if err != nil {
 		return err

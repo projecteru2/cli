@@ -3,7 +3,6 @@ package describe
 import (
 	"encoding/json"
 	"fmt"
-	"math"
 	"os"
 	"sort"
 	"strings"
@@ -17,7 +16,7 @@ import (
 
 // Nodes describes a list of Node
 // output format can be json or yaml or table
-func Nodes(nodes chan *corepb.Node, stream bool) {
+func Nodes(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
 		describeChNodeAsJSON(nodes)
@@ -29,7 +28,7 @@ func Nodes(nodes chan *corepb.Node, stream bool) {
 }
 
 // NodesWithInfo describes a list of Node with their info
-func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
+func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
 		describeChNodeAsJSON(nodes)
@@ -40,7 +39,7 @@ func NodesWithInfo(nodes chan *corepb.Node, stream bool) {
 	}
 }
 
-func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
+func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
@@ -62,10 +61,12 @@ func describeNodes(nodes chan *corepb.Node, showInfo, stream bool) {
 		}
 		status += fmt.Sprintf("\nbypass %v\navailable %v", node.Bypass, node.Available)
 
-		totalVolumeCap := int64(0)
-		for _, v := range node.InitVolume {
-			totalVolumeCap += v
-		}
+		// TODO:
+		// re-implements after the proto is ready.
+		// totalVolumeCap := int64(0)
+		// for _, v := range node.InitVolume {
+		// 	totalVolumeCap += v
+		// }
 
 		rows := [][]string{
 			{node.Name},
@@ -165,18 +166,20 @@ func NodeResources(resources chan *corepb.NodeResource, stream bool) {
 }
 
 func checkNaNForResource(resource *corepb.NodeResource) {
-	if math.IsNaN(resource.VolumePercent) {
-		resource.VolumePercent = 0
-	}
-	if math.IsNaN(resource.MemoryPercent) {
-		resource.MemoryPercent = 0
-	}
-	if math.IsNaN(resource.StoragePercent) {
-		resource.StoragePercent = 0
-	}
-	if math.IsNaN(resource.CpuPercent) {
-		resource.CpuPercent = 0
-	}
+	// TODO:
+	// re-implements after the proto is ready.
+	// if math.IsNaN(resource.VolumePercent) {
+	// 	resource.VolumePercent = 0
+	// }
+	// if math.IsNaN(resource.MemoryPercent) {
+	// 	resource.MemoryPercent = 0
+	// }
+	// if math.IsNaN(resource.StoragePercent) {
+	// 	resource.StoragePercent = 0
+	// }
+	// if math.IsNaN(resource.CpuPercent) {
+	// 	resource.CpuPercent = 0
+	// }
 }
 
 func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
@@ -187,10 +190,12 @@ func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
 	for resource := range resources {
 		rows := [][]string{
 			{resource.Name},
-			{fmt.Sprintf("%.2f%%", resource.CpuPercent*100)},
-			{fmt.Sprintf("%.2f%%", resource.MemoryPercent*100)},
-			{fmt.Sprintf("%.2f%%", resource.StoragePercent*100)},
-			{fmt.Sprintf("%.2f%%", resource.VolumePercent*100)},
+			// TODO:
+			// re-implements after the proto is ready.
+			// {fmt.Sprintf("%.2f%%", resource.CpuPercent*100)},
+			// {fmt.Sprintf("%.2f%%", resource.MemoryPercent*100)},
+			// {fmt.Sprintf("%.2f%%", resource.StoragePercent*100)},
+			// {fmt.Sprintf("%.2f%%", resource.VolumePercent*100)},
 			{strings.Join(resource.Diffs, "\n")},
 		}
 		t.AppendRows(toTableRows(rows))

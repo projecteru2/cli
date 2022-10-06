@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strings"
 
-	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 // Format indicates the output format
@@ -55,7 +55,7 @@ func describeAsJSON(o interface{}) {
 	fmt.Println(string(j))
 }
 
-func describeChNodeAsJSON(ch chan *corepb.Node) {
+func describeChNodeAsJSON(ch <-chan *corepb.Node) {
 	for t := range ch {
 		j, _ := json.MarshalIndent(t, "", "  ")
 		fmt.Println(string(j))
@@ -73,7 +73,7 @@ func describeAsYAML(o interface{}) {
 	fmt.Println(string(y))
 }
 
-func describeChNodeAsYAML(ch chan *corepb.Node) {
+func describeChNodeAsYAML(ch <-chan *corepb.Node) {
 	for t := range ch {
 		j, _ := yaml.Marshal(t)
 		fmt.Println(string(j))
