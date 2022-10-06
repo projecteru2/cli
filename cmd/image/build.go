@@ -42,7 +42,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			return err
 		}
 
-		if msg.Error != "" { // nolint
+		if msg.Error != "" { //nolint
 			fmt.Printf("Build failed: %s\tErrorDetail: %s\n", msg.Error, msg.ErrorDetail)
 			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
 		} else if msg.Stream != "" {

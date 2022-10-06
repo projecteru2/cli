@@ -46,15 +46,17 @@ func op(op string, left, right float64) bool {
 }
 
 func attr(nr *corepb.NodeResource, name string) float64 {
-	switch {
-	case name == "cpu":
-		return nr.CpuPercent
-	case name == "memory":
-		return nr.MemoryPercent
-	case name == "storage":
-		return nr.StoragePercent
-	case name == "volume":
-		return nr.VolumePercent
+	switch { //nolint
+	// TODO:
+	// re-implements after the proto is ready.
+	// case name == "cpu":
+	// 	return nr.CpuPercent
+	// case name == "memory":
+	// 	return nr.MemoryPercent
+	// case name == "storage":
+	// 	return nr.StoragePercent
+	// case name == "volume":
+	// 	return nr.VolumePercent
 	default:
 		return 0
 	}
@@ -106,44 +108,34 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
 	var ch chan *corepb.NodeResource
-	if o.stream { // nolint
-		resp, err := o.client.PodResourceStream(ctx, &corepb.GetPodOptions{
-			Name: o.name,
-		})
-		if err != nil {
-			return err
-		}
-
-		ch = make(chan *corepb.NodeResource)
-		go func() {
-			defer close(ch)
-			for {
-				resource, err := resp.Recv()
-				if err != nil {
-					if err != io.EOF {
-						println(err.Error())
-					}
-					return
-				}
-				ch <- resource
-			}
-		}()
-	} else {
-		resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
-			Name: o.name,
-		})
-		if err != nil {
-			return err
-		}
-		ch = describe.ToNodeResourceChan(resp.NodesResource...)
-	}
-
-	ch, err := o.filter(ch)
+	resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
+		Name: o.name,
+	})
 	if err != nil {
 		return err
 	}
 
-	describe.NodeResources(ch, o.stream)
+	ch = make(chan *corepb.NodeResource)
+	go func() {
+		defer close(ch)
+		for {
+			resource, err := resp.Recv()
+			if err != nil {
+				if err != io.EOF {
+					println(err.Error())
+				}
+				return
+			}
+			ch <- resource
+		}
+	}()
+
+	resChan, err := o.filter(ch)
+	if err != nil {
+		return err
+	}
+
+	describe.NodeResources(resChan, o.stream)
 	return nil
 }
 

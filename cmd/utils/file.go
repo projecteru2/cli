@@ -89,7 +89,7 @@ func SplitFiles(files []string) map[string]string {
 
 // GetSpecFromRemote gets specs from a remote position
 func GetSpecFromRemote(uri string) ([]byte, error) {
-	resp, err := http.Get(uri) // nolint
+	resp, err := http.Get(uri) //nolint
 	if err != nil {
 		return nil, err
 	}

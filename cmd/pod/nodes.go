@@ -26,7 +26,6 @@ type listPodNodesOptions struct {
 	labels          map[string]string
 	timeoutInSecond int32
 	showInfo        bool
-	stream          bool
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
@@ -37,7 +36,7 @@ func (o *listPodNodesOptions) run(ctx context.Context) error {
 }
 
 func (o *listPodNodesOptions) listDown(ctx context.Context) error {
-	resp1, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
+	allNodes, err := o.list(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
 		All:             true,
 		Labels:          o.labels,
@@ -48,7 +47,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		return err
 	}
 
-	resp2, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
+	availNodes, err := o.list(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
 		All:             false,
 		Labels:          o.labels,
@@ -60,72 +59,81 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 	}
 
 	availableNodes := map[string]*corepb.Node{}
-	for _, node := range resp2.GetNodes() {
+	for _, node := range availNodes {
 		availableNodes[node.Name] = node
 	}
 
-	nodes := []*corepb.Node{}
-	for _, node := range resp1.GetNodes() {
+	unavailNodes := []*corepb.Node{}
+	for _, node := range allNodes {
 		if _, ok := availableNodes[node.Name]; ok {
 			continue
 		}
-		nodes = append(nodes, node)
+		unavailNodes = append(unavailNodes, node)
 	}
 
-	o.describeNodes(describe.ToNodeChan(nodes...), o.stream)
+	o.describeNodes(describe.ToNodeChan(unavailNodes...), true)
 	return nil
 }
 
 func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	// filter == all, list all nodes
 	// filter == up, list available nodes only
-	var ch chan *corepb.Node
-	if o.stream { // nolint
-		resp, err := o.client.PodNodesStream(ctx, &corepb.ListNodesOptions{
-			Podname:         o.name,
-			All:             o.filter == all,
-			Labels:          o.labels,
-			TimeoutInSecond: o.timeoutInSecond,
-			SkipInfo:        !o.showInfo,
-		})
-		if err != nil {
-			return err
-		}
-		ch = make(chan *corepb.Node)
-		go func() {
-			defer close(ch)
-			for {
-				node, err := resp.Recv()
-				if err != nil {
-					if err != io.EOF {
-						println(err.Error())
-					}
-					return
-				}
-				ch <- node
-			}
-		}()
-
-	} else {
-		resp, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
-			Podname:         o.name,
-			All:             o.filter == all,
-			Labels:          o.labels,
-			TimeoutInSecond: o.timeoutInSecond,
-			SkipInfo:        !o.showInfo,
-		})
-		if err != nil {
-			return err
-		}
-		ch = describe.ToNodeChan(resp.GetNodes()...)
-
+	ch, err := o.listChan(ctx, &corepb.ListNodesOptions{
+		Podname:         o.name,
+		All:             o.filter == all,
+		Labels:          o.labels,
+		TimeoutInSecond: o.timeoutInSecond,
+		SkipInfo:        !o.showInfo,
+	})
+	if err != nil {
+		return err
 	}
 
-	o.describeNodes(ch, o.stream)
+	o.describeNodes(ch, true)
+
 	return nil
 }
 
-func (o *listPodNodesOptions) describeNodes(nodes chan *corepb.Node, stream bool) {
+func (o *listPodNodesOptions) list(ctx context.Context, opt *corepb.ListNodesOptions) ([]*corepb.Node, error) {
+	ch, err := o.listChan(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := []*corepb.Node{}
+	for n := range ch {
+		nodes = append(nodes, n)
+	}
+	return nodes, nil
+}
+
+func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNodesOptions) (<-chan *corepb.Node, error) {
+	stream, err := o.client.ListPodNodes(ctx, opt)
+	if err != nil {
+		return nil, err
+	}
+
+	ch := make(chan *corepb.Node)
+	go func() {
+		defer close(ch)
+
+		for {
+			node, err := stream.Recv()
+			if err != nil {
+				if err != io.EOF {
+					println(err.Error())
+				}
+				return
+			}
+
+			ch <- node
+		}
+	}()
+
+	return ch, nil
+}
+
+func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node, stream bool) {
 	if o.showInfo {
 		describe.NodesWithInfo(nodes, stream)
 	} else {
@@ -151,7 +159,6 @@ func cmdPodListNodes(c *cli.Context) error {
 		labels:          utils.SplitEquality(c.StringSlice("label")),
 		timeoutInSecond: int32(c.Int("timeout")),
 		showInfo:        c.Bool("show-info"),
-		stream:          c.Bool("stream"),
 	}
 	return o.run(c.Context)
 }

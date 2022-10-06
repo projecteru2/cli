@@ -18,8 +18,8 @@ type setNodeUpOptions struct {
 
 func (o *setNodeUpOptions) run(ctx context.Context) error {
 	_, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
-		Nodename:  o.name,
-		BypassOpt: corepb.TriOpt_FALSE,
+		Nodename: o.name,
+		Bypass:   corepb.TriOpt_FALSE,
 	})
 	if err != nil {
 		return err
