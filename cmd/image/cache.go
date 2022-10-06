@@ -22,8 +22,8 @@ type cacheImageOptions struct {
 
 func (o *cacheImageOptions) run(ctx context.Context) error {
 	opts := &corepb.CacheImageOptions{
-		Images:    o.images,
-		Step:      o.step,
+		Images: o.images,
+		// Step:      o.step,
 		Podname:   o.podname,
 		Nodenames: o.nodenames,
 	}

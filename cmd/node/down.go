@@ -36,8 +36,8 @@ func (o *setNodeDownOptions) run(ctx context.Context) error {
 
 	if do {
 		_, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
-			Nodename:  o.name,
-			BypassOpt: corepb.TriOpt_TRUE,
+			Nodename: o.name,
+			Bypass:   corepb.TriOpt_TRUE,
 		})
 		if err != nil {
 			return err
