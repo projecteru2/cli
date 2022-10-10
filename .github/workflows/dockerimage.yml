@@ -52,17 +52,19 @@ jobs:
 
       - name: Build and push image
         if: ${{ steps.meta.outputs.tags != '' }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: "."
+          platforms: linux/amd64,linux/arm64,darwin/amd64,darwin/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
 
       - name: "[debug version] Build and push image"
         if: ${{ github.ref == 'refs/heads/master' }}
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: "."
+          platforms: linux/amd64,linux/arm64,darwin/amd64,darwin/arm64
           push: true
           build-args: |
             KEEP_SYMBOL=1
