@@ -47,6 +47,11 @@ func Command() *cli.Command {
 						Name:  "stop-signal",
 						Usage: "customize stop signal",
 					},
+					&cli.StringFlag{
+						Name:  "platform",
+						Usage: "indicate the platform",
+						Value: "",
+					},
 					&cli.IntFlag{
 						Name:        "uid",
 						Usage:       "uid of image",

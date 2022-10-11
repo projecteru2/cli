@@ -179,5 +179,6 @@ func generateBuildOptions(c *cli.Context) (*corepb.BuildImageOptions, error) {
 		Builds:      specs,
 		Tar:         tar,
 		ExistId:     existID,
+		Platform:    c.String("platform"),
 	}, nil
 }
