@@ -276,7 +276,7 @@ func Command() *cli.Command {
 					&cli.StringSliceFlag{
 						Name: "disk",
 						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
-					e.g. --disk /dev/sda1:/data0,/:100:100:100M:100M`,
+										e.g. --disk /dev/sda1:/data0,/:100:100:100M:100M`,
 					},
 					&cli.StringSliceFlag{
 						Name:  "workload-limit",
