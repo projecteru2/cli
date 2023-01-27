@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/sirupsen/logrus"
@@ -110,16 +111,16 @@ func parse(key, value interface{}) []string {
 }
 
 func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells [][]string) {
-	capacityMap := map[string]map[string]interface{}{}
-	usageMap := map[string]map[string]interface{}{}
+	capacities := coretypes.Resources{}
+	usages := coretypes.Resources{}
 	if len(node.ResourceCapacity) > 0 {
-		_ = json.Unmarshal([]byte(node.ResourceCapacity), &capacityMap)
+		_ = json.Unmarshal([]byte(node.ResourceCapacity), &capacities)
 	}
 	if len(node.ResourceUsage) > 0 {
-		_ = json.Unmarshal([]byte(node.ResourceUsage), &usageMap)
+		_ = json.Unmarshal([]byte(node.ResourceUsage), &usages)
 	}
 
-	for plugin := range capacityMap {
+	for plugin := range usages {
 		header = append(header, plugin)
 	}
 	sort.Slice(header, func(i, j int) bool {
@@ -128,8 +129,8 @@ func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells []
 
 	for _, plugin := range header {
 		row := []string{}
-		capacity := capacityMap[plugin.(string)]
-		usage := usageMap[plugin.(string)]
+		capacity := capacities[plugin.(string)]
+		usage := usages[plugin.(string)]
 
 		capRows := []string{}
 		usageRows := []string{}

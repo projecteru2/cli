@@ -17,6 +17,11 @@ func Command() *cli.Command {
 				Usage:  "core info",
 				Action: utils.ExitCoder(cmdCoreInfo),
 			},
+			{
+				Name:   "watch",
+				Usage:  "",
+				Action: utils.ExitCoder(cmdWatchServiceStatus),
+			},
 		},
 	}
 }

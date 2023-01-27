@@ -17,14 +17,9 @@ func Command() *cli.Command {
 		Usage: "node commands",
 		Subcommands: []*cli.Command{
 			{
-				Name:  "get",
-				Usage: "get a node",
-				Flags: []cli.Flag{
-					&cli.StringFlag{
-						Name:  "plugins",
-						Usage: "specify the plugins, e.g. --plugins=cpumem,volume",
-					},
-				},
+				Name:      "get",
+				Usage:     "get a node",
+				Flags:     []cli.Flag{},
 				ArgsUsage: nodeArgsUsage,
 				Action:    utils.ExitCoder(cmdNodeGet),
 			},
@@ -140,16 +135,16 @@ func Command() *cli.Command {
                         this value can be set multiple times, the index will be the numa node ID,
                         e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
 					},
-					&cli.StringFlag{
+					&cli.StringSliceFlag{
 						Name: "volume",
-						Usage: `volume value in string, like "/data0:10G,/data1:10G"
-                   when using --delta flag, this can be a negative number indicating how much to add to the current value,
-                   e.g. --volume /data0:-10G,/data1:20G, means /data0 will be subtract 10G and /data1 will be added 20G`,
+						Usage: `volume value in string, can set multiple times. e.g. "--volume /data:100G",
+                    when using --delta flag, this can be a negative number indicating how much to add to the current value,
+                    e.g. --volume /data0:-10G --volume /data1:20G, means /data0 will be subtract 10G and /data1 will be added 20G`,
 					},
 					&cli.StringSliceFlag{
 						Name: "disk",
 						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
-					e.g. --disk /dev/sda1:/data0,/:100:100:100M:100M
+					e.g. --disk /dev/sda1:/data0:100:100:100M:100M
 					when using --delta flag, this can be a negative number indicating how much to add to the current value`,
 					},
 					&cli.StringFlag{
@@ -188,22 +183,6 @@ func Command() *cli.Command {
 						Name:  "key",
 						Usage: "key file, like /etc/docker/tls/client.key",
 						Value: "",
-					},
-					&cli.Float64Flag{
-						Name:  "node-storage-usage-threshold",
-						Usage: "set the node storage usage limit for that node",
-					},
-					&cli.Float64Flag{
-						Name:  "pod-storage-usage-threshold",
-						Usage: "set the pod storage usage limit for this node's pod, has less priority than node usage threshold",
-					},
-					&cli.StringSliceFlag{
-						Name:  "workload-limit",
-						Usage: "set the maximum number of workloads for a particular App that can be deployed on this node, can set multiple times",
-					},
-					&cli.StringSliceFlag{
-						Name:  "pod-workload-limit",
-						Usage: "set the maximum number of workloads for a particular App that can be deployed on each nodes of this pod, can set multiple times",
 					},
 				},
 			},
@@ -270,17 +249,13 @@ func Command() *cli.Command {
 						Usage: "numa memory, can set multiple times. if not set, it will count numa-cpu groups, and divided by total memory",
 					},
 					&cli.StringSliceFlag{
-						Name:  "volumes",
-						Usage: `device volumes, can set multiple times. e.g. "--volumes /data:100G" `,
+						Name:  "volume",
+						Usage: `device volumes, can set multiple times. e.g. "--volume /data:100G" `,
 					},
 					&cli.StringSliceFlag{
 						Name: "disk",
 						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
-										e.g. --disk /dev/sda1:/data0,/:100:100:100M:100M`,
-					},
-					&cli.StringSliceFlag{
-						Name:  "workload-limit",
-						Usage: "set the maximum number of workloads for a particular App that can be deployed on this node, can set multiple times",
+										e.g. --disk /dev/sda1:/data0:100:100:100M:100M`,
 					},
 				},
 			},

@@ -17,7 +17,7 @@ type getWorkloadsOptions struct {
 }
 
 func (o *getWorkloadsOptions) run(ctx context.Context) error {
-	resp, err := o.client.GetWorkloads(ctx, &corepb.WorkloadIDs{Ids: o.ids})
+	resp, err := o.client.GetWorkloads(ctx, &corepb.WorkloadIDs{IDs: o.ids})
 	if err != nil {
 		return err
 	}

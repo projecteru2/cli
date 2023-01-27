@@ -2,6 +2,7 @@ package lambda
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 )
 
 type runLambdaOptions struct {
@@ -83,26 +85,40 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 
 	network := c.String("network")
 
-	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
+	memoryRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
 	if err != nil {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
-	memLimit, err := utils.ParseRAMInHuman(c.String("memory"))
+	memoryLimit, err := utils.ParseRAMInHuman(c.String("memory"))
 	if err != nil {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
-	resourceOpts := map[string]*corepb.RawParam{
-		"cpu-request":     utils.ToPBRawParamsString(c.Float64("cpu-request")),
-		"cpu-limit":       utils.ToPBRawParamsString(c.Float64("cpu")),
-		"memory-request":  utils.ToPBRawParamsString(memRequest),
-		"memory-limit":    utils.ToPBRawParamsString(memLimit),
-		"storage-request": utils.ToPBRawParamsString(c.Int64("storage-request")),
-		"storage-limit":   utils.ToPBRawParamsString(c.Int64("storage")),
-		"volumes-request": utils.ToPBRawParamsStringSlice(c.StringSlice("volumes-request")),
-		"volumes-limit":   utils.ToPBRawParamsStringSlice(c.StringSlice("volumes")),
+	cpumem := coretypes.RawParams{
+		"cpu-request":    c.Float64("cpu-request"),
+		"cpu-limit":      c.Float64("cpu"),
+		"memory-request": memoryRequest,
+		"memory-limit":   memoryLimit,
+	}
+	storage := coretypes.RawParams{
+		"storage-request": c.Int64("storage-request"),
+		"storage-limit":   c.Int64("storage"),
+		"volumes-request": c.StringSlice("volumes-request"),
+		"volumes-limit":   c.StringSlice("volumes"),
+	}
+
+	if c.Bool("cpu-bind") {
+		cpumem["cpu-bind"] = true
+	}
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	return &corepb.RunAndWaitOptions{
@@ -116,8 +132,8 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 				Privileged: c.Bool("privileged"),
 				Dir:        c.String("working-dir"),
 			},
-			ResourceOpts: resourceOpts,
-			Podname:      c.String("pod"),
+			Resources: resources,
+			Podname:   c.String("pod"),
 			NodeFilter: &corepb.NodeFilter{
 				Includes: c.StringSlice("node"),
 			},

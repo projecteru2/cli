@@ -23,7 +23,7 @@ type controlWorkloadsOptions struct {
 
 func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 	opts := &corepb.ControlWorkloadOptions{
-		Ids:   o.ids,
+		IDs:   o.ids,
 		Type:  o.action,
 		Force: o.force,
 	}

@@ -21,7 +21,7 @@ type removeWorkloadsOptions struct {
 
 func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 	opts := &corepb.RemoveWorkloadOptions{
-		Ids:   o.ids,
+		IDs:   o.ids,
 		Force: o.force,
 	}
 	resp, err := o.client.RemoveWorkload(ctx, opts)

@@ -2,7 +2,7 @@ package node
 
 import (
 	"context"
-	"strings"
+	"encoding/json"
 
 	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
@@ -10,6 +10,7 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 )
 
 type setNodeOptions struct {
@@ -59,47 +60,47 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 		return nil, err
 	}
 
-	resourceOpts := map[string]*corepb.RawParam{}
+	cpumem := coretypes.RawParams{}
+	storage := coretypes.RawParams{}
+
 	if c.IsSet("cpu") {
-		resourceOpts["cpu"] = utils.ToPBRawParamsString(c.String("cpu"))
+		cpumem["cpu"] = c.String("cpu")
+	}
+	if c.IsSet("share") {
+		cpumem["share"] = c.String("share")
 	}
 	if c.IsSet("memory") {
-		resourceOpts["memory"] = utils.ToPBRawParamsString(c.String("memory"))
+		cpumem["memory"] = c.String("memory")
 	}
-	if c.IsSet("storage") {
-		resourceOpts["storage"] = utils.ToPBRawParamsString(c.String("storage"))
-	}
-	if c.IsSet("volume") {
-		resourceOpts["volumes"] = utils.ToPBRawParamsStringSlice(strings.Split(c.String("volume"), ","))
-	}
-	if c.IsSet("numa") {
-		resourceOpts["numa-cpu"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa"))
+	if c.IsSet("numa-cpu") {
+		cpumem["numa-cpu"] = c.StringSlice("numa-cpu")
 	}
 	if c.IsSet("numa-memory") {
-		resourceOpts["numa-memory"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa-memory"))
+		cpumem["numa-memory"] = c.StringSlice("numa-memory")
 	}
 	if c.IsSet("disk") {
-		resourceOpts["disks"] = utils.ToPBRawParamsStringSlice(c.StringSlice("disk"))
+		storage["disks"] = c.StringSlice("disk")
 	}
-	if c.IsSet("node-storage-usage-threshold") {
-		resourceOpts["node-storage-usage-threshold"] = utils.ToPBRawParamsString(c.Float64("node-storage-usage-threshold"))
+	if c.IsSet("storage") {
+		storage["storage"] = c.String("storage")
 	}
-	if c.IsSet("pod-storage-usage-threshold") {
-		resourceOpts["pod-storage-usage-threshold"] = utils.ToPBRawParamsString(c.Float64("pod-storage-usage-threshold"))
+	if c.IsSet("volume") {
+		storage["volumes"] = c.StringSlice("volume")
 	}
 	if c.IsSet("rm-disk") {
-		resourceOpts["rm-disks"] = utils.ToPBRawParamsString(c.String("rm-disk"))
+		storage["rm-disks"] = c.String("rm-disk")
 	}
-	if c.IsSet("workload-limit") {
-		resourceOpts["workload-limit"] = utils.ToPBRawParamsStringSlice(c.StringSlice("workload-limit"))
-	}
-	if c.IsSet("pod-workload-limit") {
-		resourceOpts["pod-workload-limit"] = utils.ToPBRawParamsStringSlice(c.StringSlice("pod-workload-limit"))
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	return &corepb.SetNodeOptions{
 		Nodename:      name,
-		ResourceOpts:  resourceOpts,
+		Resources:     resources,
 		Labels:        utils.SplitEquality(c.StringSlice("label")),
 		WorkloadsDown: c.Bool("mark-workloads-down"),
 		Endpoint:      c.String("endpoint"),

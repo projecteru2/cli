@@ -23,7 +23,7 @@ type sendWorkloadsOptions struct {
 
 func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 	opts := &corepb.SendOptions{
-		Ids:    o.ids,
+		IDs:    o.ids,
 		Data:   o.content,
 		Modes:  o.modes,
 		Owners: o.owners,

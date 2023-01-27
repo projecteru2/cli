@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 	coreutils "github.com/projecteru2/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -35,16 +36,18 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		Storage int64
 	}{}
 	for _, w := range workloads {
-		rawResourceArgs := map[string]map[string]interface{}{}
-		if err := json.Unmarshal([]byte(w.ResourceArgs), &rawResourceArgs); err != nil {
+		res := coretypes.Resources{}
+		if err := json.Unmarshal([]byte(w.Resources), &res); err != nil {
 			continue
 		}
-		cpu := rawResourceArgs["cpumem"]["cpu_request"].(float64)
-		mem := rawResourceArgs["cpumem"]["memory_request"].(float64)
-		storage := rawResourceArgs["volume"]["storage_request"].(float64)
+		cpu := res["cpumem"]["cpu_request"].(float64)
+		mem := res["cpumem"]["memory_request"].(float64)
+		if v, ok := res["storage"]; ok {
+			storage := v["storage_request"].(float64)
+			stat.Storage += int64(coreutils.Round(storage))
+		}
 		stat.CPUs += cpu
 		stat.Memory += int64(coreutils.Round(mem))
-		stat.Storage += int64(coreutils.Round(storage))
 	}
 
 	describeStatistics := func() {
@@ -123,12 +126,12 @@ func describeWorkloads(workloads []*corepb.Workload) {
 }
 
 func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface{}, cells [][]string) {
-	usageMap := map[string]map[string]interface{}{}
-	if len(workload.ResourceArgs) > 0 {
-		_ = json.Unmarshal([]byte(workload.ResourceArgs), &usageMap)
+	usages := coretypes.Resources{}
+	if len(workload.Resources) > 0 {
+		_ = json.Unmarshal([]byte(workload.Resources), &usages)
 	}
 
-	for plugin := range usageMap {
+	for plugin := range usages {
 		header = append(header, plugin)
 	}
 	sort.Slice(header, func(i, j int) bool {
@@ -137,7 +140,7 @@ func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface
 
 	for _, plugin := range header {
 		row := []string{}
-		usage := usageMap[plugin.(string)]
+		usage := usages[plugin.(string)]
 
 		for key, value := range usage {
 			row = append(row, parse(key, value)...)

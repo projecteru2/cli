@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -10,6 +11,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/urfave/cli/v2"
 )
@@ -136,44 +138,50 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	resourceOpts := map[string]*corepb.RawParam{}
+	cpumem := coretypes.RawParams{}
+	storage := coretypes.RawParams{}
+
 	if c.IsSet("cpu") {
-		resourceOpts["cpu"] = utils.ToPBRawParamsString(c.String("cpu"))
+		cpumem["cpu"] = c.String("cpu")
 	}
 	if c.IsSet("share") {
-		resourceOpts["share"] = utils.ToPBRawParamsString(c.String("share"))
+		cpumem["share"] = c.String("share")
 	}
 	if c.IsSet("memory") {
-		resourceOpts["memory"] = utils.ToPBRawParamsString(c.String("memory"))
-	}
-	if c.IsSet("storage") {
-		resourceOpts["storage"] = utils.ToPBRawParamsString(c.String("storage"))
-	}
-	if c.IsSet("volumes") {
-		resourceOpts["volumes"] = utils.ToPBRawParamsStringSlice(c.StringSlice("volumes"))
+		cpumem["memory"] = c.String("memory")
 	}
 	if c.IsSet("numa-cpu") {
-		resourceOpts["numa-cpu"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa-cpu"))
+		cpumem["numa-cpu"] = c.StringSlice("numa-cpu")
 	}
 	if c.IsSet("numa-memory") {
-		resourceOpts["numa-memory"] = utils.ToPBRawParamsStringSlice(c.StringSlice("numa-memory"))
+		cpumem["numa-memory"] = c.StringSlice("numa-memory")
 	}
 	if c.IsSet("disk") {
-		resourceOpts["disks"] = utils.ToPBRawParamsStringSlice(c.StringSlice("disk"))
+		storage["disks"] = c.StringSlice("disk")
 	}
-	if c.IsSet("workload-limit") {
-		resourceOpts["workload-limit"] = utils.ToPBRawParamsStringSlice(c.StringSlice("workload-limit"))
+	if c.IsSet("storage") {
+		storage["storage"] = c.String("storage")
+	}
+	if c.IsSet("volume") {
+		storage["volumes"] = c.StringSlice("volume")
+	}
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	labels := utils.SplitEquality(c.StringSlice("label"))
 	return &corepb.AddNodeOptions{
-		Nodename:     nodename,
-		Endpoint:     endpoint,
-		Podname:      podname,
-		Ca:           ca,
-		Cert:         cert,
-		Key:          key,
-		Labels:       labels,
-		ResourceOpts: resourceOpts,
+		Nodename:  nodename,
+		Endpoint:  endpoint,
+		Podname:   podname,
+		Ca:        ca,
+		Cert:      cert,
+		Key:       key,
+		Labels:    labels,
+		Resources: resources,
 	}, nil
 }

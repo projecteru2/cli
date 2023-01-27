@@ -2,10 +2,12 @@ package workload
 
 import (
 	"context"
+	"encoding/json"
 	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
@@ -88,25 +90,36 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 
 	cpuRequest, cpuLimit := cpuOption(c)
 
-	resourceOpts := map[string]*corepb.RawParam{
-		"cpu-request":     utils.ToPBRawParamsString(cpuRequest),
-		"cpu-limit":       utils.ToPBRawParamsString(cpuLimit),
-		"memory-request":  utils.ToPBRawParamsString(memoryRequest),
-		"memory-limit":    utils.ToPBRawParamsString(memoryLimit),
-		"storage-request": utils.ToPBRawParamsString(storageRequest),
-		"storage-limit":   utils.ToPBRawParamsString(storageLimit),
-		"volumes-request": utils.ToPBRawParamsStringSlice(volumesRequest),
-		"volumes-limit":   utils.ToPBRawParamsStringSlice(volumesLimit),
+	cpumem := coretypes.RawParams{
+		"cpu-request":    cpuRequest,
+		"cpu-limit":      cpuLimit,
+		"memory-request": memoryRequest,
+		"memory-limit":   memoryLimit,
 	}
+	storage := coretypes.RawParams{
+		"storage-request": storageRequest,
+		"storage-limit":   storageLimit,
+		"volumes-request": volumesRequest,
+		"volumes-limit":   volumesLimit,
+	}
+
 	switch bindCPUOpt {
 	case corepb.TriOpt_KEEP:
-		resourceOpts["keep-cpu-bind"] = utils.ToPBRawParamsString("true")
+		cpumem["keep-cpu-bind"] = true
 	case corepb.TriOpt_TRUE:
-		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+		cpumem["cpu-bind"] = true
+	}
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	return &corepb.ReallocOptions{
-		Id:           id,
-		ResourceOpts: resourceOpts,
+		Id:        id,
+		Resources: resources,
 	}, nil
 }

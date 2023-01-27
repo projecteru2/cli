@@ -43,9 +43,10 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:    version.NAME,
-		Usage:   "control eru in shell",
-		Version: version.VERSION,
+		Name:                      version.NAME,
+		Usage:                     "control eru in shell",
+		Version:                   version.VERSION,
+		DisableSliceFlagSeparator: true,
 		Commands: []*cli.Command{
 			core.Command(),
 			image.Command(),

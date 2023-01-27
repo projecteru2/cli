@@ -2,6 +2,7 @@ package workload
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 )
 
 type deployWorkloadsOptions struct {
@@ -107,7 +109,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 		}
 
 		if msg.Success {
-			logrus.Infof("[Deploy] Success %s %s %s %s", msg.Id, msg.Name, msg.Nodename, msg.ResourceArgs)
+			logrus.Infof("[Deploy] Success %s %s %s %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
 			if len(msg.Hook) > 0 {
 				logrus.Infof("[Deploy] Hook output \n%s", msg.Hook)
 			}
@@ -141,7 +143,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		return nil, err
 	}
 
-	memRequest, memLimit, err := memoryOption(c)
+	memoryRequest, memoryLimit, err := memoryOption(c)
 	if err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
 	}
@@ -202,18 +204,29 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
-	resourceOpts := map[string]*corepb.RawParam{
-		"cpu-request":     utils.ToPBRawParamsString(cpuRequest),
-		"cpu-limit":       utils.ToPBRawParamsString(cpuLimit),
-		"memory-request":  utils.ToPBRawParamsString(memRequest),
-		"memory-limit":    utils.ToPBRawParamsString(memLimit),
-		"storage-request": utils.ToPBRawParamsString(storageRequest),
-		"storage-limit":   utils.ToPBRawParamsString(storageLimit),
-		"volumes-request": utils.ToPBRawParamsStringSlice(specs.VolumesRequest),
-		"volumes-limit":   utils.ToPBRawParamsStringSlice(specs.Volumes),
+	cpumem := coretypes.RawParams{
+		"cpu-request":    cpuRequest,
+		"cpu-limit":      cpuLimit,
+		"memory-request": memoryRequest,
+		"memory-limit":   memoryLimit,
 	}
+	storage := coretypes.RawParams{
+		"storage-request": storageRequest,
+		"storage-limit":   storageLimit,
+		"volumes-request": specs.VolumesRequest,
+		"volumes-limit":   specs.Volumes,
+	}
+
 	if c.Bool("cpu-bind") {
-		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+		cpumem["cpu-bind"] = true
+	}
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	return &corepb.DeployOptions{
@@ -230,8 +243,8 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Restart:     entrypoint.Restart,
 			Sysctls:     entrypoint.Sysctls,
 		},
-		ResourceOpts: resourceOpts,
-		Podname:      c.String("pod"),
+		Resources: resources,
+		Podname:   c.String("pod"),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: c.StringSlice("node"),
 			Labels:   utils.SplitEquality(c.StringSlice("nodelabel")),

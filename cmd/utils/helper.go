@@ -2,15 +2,12 @@ package utils
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"strings"
 	"text/template"
 
 	"github.com/docker/go-units"
 	"github.com/urfave/cli/v2"
-
-	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 // GetNetworks returns a networkmode -> ip map
@@ -90,14 +87,4 @@ func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname
-}
-
-// ToPBRawParamsString .
-func ToPBRawParamsString(v interface{}) *corepb.RawParam {
-	return &corepb.RawParam{Value: &corepb.RawParam_Str{Str: fmt.Sprintf("%v", v)}}
-}
-
-// ToPBRawParamsStringSlice .
-func ToPBRawParamsStringSlice(slice []string) *corepb.RawParam {
-	return &corepb.RawParam{Value: &corepb.RawParam_StringSlice{StringSlice: &corepb.StringSlice{Slice: slice}}}
 }

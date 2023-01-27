@@ -2,11 +2,13 @@ package pod
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/google/uuid"
 	"github.com/juju/errors"
@@ -25,18 +27,28 @@ type capacityPodOptions struct {
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
-	resourceOpts := map[string]*corepb.RawParam{
-		"cpu":     utils.ToPBRawParamsString(o.cpu),
-		"memory":  utils.ToPBRawParamsString(o.memory),
-		"storage": utils.ToPBRawParamsString(o.storage),
+	cpumem := coretypes.RawParams{
+		"cpu":    o.cpu,
+		"memory": o.memory,
 	}
+	storage := coretypes.RawParams{
+		"storage": o.storage,
+	}
+
 	if o.cpuBind {
-		resourceOpts["cpu-bind"] = utils.ToPBRawParamsString("true")
+		cpumem["cpu-bind"] = true
+	}
+
+	cb, _ := json.Marshal(cpumem)
+	sb, _ := json.Marshal(storage)
+	resources := map[string][]byte{
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	opts := &corepb.DeployOptions{
 		// resource definitions
-		ResourceOpts: resourceOpts,
+		Resources: resources,
 
 		// deploy options
 		Entrypoint: &corepb.EntrypointOptions{

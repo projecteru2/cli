@@ -18,7 +18,7 @@ type dissociateWorkloadsOptions struct {
 }
 
 func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
-	opts := &corepb.DissociateWorkloadOptions{Ids: o.ids}
+	opts := &corepb.DissociateWorkloadOptions{IDs: o.ids}
 	resp, err := o.client.DissociateWorkload(ctx, opts)
 	if err != nil {
 		return err

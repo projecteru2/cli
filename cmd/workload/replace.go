@@ -100,7 +100,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 
 		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
 		createMsg := msg.Create
-		logrus.Infof("[Replace] New workload %s, resource: %s", createMsg.Name, createMsg.ResourceArgs)
+		logrus.Infof("[Replace] New workload %s, resource: %s", createMsg.Name, createMsg.Resources)
 		if len(createMsg.Hook) > 0 {
 			logrus.Infof("[Replace] Other output \n%s", createMsg.Hook)
 		}
@@ -188,8 +188,8 @@ func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Restart:     entrypoint.Restart,
 			Sysctls:     entrypoint.Sysctls,
 		},
-		ResourceOpts: nil,
-		Podname:      c.String("pod"),
+		Resources: nil,
+		Podname:   c.String("pod"),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: c.StringSlice("node"),
 			Labels:   nil,
