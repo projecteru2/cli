@@ -94,7 +94,7 @@ func cmdPodCapacity(c *cli.Context) error {
 	o := &capacityPodOptions{
 		client:    client,
 		podname:   name,
-		nodenames: c.StringSlice("nodename"),
+		nodenames: c.StringSlice("node"),
 
 		cpu:     c.Float64("cpu"),
 		cpuBind: c.Bool("cpu-bind"),

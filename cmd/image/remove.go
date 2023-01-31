@@ -70,8 +70,8 @@ func cmdImageClean(c *cli.Context) error {
 		client:    client,
 		images:    images,
 		step:      int32(c.Int("concurrent")),
-		podname:   c.String("podname"),
-		nodenames: c.StringSlice("nodename"),
+		podname:   c.String("pod"),
+		nodenames: c.StringSlice("node"),
 		prune:     c.Bool("prune"),
 	}
 	return o.run(c.Context)

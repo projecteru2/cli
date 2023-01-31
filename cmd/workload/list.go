@@ -142,7 +142,7 @@ func cmdWorkloadList(c *cli.Context) error {
 		client:     client,
 		appname:    c.Args().First(),
 		entrypoint: c.String("entry"),
-		nodename:   c.String("nodename"),
+		nodename:   c.String("node"),
 		labels:     utils.SplitEquality(c.StringSlice("label")),
 		limit:      c.Int64("limit"),
 		matchIPs:   c.StringSlice("match-ip"),

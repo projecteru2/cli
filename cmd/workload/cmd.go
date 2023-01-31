@@ -99,7 +99,7 @@ func Command() *cli.Command {
 						Usage: "filter by entry",
 					},
 					&cli.StringFlag{
-						Name:  "nodename",
+						Name:  "node",
 						Usage: "filter by nodename",
 					},
 					&cli.StringSliceFlag{

@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	podArgsUsage = "podname"
+	podArgsUsage = "pod name"
 )
 
 // Command exports pod subommands
@@ -89,7 +89,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:     "node",
-						Aliases:  []string{"nodename", "n"},
+						Aliases:  []string{"node", "n"},
 						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
 						Required: false,
 					},

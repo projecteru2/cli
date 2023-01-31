@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	nodeArgsUsage = "nodename"
+	nodeArgsUsage = "node name"
 )
 
 // Command exports node subommands
@@ -189,7 +189,7 @@ func Command() *cli.Command {
 			{
 				Name:      "add",
 				Usage:     "add node",
-				ArgsUsage: "podname",
+				ArgsUsage: "pod name",
 				Action:    utils.ExitCoder(cmdNodeAdd),
 				Flags: []cli.Flag{
 					&cli.StringFlag{

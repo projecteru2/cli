@@ -67,11 +67,11 @@ func Command() *cli.Command {
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "nodename",
+						Name:  "node",
 						Usage: "nodename if you just want to cache on one node",
 					},
 					&cli.StringFlag{
-						Name:  "podname",
+						Name:  "pod",
 						Usage: "name of pod, if you want to cache on all nodes in one pod",
 					},
 					&cli.IntFlag{
@@ -88,11 +88,11 @@ func Command() *cli.Command {
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "nodename",
+						Name:  "node",
 						Usage: "nodename if you just want to clean on one node",
 					},
 					&cli.StringFlag{
-						Name:  "podname",
+						Name:  "pod",
 						Usage: "name of pod, if you want to clean on all nodes in one pod",
 					},
 					&cli.IntFlag{
@@ -115,11 +115,11 @@ func Command() *cli.Command {
 				ArgsUsage: "[podname/nodenames]",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "nodename",
+						Name:  "node",
 						Usage: "nodename if you just want to list on specific nodes",
 					},
 					&cli.StringFlag{
-						Name:  "podname",
+						Name:  "pod",
 						Usage: "name of pod, if you want to list on all nodes in one pod",
 					},
 					&cli.StringFlag{
