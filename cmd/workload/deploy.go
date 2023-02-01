@@ -14,8 +14,8 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/types"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 )
 
 type deployWorkloadsOptions struct {
@@ -204,13 +204,13 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
-	cpumem := coretypes.RawParams{
+	cpumem := resourcetypes.RawParams{
 		"cpu-request":    cpuRequest,
 		"cpu-limit":      cpuLimit,
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
-	storage := coretypes.RawParams{
+	storage := resourcetypes.RawParams{
 		"storage-request": storageRequest,
 		"storage-limit":   storageLimit,
 		"volumes-request": specs.VolumesRequest,

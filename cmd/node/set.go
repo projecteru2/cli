@@ -9,8 +9,8 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/projecteru2/cli/cmd/utils"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 )
 
 type setNodeOptions struct {
@@ -60,8 +60,8 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 		return nil, err
 	}
 
-	cpumem := coretypes.RawParams{}
-	storage := coretypes.RawParams{}
+	cpumem := resourcetypes.RawParams{}
+	storage := resourcetypes.RawParams{}
 
 	if c.IsSet("cpu") {
 		cpumem["cpu"] = c.String("cpu")

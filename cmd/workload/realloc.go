@@ -7,9 +7,9 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/juju/errors"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -90,13 +90,13 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 
 	cpuRequest, cpuLimit := cpuOption(c)
 
-	cpumem := coretypes.RawParams{
+	cpumem := resourcetypes.RawParams{
 		"cpu-request":    cpuRequest,
 		"cpu-limit":      cpuLimit,
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
-	storage := coretypes.RawParams{
+	storage := resourcetypes.RawParams{
 		"storage-request": storageRequest,
 		"storage-limit":   storageLimit,
 		"volumes-request": volumesRequest,

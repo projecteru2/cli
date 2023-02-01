@@ -10,8 +10,8 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/urfave/cli/v2"
 )
@@ -138,8 +138,8 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	cpumem := coretypes.RawParams{}
-	storage := coretypes.RawParams{}
+	cpumem := resourcetypes.RawParams{}
+	storage := resourcetypes.RawParams{}
 
 	if c.IsSet("cpu") {
 		cpumem["cpu"] = c.String("cpu")

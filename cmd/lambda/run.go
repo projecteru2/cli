@@ -11,8 +11,8 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 )
 
 type runLambdaOptions struct {
@@ -96,13 +96,13 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 
 	content, modes, owners := utils.GenerateFileOptions(c)
 
-	cpumem := coretypes.RawParams{
+	cpumem := resourcetypes.RawParams{
 		"cpu-request":    c.Float64("cpu-request"),
 		"cpu-limit":      c.Float64("cpu"),
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
-	storage := coretypes.RawParams{
+	storage := resourcetypes.RawParams{
 		"storage-request": c.Int64("storage-request"),
 		"storage-limit":   c.Int64("storage"),
 		"volumes-request": c.StringSlice("volumes-request"),

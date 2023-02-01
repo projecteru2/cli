@@ -7,8 +7,8 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/google/uuid"
 	"github.com/juju/errors"
@@ -27,11 +27,11 @@ type capacityPodOptions struct {
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
-	cpumem := coretypes.RawParams{
+	cpumem := resourcetypes.RawParams{
 		"cpu":    o.cpu,
 		"memory": o.memory,
 	}
-	storage := coretypes.RawParams{
+	storage := resourcetypes.RawParams{
 		"storage": o.storage,
 	}
 

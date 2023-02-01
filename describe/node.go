@@ -9,9 +9,9 @@ import (
 	"sync"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -111,8 +111,8 @@ func parse(key, value interface{}) []string {
 }
 
 func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells [][]string) {
-	capacities := coretypes.Resources{}
-	usages := coretypes.Resources{}
+	capacities := resourcetypes.Resources{}
+	usages := resourcetypes.Resources{}
 	if len(node.ResourceCapacity) > 0 {
 		_ = json.Unmarshal([]byte(node.ResourceCapacity), &capacities)
 	}

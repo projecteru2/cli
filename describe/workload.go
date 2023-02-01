@@ -8,8 +8,8 @@ import (
 	"strings"
 	"sync"
 
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	coretypes "github.com/projecteru2/core/types"
 	coreutils "github.com/projecteru2/core/utils"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -36,7 +36,7 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		Storage int64
 	}{}
 	for _, w := range workloads {
-		res := coretypes.Resources{}
+		res := resourcetypes.Resources{}
 		if err := json.Unmarshal([]byte(w.Resources), &res); err != nil {
 			continue
 		}
@@ -126,7 +126,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 }
 
 func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface{}, cells [][]string) {
-	usages := coretypes.Resources{}
+	usages := resourcetypes.Resources{}
 	if len(workload.Resources) > 0 {
 		_ = json.Unmarshal([]byte(workload.Resources), &usages)
 	}
