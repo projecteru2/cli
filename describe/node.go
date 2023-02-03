@@ -62,13 +62,6 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 		}
 		status += fmt.Sprintf("\nbypass %v\navailable %v", node.Bypass, node.Available)
 
-		// TODO:
-		// re-implements after the proto is ready.
-		// totalVolumeCap := int64(0)
-		// for _, v := range node.InitVolume {
-		// 	totalVolumeCap += v
-		// }
-
 		rows := [][]string{
 			{node.Name},
 			{node.Endpoint},
@@ -164,37 +157,23 @@ func NodeResources(resources chan *corepb.NodeResource, stream bool) {
 	}
 }
 
-func checkNaNForResource(resource *corepb.NodeResource) {
-	// TODO:
-	// re-implements after the proto is ready.
-	// if math.IsNaN(resource.VolumePercent) {
-	// 	resource.VolumePercent = 0
-	// }
-	// if math.IsNaN(resource.MemoryPercent) {
-	// 	resource.MemoryPercent = 0
-	// }
-	// if math.IsNaN(resource.StoragePercent) {
-	// 	resource.StoragePercent = 0
-	// }
-	// if math.IsNaN(resource.CpuPercent) {
-	// 	resource.CpuPercent = 0
-	// }
-}
-
 func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})
 
 	for resource := range resources {
+		cr, sr, err := ToResourcePrecent(resource)
+		if err != nil {
+			logrus.Error(err)
+			continue
+		}
 		rows := [][]string{
 			{resource.Name},
-			// TODO:
-			// re-implements after the proto is ready.
-			// {fmt.Sprintf("%.2f%%", resource.CpuPercent*100)},
-			// {fmt.Sprintf("%.2f%%", resource.MemoryPercent*100)},
-			// {fmt.Sprintf("%.2f%%", resource.StoragePercent*100)},
-			// {fmt.Sprintf("%.2f%%", resource.VolumePercent*100)},
+			{fmt.Sprintf("%.2f%%", cr["cpu"]*100)},
+			{fmt.Sprintf("%.2f%%", cr["memory"]*100)},
+			{fmt.Sprintf("%.2f%%", sr["storage"]*100)},
+			{fmt.Sprintf("%.2f%%", sr["volumes"]*100)},
 			{strings.Join(resource.Diffs, "\n")},
 		}
 		t.AppendRows(toTableRows(rows))

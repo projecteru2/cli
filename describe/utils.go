@@ -7,6 +7,7 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
@@ -104,9 +105,59 @@ func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeReso
 	go func() {
 		defer close(ch)
 		for _, resource := range resources {
-			checkNaNForResource(resource)
 			ch <- resource
 		}
 	}()
 	return ch
+}
+
+func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[string]float64, error) {
+	var resUsage resourcetypes.Resources
+	var resCap resourcetypes.Resources
+	if err := json.Unmarshal([]byte(resource.ResourceUsage), &resUsage); err != nil {
+		return nil, nil, err
+	}
+	if err := json.Unmarshal([]byte(resource.ResourceCapacity), &resCap); err != nil {
+		return nil, nil, err
+	}
+	cpumemUsage := resUsage["cpumem"]
+	storageUsage := resUsage["storage"]
+	cpumemCap := resCap["cpumem"]
+	storageCap := resCap["storage"]
+	cr, sr := map[string]float64{}, map[string]float64{}
+	if cpumemUsage != nil && cpumemCap != nil {
+		cpuUsage := cpumemUsage.Float64("cpu")
+		cpuCap := cpumemCap.Float64("cpu")
+		memUsage := cpumemUsage.Float64("memory")
+		memCap := cpumemCap.Float64("memory")
+		cr["cpu"] = 0.0
+		cr["memory"] = 0.0
+		if cpuCap != 0 {
+			cr["cpu"] = cpuUsage / cpuCap
+		}
+		if memCap != 0 {
+			cr["memory"] = memUsage / memCap
+		}
+	}
+	if storageUsage != nil && storageCap != nil {
+		stUsage := storageUsage.Float64("storage")
+		stCap := storageCap.Float64("storage")
+		volumesUsage := storageUsage.RawParams("volumes")
+		volumesCap := storageCap.RawParams("volumes")
+		sr["storage"] = 0.0
+		sr["volumes"] = 0.0
+		if stCap != 0 {
+			cr["storage"] = stUsage / stCap
+		}
+		vu := 0.0
+		vc := 0.0
+		for k := range volumesUsage {
+			vu += volumesUsage.Float64(k)
+		}
+		for k := range volumesCap {
+			vc += volumesCap.Float64(k)
+		}
+		sr["volumes"] = vu / vc
+	}
+	return cr, sr, nil
 }

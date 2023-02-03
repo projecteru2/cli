@@ -46,17 +46,19 @@ func op(op string, left, right float64) bool {
 }
 
 func attr(nr *corepb.NodeResource, name string) float64 {
+	cr, sr, err := describe.ToResourcePrecent(nr)
+	if err != nil {
+		return 0.0
+	}
 	switch { //nolint
-	// TODO:
-	// re-implements after the proto is ready.
-	// case name == "cpu":
-	// 	return nr.CpuPercent
-	// case name == "memory":
-	// 	return nr.MemoryPercent
-	// case name == "storage":
-	// 	return nr.StoragePercent
-	// case name == "volume":
-	// 	return nr.VolumePercent
+	case name == "cpu":
+		return cr["cpu"]
+	case name == "memory":
+		return cr["memory"]
+	case name == "storage":
+		return sr["storage"]
+	case name == "volume":
+		return sr["volume"]
 	default:
 		return 0
 	}
