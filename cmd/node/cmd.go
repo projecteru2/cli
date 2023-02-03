@@ -112,20 +112,19 @@ func Command() *cli.Command {
 						Usage: "mark workloads down",
 					},
 					&cli.StringFlag{
+						Name:  "cpu",
+						Usage: "cpu value in string, e.g. 0:100,1:200,3:50",
+					},
+					&cli.StringFlag{
 						Name: "memory",
 						Usage: `memory, unit can be K/M/G/T, 
                           when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
                           e.g. --memory -10G --delta, means memory will be the current value - 10`,
 					},
-					&cli.StringFlag{
-						Name: "storage",
-						Usage: `storage, unit can be K/M/G/T, 
-                    when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
-                    e.g. --storage -10G --delta, means storage will be the current value - 10`,
-					},
-					&cli.StringFlag{
-						Name:  "cpu",
-						Usage: "cpu value in string, e.g. 0:100,1:200,3:50",
+					&cli.StringSliceFlag{
+						Name: "numa-cpu",
+						Usage: `numa cpu list, can be set multiple times, the index will be the numa node ID.
+                     e.g. --numa-cpu 0,1,2,3 --numa-cpu 4,5,6,7 means cpu 0,1,2,3 are bound to node ID 0, cpu 4,5,6,7 are bound to node ID 1`,
 					},
 					&cli.StringSliceFlag{
 						Name: "numa-memory",
@@ -135,28 +134,29 @@ func Command() *cli.Command {
                         this value can be set multiple times, the index will be the numa node ID,
                         e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
 					},
-					&cli.StringSliceFlag{
-						Name: "volume",
-						Usage: `volume value in string, can set multiple times. e.g. "--volume /data:100G",
-                    when using --delta flag, this can be a negative number indicating how much to add to the current value,
-                    e.g. --volume /data0:-10G --volume /data1:20G, means /data0 will be subtract 10G and /data1 will be added 20G`,
-					},
-					&cli.StringSliceFlag{
-						Name: "disk",
-						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
-					e.g. --disk /dev/sda1:/data0:100:100:100M:100M
-					when using --delta flag, this can be a negative number indicating how much to add to the current value`,
-					},
-					&cli.StringFlag{
-						Name: "rm-disk",
-						Usage: `remove disks, e.g. --rm-disk /dev/vda,/dev/vdb
-					rm-disk is not supported in delta mode`,
-					},
-					&cli.StringSliceFlag{
-						Name: "numa-cpu",
-						Usage: `numa cpu list, can be set multiple times, the index will be the numa node ID.
-                     e.g. --numa-cpu 0,1,2,3 --numa-cpu 4,5,6,7 means cpu 0,1,2,3 are bound to node ID 0, cpu 4,5,6,7 are bound to node ID 1`,
-					},
+					//					&cli.StringFlag{
+					//						Name: "storage",
+					//						Usage: `storage, unit can be K/M/G/T,
+					//                    when using --delta flag, this can be a negtive number indicating how much to add to the current value,
+					//                    e.g. --storage -10G --delta, means storage will be the current value - 10`,
+					//					},
+					//					&cli.StringSliceFlag{
+					//						Name: "volume",
+					//						Usage: `volume value in string, can set multiple times. e.g. "--volume /data:100G",
+					//                    when using --delta flag, this can be a negative number indicating how much to add to the current value,
+					//                    e.g. --volume /data0:-10G --volume /data1:20G, means /data0 will be subtract 10G and /data1 will be added 20G`,
+					//					},
+					//					&cli.StringSliceFlag{
+					//						Name: "disk",
+					//						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
+					//					e.g. --disk /dev/sda1:/data0:100:100:100M:100M
+					//					when using --delta flag, this can be a negative number indicating how much to add to the current value`,
+					//					},
+					//					&cli.StringFlag{
+					//						Name: "rm-disk",
+					//						Usage: `remove disks, e.g. --rm-disk /dev/vda,/dev/vdb
+					//					rm-disk is not supported in delta mode`,
+					//					},
 					&cli.StringSliceFlag{
 						Name:  "label",
 						Usage: "label for the node, can set multiple times, e.g. --label a=1 --label b=2",
