@@ -50,7 +50,7 @@ func attr(nr *corepb.NodeResource, name string) float64 {
 	if err != nil {
 		return 0.0
 	}
-	switch { //nolint
+	switch {
 	case name == "cpu":
 		return cr["cpu"]
 	case name == "memory":
