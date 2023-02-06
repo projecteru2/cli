@@ -61,7 +61,7 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 	}
 
 	cpumem := resourcetypes.RawParams{}
-	//	storage := resourcetypes.RawParams{}
+	storage := resourcetypes.RawParams{}
 
 	if c.IsSet("cpu") {
 		cpumem["cpu"] = c.String("cpu")
@@ -78,24 +78,24 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 	if c.IsSet("numa-memory") {
 		cpumem["numa-memory"] = c.StringSlice("numa-memory")
 	}
-	//	if c.IsSet("disk") {
-	//		storage["disks"] = c.StringSlice("disk")
-	//	}
-	//	if c.IsSet("storage") {
-	//		storage["storage"] = c.String("storage")
-	//	}
-	//	if c.IsSet("volume") {
-	//		storage["volumes"] = c.StringSlice("volume")
-	//	}
-	//	if c.IsSet("rm-disk") {
-	//		storage["rm-disks"] = c.String("rm-disk")
-	//	}
+	if c.IsSet("disk") {
+		storage["disks"] = c.StringSlice("disk")
+	}
+	if c.IsSet("storage") {
+		storage["storage"] = c.String("storage")
+	}
+	if c.IsSet("volume") {
+		storage["volumes"] = c.StringSlice("volume")
+	}
+	if c.IsSet("rm-disk") {
+		storage["rm-disks"] = c.String("rm-disk")
+	}
 
 	cb, _ := json.Marshal(cpumem)
-	//	sb, _ := json.Marshal(storage)
+	sb, _ := json.Marshal(storage)
 	resources := map[string][]byte{
-		"cpumem": cb,
-		//		"storage": sb,
+		"cpumem":  cb,
+		"storage": sb,
 	}
 
 	return &corepb.SetNodeOptions{

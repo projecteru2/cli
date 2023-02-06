@@ -12,9 +12,8 @@ import (
 )
 
 type getNodeOptions struct {
-	client  corepb.CoreRPCClient
-	plugins []string
-	name    string
+	client corepb.CoreRPCClient
+	name   string
 }
 
 func (o *getNodeOptions) run(ctx context.Context) error {
