@@ -60,7 +60,7 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 		if !node.Bypass && node.Available {
 			status = "UP"
 		}
-		status += fmt.Sprintf("\nbypass %v\navailable %v", node.Bypass, node.Available)
+		status += fmt.Sprintf("\nbypass %v\navailable %v\ntest %v", node.Bypass, node.Available, node.Test)
 
 		rows := [][]string{
 			{node.Name},
