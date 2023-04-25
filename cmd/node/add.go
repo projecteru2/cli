@@ -183,5 +183,6 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		Key:       key,
 		Labels:    labels,
 		Resources: resources,
+		Test:      c.Bool("test"),
 	}, nil
 }

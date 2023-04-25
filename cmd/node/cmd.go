@@ -257,6 +257,10 @@ func Command() *cli.Command {
 						Usage: `disk value in string, format: device:mounts:read-iops:write-iops:read-bps:write-bps
 										e.g. --disk /dev/sda1:/data0:100:100:100M:100M`,
 					},
+					&cli.BoolFlag{
+						Name:  "test",
+						Usage: "mark node for testing, maybe no health check and status report",
+					},
 				},
 			},
 		},
