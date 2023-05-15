@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"encoding/json"
 	"os"
 	"strings"
 	"text/template"
@@ -87,4 +88,15 @@ func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname
+}
+
+// ParseExtraResources .
+func ParseExtraResources(c *cli.Context) (map[string]any, error) {
+	var err error
+	extraResourcesMap := make(map[string]any)
+	extraResources := c.String("extra-resources")
+	if extraResources != "" {
+		err = json.Unmarshal([]byte(extraResources), &extraResourcesMap)
+	}
+	return extraResourcesMap, err
 }

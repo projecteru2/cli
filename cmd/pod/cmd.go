@@ -93,6 +93,11 @@ func Command() *cli.Command {
 						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
 						Required: false,
 					},
+					&cli.StringFlag{
+						Name:  "extra-resources",
+						Usage: "add extra resource requests",
+						Value: "",
+					},
 				},
 			},
 			{

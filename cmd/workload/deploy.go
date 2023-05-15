@@ -229,12 +229,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		"storage": sb,
 	}
 
-	extraResources := c.String("extra-resources")
-	if extraResources != "" {
-		extraResourcesMap := make(map[string]any)
-		if err := json.Unmarshal([]byte(extraResources), &extraResourcesMap); err != nil {
-			return nil, fmt.Errorf("Invalid value for extra-resources: %v", err)
-		}
+	if extraResourcesMap, err := utils.ParseExtraResources(c); err != nil {
 		for k, v := range extraResourcesMap {
 			if _, ok := resources[k]; ok {
 				continue
@@ -242,7 +237,10 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			eb, _ := json.Marshal(v)
 			resources[k] = eb
 		}
+	} else {
+		return nil, fmt.Errorf("[generateDeployOptions] get extra resources failed %v", err)
 	}
+
 	return &corepb.DeployOptions{
 		Name: specs.Appname,
 		Entrypoint: &corepb.EntrypointOptions{

@@ -283,6 +283,11 @@ func Command() *cli.Command {
 						Name:  "storage",
 						Usage: "shortcut to set storage-limit/request equally to this value",
 					},
+					&cli.StringFlag{
+						Name:  "extra-resources",
+						Usage: "add extra resource requests",
+						Value: "",
+					},
 				},
 			},
 			{
@@ -515,6 +520,11 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "raw-args",
 						Usage: "raw args in json (for docker engine)",
+						Value: "",
+					},
+					&cli.StringFlag{
+						Name:  "extra-resources",
+						Usage: "add extra resource requests",
 						Value: "",
 					},
 				},

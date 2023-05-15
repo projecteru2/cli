@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -116,6 +117,18 @@ func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
 	resources := map[string][]byte{
 		"cpumem":  cb,
 		"storage": sb,
+	}
+
+	if extraResourcesMap, err := utils.ParseExtraResources(c); err != nil {
+		for k, v := range extraResourcesMap {
+			if _, ok := resources[k]; ok {
+				continue
+			}
+			eb, _ := json.Marshal(v)
+			resources[k] = eb
+		}
+	} else {
+		return nil, fmt.Errorf("[generateReallocOptions] get extra resources failed %v", err)
 	}
 
 	return &corepb.ReallocOptions{

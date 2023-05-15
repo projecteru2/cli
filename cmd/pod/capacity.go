@@ -20,10 +20,11 @@ type capacityPodOptions struct {
 	podname   string   // podname
 	nodenames []string // node white list
 
-	cpu     float64
-	cpuBind bool
-	memory  int64
-	storage int64
+	cpu            float64
+	cpuBind        bool
+	memory         int64
+	storage        int64
+	extraResources map[string]any
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
@@ -44,6 +45,14 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	resources := map[string][]byte{
 		"cpumem":  cb,
 		"storage": sb,
+	}
+
+	for k, v := range o.extraResources {
+		if _, ok := resources[k]; ok {
+			continue
+		}
+		eb, _ := json.Marshal(v)
+		resources[k] = eb
 	}
 
 	opts := &corepb.DeployOptions{
@@ -91,15 +100,21 @@ func cmdPodCapacity(c *cli.Context) error {
 		return fmt.Errorf("[cmdPodCapacity] parse storage failed %v", err)
 	}
 
+	extraResourcesMap, err := utils.ParseExtraResources(c)
+	if err != nil {
+		return fmt.Errorf("[cmdPodCapacity] parse extra resources failed %v", err)
+	}
+
 	o := &capacityPodOptions{
 		client:    client,
 		podname:   name,
 		nodenames: c.StringSlice("node"),
 
-		cpu:     c.Float64("cpu"),
-		cpuBind: c.Bool("cpu-bind"),
-		memory:  mem,
-		storage: storage,
+		cpu:            c.Float64("cpu"),
+		cpuBind:        c.Bool("cpu-bind"),
+		memory:         mem,
+		storage:        storage,
+		extraResources: extraResourcesMap,
 	}
 	return o.run(c.Context)
 }
