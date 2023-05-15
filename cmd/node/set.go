@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/juju/errors"
 	"github.com/sirupsen/logrus"
@@ -96,6 +97,18 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 	resources := map[string][]byte{
 		"cpumem":  cb,
 		"storage": sb,
+	}
+
+	if extraResourcesMap, err := utils.ParseExtraResources(c); err != nil {
+		for k, v := range extraResourcesMap {
+			if _, ok := resources[k]; ok {
+				continue
+			}
+			eb, _ := json.Marshal(v)
+			resources[k] = eb
+		}
+	} else {
+		return nil, fmt.Errorf("[generateSetNodeOptions] get extra resources failed %v", err)
 	}
 
 	return &corepb.SetNodeOptions{

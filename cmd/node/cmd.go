@@ -184,6 +184,11 @@ func Command() *cli.Command {
 						Usage: "key file, like /etc/docker/tls/client.key",
 						Value: "",
 					},
+					&cli.StringFlag{
+						Name:  "extra-resources",
+						Usage: "add extra resource requests",
+						Value: "",
+					},
 				},
 			},
 			{
@@ -260,6 +265,11 @@ func Command() *cli.Command {
 					&cli.BoolFlag{
 						Name:  "test",
 						Usage: "mark node for testing, maybe no health check and status report",
+					},
+					&cli.StringFlag{
+						Name:  "extra-resources",
+						Usage: "add extra resource requests",
+						Value: "",
 					},
 				},
 			},
