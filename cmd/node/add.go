@@ -173,7 +173,7 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		"storage": sb,
 	}
 
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err != nil {
+	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
 		for k, v := range extraResourcesMap {
 			if _, ok := resources[k]; ok {
 				continue
