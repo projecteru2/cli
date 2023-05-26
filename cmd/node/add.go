@@ -142,7 +142,7 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 	storage := resourcetypes.RawParams{}
 
 	if c.IsSet("cpu") {
-		cpumem["cpu"] = c.String("cpu")
+		cpumem["cpu"] = c.Int64("cpu")
 	}
 	if c.IsSet("share") {
 		cpumem["share"] = c.String("share")
