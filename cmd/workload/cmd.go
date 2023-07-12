@@ -217,6 +217,18 @@ func Command() *cli.Command {
 				},
 			},
 			{
+				Name:      "sendlarge",
+				Usage:     "send single large file to workload(s)",
+				ArgsUsage: sendArgsUsage,
+				Action:    utils.ExitCoder(cmdWorkloadSendLarge),
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "file",
+						Usage: "copy local files to workload, only can use single time. src_path:dst_path[:mode[:uid:gid]]",
+					},
+				},
+			},
+			{
 				Name:      "dissociate",
 				Usage:     "dissociate workload(s) from eru, return it resource but not remove it",
 				ArgsUsage: workloadArgsUsage,
