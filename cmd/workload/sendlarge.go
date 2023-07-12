@@ -7,6 +7,7 @@ import (
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/projecteru2/core/types"
 
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -59,7 +60,7 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 }
 
 func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {
-	const maxChunkSize = 2 << 10
+	maxChunkSize := types.SendLargeFileChunkSize
 	ret := make([]*corepb.FileOptions, 0)
 	for idx := 0; idx < len(o.content); idx += maxChunkSize {
 		fileOption := &corepb.FileOptions{
