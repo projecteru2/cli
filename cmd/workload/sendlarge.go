@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -30,7 +31,10 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			msg, err := stream.Recv()
 			if err == io.EOF {
@@ -56,6 +60,8 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 	}
+	stream.CloseSend()
+	wg.Wait()
 	return nil
 }
 
