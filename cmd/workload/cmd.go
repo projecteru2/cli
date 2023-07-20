@@ -224,7 +224,7 @@ func Command() *cli.Command {
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:  "file",
-						Usage: "copy local files to workload, only can use single time. src_path:dst_path[:mode[:uid:gid]]",
+						Usage: "copy local file to workload, only can use single time. src_path:dst_path[:mode[:uid:gid]]",
 					},
 				},
 			},
