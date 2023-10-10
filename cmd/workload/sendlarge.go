@@ -33,6 +33,7 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
+	defer wg.Wait()
 	go func() {
 		defer wg.Done()
 		for {
@@ -60,9 +61,7 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 	}
-	stream.CloseSend()
-	wg.Wait()
-	return nil
+	return stream.CloseSend()
 }
 
 func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {
