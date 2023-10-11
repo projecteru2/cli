@@ -2,7 +2,6 @@ CLI
 =====
 ![](https://github.com/projecteru2/cli/workflows/goreleaser/badge.svg)
 ![](https://github.com/projecteru2/cli/workflows/golangci-lint/badge.svg)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e9a4c445afb549fea950b4353197e859)](https://www.codacy.com/gh/projecteru2/cli?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=projecteru2/cli&amp;utm_campaign=Badge_Grade)
 
 CLI for Eru.
 

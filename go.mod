@@ -10,7 +10,7 @@ require (
 	github.com/jedib0t/go-pretty/v6 v6.4.6
 	github.com/juju/errors v1.0.0
 	github.com/pkg/term v1.1.0
-	github.com/projecteru2/core v0.0.0-20231010184432-b89f6dbbdd1c
+	github.com/projecteru2/core v0.0.0-20231011045726-f834c8786ef0
 	github.com/sethgrid/curse v0.0.0-20181231162520-d4ee583ebf0f
 	github.com/sethvargo/go-signalcontext v0.2.1
 	github.com/sirupsen/logrus v1.9.0
