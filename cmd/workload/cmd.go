@@ -233,6 +233,12 @@ func Command() *cli.Command {
 				Usage:     "dissociate workload(s) from eru, return it resource but not remove it",
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadDissociate),
+				Flags: []cli.Flag{
+					&cli.StringSliceFlag{
+						Name:  "node",
+						Usage: "dissociate all workload(s) on node(s)",
+					},
+				},
 			},
 			{
 				Name:      "realloc",
