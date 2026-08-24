@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strconv"
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -142,10 +143,10 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	storage := resourcetypes.RawParams{}
 
 	if cmd.IsSet("cpu") {
-		cpumem["cpu"] = cmd.Int64("cpu")
+		cpumem["cpu"] = cmd.Int("cpu")
 	}
 	if cmd.IsSet("share") {
-		cpumem["share"] = cmd.String("share")
+		cpumem["share"] = strconv.Itoa(cmd.Int("share"))
 	}
 	if cmd.IsSet("memory") {
 		cpumem["memory"] = cmd.String("memory")

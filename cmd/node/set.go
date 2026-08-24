@@ -67,9 +67,6 @@ func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.S
 	if cmd.IsSet("cpu") {
 		cpumem["cpu"] = cmd.String("cpu")
 	}
-	if cmd.IsSet("share") {
-		cpumem["share"] = cmd.String("share")
-	}
 	if cmd.IsSet("memory") {
 		cpumem["memory"] = cmd.String("memory")
 	}
