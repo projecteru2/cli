@@ -343,6 +343,7 @@ func Command() *cli.Command {
 					&cli.BoolFlag{
 						Name:    "interactive",
 						Aliases: []string{"i"},
+						Usage:   "attach stdin to the command",
 						Value:   false,
 					},
 					&cli.StringSliceFlag{

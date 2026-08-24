@@ -19,7 +19,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:   "watch",
-				Usage:  "",
+				Usage:  "watch core service addresses",
 				Action: utils.ExitCoder(cmdWatchServiceStatus),
 			},
 		},
