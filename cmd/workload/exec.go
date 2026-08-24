@@ -5,11 +5,10 @@ import (
 	"fmt"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
-
-	"github.com/urfave/cli/v3"
 )
 
 type execWorkloadOptions struct {

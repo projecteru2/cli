@@ -8,13 +8,12 @@ import (
 	"os"
 	"strings"
 
-	"github.com/urfave/cli/v3"
-	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
-
 	dockerengine "github.com/projecteru2/core/engine/docker"
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+	"golang.org/x/term"
+	"gopkg.in/yaml.v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )

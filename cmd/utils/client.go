@@ -3,11 +3,10 @@ package utils
 import (
 	"context"
 
-	"github.com/urfave/cli/v3"
-
 	coreclient "github.com/projecteru2/core/client"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coretypes "github.com/projecteru2/core/types"
+	"github.com/urfave/cli/v3"
 )
 
 // NewCoreRPCClient returns an RPC client to use

@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/urfave/cli/v3"
-
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
 )
+
+var clrf = []byte{0xa}
 
 type runLambdaOptions struct {
 	client          corepb.CoreRPCClient
@@ -52,8 +53,6 @@ func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
 	}
 	return o.run(ctx)
 }
-
-var clrf = []byte{0xa}
 
 func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int, printWorkloadID bool) (code int, err error) {
 	resp, err := client.RunAndWait(ctx)

@@ -6,10 +6,9 @@ import (
 	"time"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
-
-	"github.com/urfave/cli/v3"
 )
 
 type setNodeStatusOptions struct {

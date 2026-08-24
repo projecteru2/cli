@@ -13,10 +13,9 @@ import (
 	"syscall"
 	"text/template"
 
-	"golang.org/x/term"
-
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"golang.org/x/term"
 )
 
 var (

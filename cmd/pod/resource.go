@@ -9,11 +9,10 @@ import (
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-
-	"github.com/urfave/cli/v3"
 )
 
 var re = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)

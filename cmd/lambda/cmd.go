@@ -2,10 +2,9 @@ package lambda
 
 import (
 	"github.com/projecteru2/core/strategy"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
-
-	"github.com/urfave/cli/v3"
 )
 
 // stopOnFirstArg keeps v2 parsing: everything after the first positional

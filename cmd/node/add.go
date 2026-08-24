@@ -9,11 +9,10 @@ import (
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-
-	"github.com/urfave/cli/v3"
 )
 
 type addNodeOptions struct {

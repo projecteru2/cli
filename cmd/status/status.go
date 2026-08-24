@@ -7,11 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/urfave/cli/v3"
-
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )

@@ -8,11 +8,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
-
-	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 // Workloads describes a list of Workload
@@ -74,6 +73,19 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		describeAsYAML(stat)
 	default:
 		describeStatistics()
+	}
+}
+
+// WorkloadStatuses describes a list of WorkloadStatus
+// output format can be json or yaml or table
+func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
+	switch {
+	case isJSON():
+		describeAsJSON(workloadStatuses)
+	case isYAML():
+		describeAsYAML(workloadStatuses)
+	default:
+		describeWorkloadStatuses(workloadStatuses)
 	}
 }
 
@@ -148,19 +160,6 @@ func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface
 		cells = append(cells, row)
 	}
 	return header, cells
-}
-
-// WorkloadStatuses describes a list of WorkloadStatus
-// output format can be json or yaml or table
-func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
-	switch {
-	case isJSON():
-		describeAsJSON(workloadStatuses)
-	case isYAML():
-		describeAsYAML(workloadStatuses)
-	default:
-		describeWorkloadStatuses(workloadStatuses)
-	}
 }
 
 func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {

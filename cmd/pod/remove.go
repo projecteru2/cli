@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"github.com/urfave/cli/v3"
-
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )

@@ -10,11 +10,10 @@ import (
 	"strings"
 	"sync"
 
-	corepb "github.com/projecteru2/core/rpc/gen"
-
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 // Nodes describes a list of Node
@@ -39,6 +38,32 @@ func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 		describeChNodeAsYAML(nodes)
 	default:
 		describeNodes(nodes, true, stream)
+	}
+}
+
+// NodeResources describes a list of NodeResource
+// output format can be json or yaml or table
+func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
+	switch {
+	case isJSON():
+		describeChNodeResourceAsJSON(resources)
+	case isYAML():
+		describeChNodeResourceAsYAML(resources)
+	default:
+		describeNodeResources(ctx, resources, stream)
+	}
+}
+
+// NodeStatusMessage describes NodeStatusStreamMessage
+// in json / yaml, or just a line in stdout
+func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
+	switch {
+	case isJSON():
+		describeAsJSON(ms)
+	case isYAML():
+		describeAsYAML(ms)
+	default:
+		describeNodeStatusMessage(ctx, ms)
 	}
 }
 
@@ -146,19 +171,6 @@ func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells []
 	return header, cells
 }
 
-// NodeResources describes a list of NodeResource
-// output format can be json or yaml or table
-func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
-	switch {
-	case isJSON():
-		describeChNodeResourceAsJSON(resources)
-	case isYAML():
-		describeChNodeResourceAsYAML(resources)
-	default:
-		describeNodeResources(ctx, resources, stream)
-	}
-}
-
 func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	logger := log.WithFunc("describe.NodeResources")
 	t := table.NewWriter()
@@ -190,19 +202,6 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 	if !stream {
 		t.SetStyle(table.StyleLight)
 		t.Render()
-	}
-}
-
-// NodeStatusMessage describes NodeStatusStreamMessage
-// in json / yaml, or just a line in stdout
-func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
-	switch {
-	case isJSON():
-		describeAsJSON(ms)
-	case isYAML():
-		describeAsYAML(ms)
-	default:
-		describeNodeStatusMessage(ctx, ms)
 	}
 }
 

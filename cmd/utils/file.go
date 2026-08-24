@@ -8,10 +8,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/urfave/cli/v3"
-
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
+	"github.com/urfave/cli/v3"
 )
 
 // ReadAllFiles open each pair in files

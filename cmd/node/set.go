@@ -6,11 +6,10 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/urfave/cli/v3"
-
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )
