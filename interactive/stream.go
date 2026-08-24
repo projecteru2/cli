@@ -126,7 +126,7 @@ func attachTerminal(ctx context.Context, iStream Stream) (func(), error) {
 		for {
 			select {
 			case <-ctx.Done():
-				break
+				return
 			case <-sigs:
 				if err := resize(); err != nil {
 					logger.Error(ctx, err, "resize")
