@@ -1,21 +1,23 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-func cmdWatchServiceStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWatchServiceStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	resp, err := client.WatchServiceStatus(c.Context, &corepb.Empty{})
+	resp, err := client.WatchServiceStatus(ctx, &corepb.Empty{})
 	if err != nil {
 		return err
 	}

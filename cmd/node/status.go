@@ -2,13 +2,14 @@ package node
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/projecteru2/cli/cmd/utils"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+
+	"github.com/urfave/cli/v3"
 )
 
 type setNodeStatusOptions struct {
@@ -45,13 +46,13 @@ func (o *setNodeStatusOptions) heartbeat(ctx context.Context) error {
 	return err
 }
 
-func cmdNodeSetStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSetStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Node name must be given")
 	}
@@ -59,8 +60,8 @@ func cmdNodeSetStatus(c *cli.Context) error {
 	o := &setNodeStatusOptions{
 		client:   client,
 		name:     name,
-		ttl:      c.Int("ttl"),
-		interval: c.Int("interval"),
+		ttl:      cmd.Int("ttl"),
+		interval: cmd.Int("interval"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

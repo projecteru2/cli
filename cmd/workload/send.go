@@ -2,14 +2,16 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type sendWorkloadsOptions struct {
@@ -22,6 +24,7 @@ type sendWorkloadsOptions struct {
 }
 
 func (o *sendWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.sendWorkloadsOptions.run")
 	opts := &corepb.SendOptions{
 		IDs:    o.ids,
 		Data:   o.content,
@@ -43,26 +46,26 @@ func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logrus.Errorf("[Send] Failed send %s to %s", msg.Path, msg.Id)
+			logger.Errorf(ctx, errors.New(msg.Error), "send %s to %s failed", msg.Path, msg.Id)
 		} else {
-			logrus.Infof("[Send] Send %s to %s success", msg.Path, msg.Id)
+			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 		}
 	}
 	return nil
 }
 
-func cmdWorkloadSend(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(cmd)
 	if len(content) == 0 {
 		return fmt.Errorf("files should not be empty")
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -74,5 +77,5 @@ func cmdWorkloadSend(c *cli.Context) error {
 		modes:   modes,
 		owners:  owners,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

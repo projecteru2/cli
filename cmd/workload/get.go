@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 type getWorkloadsOptions struct {
@@ -26,13 +27,13 @@ func (o *getWorkloadsOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdWorkloadGet(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadGet(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -41,5 +42,5 @@ func cmdWorkloadGet(c *cli.Context) error {
 		client: client,
 		ids:    ids,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

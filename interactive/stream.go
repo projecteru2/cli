@@ -5,20 +5,18 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"text/template"
-	"unsafe"
 
+	"golang.org/x/term"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/getlantern/deepcopy"
-	"github.com/pkg/term/termios"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
 )
 
 var (
@@ -27,10 +25,8 @@ var (
 )
 
 type window struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16 `json:"-"`
-	Ypixel uint16 `json:"-"`
+	Row uint16
+	Col uint16
 }
 
 // Stream is a wrapper for send and recv method
@@ -41,48 +37,28 @@ type Stream struct {
 
 // HandleStream will handle a stream with send and recv method
 // with or without interactive mode
-func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
-	if interactive { //nolint
-		stdinFd := os.Stdin.Fd()
-		terminal := &unix.Termios{}
-		_ = termios.Tcgetattr(stdinFd, terminal)
-		terminalBak := &unix.Termios{}
-		_ = deepcopy.Copy(terminalBak, terminal)
-		defer func() { _ = termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak) }()
+func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
+	logger := log.WithFunc("interactive.HandleStream")
 
-		terminal.Lflag &^= syscall.ECHO   // off echoing
-		terminal.Lflag &^= syscall.ICANON // noncanonical mode
-		terminal.Lflag &^= syscall.ISIG   // disable signals
-		terminal.Lflag &^= syscall.IEXTEN // extended input processing
-
-		terminal.Iflag &^= syscall.BRKINT // disable special handling of BREAK
-		terminal.Iflag &^= syscall.ICRNL  // disable special handling of CR
-		terminal.Iflag &^= syscall.IGNBRK // disable special handling of BREAK
-		terminal.Iflag &^= syscall.IGNCR  // disable special handling of CR
-		terminal.Iflag &^= syscall.INLCR  // disable special handling of NL
-		terminal.Iflag &^= syscall.INPCK  // no parity error handling
-		terminal.Iflag &^= syscall.ISTRIP // no 8th-bit stripping
-		terminal.Iflag &^= syscall.IXON   // disable output flow control
-		terminal.Iflag &^= syscall.PARMRK // no parity error handling
-
-		terminal.Oflag &^= syscall.OPOST // disable all output processing
-
-		terminal.Cc[syscall.VMIN] = 1  // character-at-a-time input
-		terminal.Cc[syscall.VTIME] = 0 // blocking
-
-		_ = termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
+	if interactive {
+		stdinFd := int(os.Stdin.Fd())
+		state, err := term.MakeRaw(stdinFd)
+		if err != nil {
+			return -1, err
+		}
+		defer func() { _ = term.Restore(stdinFd, state) }()
 
 		// capture SIGWINCH and measure window size
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGWINCH)
-		ctx, cancel := context.WithCancel(context.Background())
+		ctx, cancel := context.WithCancel(ctx)
 		defer cancel()
-		resize := func(_ context.Context) error {
-			w := &window{}
-			if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
+		resize := func() error {
+			col, row, err := term.GetSize(stdinFd)
+			if err != nil {
 				return err
 			}
-			opts, err := json.Marshal(w)
+			opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)})
 			if err != nil {
 				return err
 			}
@@ -99,27 +75,27 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 					if !ok {
 						return
 					}
-					if err := resize(ctx); err != nil {
-						logrus.Errorf("[HandleStream] Resize error: %v", err)
+					if err := resize(); err != nil {
+						logger.Error(ctx, err, "resize")
 					}
 				}
 			}
 		}(ctx)
 
 		go func() {
-			if err := resize(ctx); err != nil {
-				logrus.Errorf("[HandleStream] Resize error: %v", err)
+			if err := resize(); err != nil {
+				logger.Error(ctx, err, "resize")
 			}
 			scanner := bufio.NewScanner(os.Stdin)
 			scanner.Split(bufio.ScanRunes)
 			for scanner.Scan() {
 				b := scanner.Bytes()
 				if err := iStream.Send(b); err != nil {
-					logrus.Errorf("[HandleStream] Send command %s error: %v", b, err)
+					logger.Errorf(ctx, err, "send command %s", b)
 				}
 			}
 			if err := scanner.Err(); err != nil {
-				logrus.Errorf("[HandleStream] Failed to read output from virtual unit: %v", err)
+				logger.Error(ctx, err, "read output from virtual unit")
 				return
 			}
 		}()
@@ -147,12 +123,12 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 
 		// error should be printed and skipped
 		if msg.StdStreamType == corepb.StdStreamType_ERUERROR {
-			logrus.Errorf("[Error From ERU] %s", string(msg.Data))
+			logger.Error(ctx, errors.New(string(msg.Data)), "error from eru")
 			continue
 		}
 
 		if msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID {
-			logrus.Infof("[WorkloadID] %s", msg.WorkloadId)
+			logger.Infof(ctx, "workload id %s", msg.WorkloadId)
 			continue
 		}
 
@@ -177,7 +153,7 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 			outStream = os.Stderr
 		}
 		if err := outputT.Execute(outStream, msg); err != nil {
-			logrus.Errorf("[HandleStream] Render template error: %v", err)
+			logger.Error(ctx, err, "render template")
 		}
 	}
 

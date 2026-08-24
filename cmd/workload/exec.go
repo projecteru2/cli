@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/interactive"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/interactive"
+
+	"github.com/urfave/cli/v3"
 )
 
 type execWorkloadOptions struct {
@@ -39,12 +40,12 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 
 	iStream := interactive.Stream{
 		Recv: resp.Recv,
-		Send: func(cmd []byte) error {
-			return resp.Send(&corepb.ExecuteWorkloadOptions{ReplCmd: cmd})
+		Send: func(data []byte) error {
+			return resp.Send(&corepb.ExecuteWorkloadOptions{ReplCmd: data})
 		},
 	}
 
-	code, err := interactive.HandleStream(opts.OpenStdin, iStream, 1, false)
+	code, err := interactive.HandleStream(ctx, opts.OpenStdin, iStream, 1, false)
 
 	if err == nil {
 		return cli.Exit("", code)
@@ -52,18 +53,18 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 	return err
 }
 
-func cmdWorkloadExec(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadExec(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	id := c.Args().First()
+	id := cmd.Args().First()
 	if id == "" {
 		return fmt.Errorf("Workload ID should not be empty")
 	}
 
-	commands := c.Args().Tail()
+	commands := cmd.Args().Tail()
 	if len(commands) == 0 {
 		return fmt.Errorf("Commands should not be empty")
 	}
@@ -71,10 +72,10 @@ func cmdWorkloadExec(c *cli.Context) error {
 	o := &execWorkloadOptions{
 		client:      client,
 		id:          id,
-		interactive: c.Bool("interactive"),
+		interactive: cmd.Bool("interactive"),
 		commands:    commands,
-		envs:        c.StringSlice("env"),
-		workdir:     c.String("workdir"),
+		envs:        cmd.StringSlice("env"),
+		workdir:     cmd.String("workdir"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

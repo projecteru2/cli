@@ -2,15 +2,16 @@ package pod
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -141,24 +142,24 @@ func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node, stream bo
 	}
 }
 
-func cmdPodListNodes(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	filter := strings.ToLower(c.String("filter"))
+	filter := strings.ToLower(cmd.String("filter"))
 	if !(filter == up || filter == down || filter == all) {
 		return errors.New("filter should be one of up/down/all")
 	}
 
 	o := &listPodNodesOptions{
 		client:          client,
-		name:            c.Args().First(),
+		name:            cmd.Args().First(),
 		filter:          filter,
-		labels:          utils.SplitEquality(c.StringSlice("label")),
-		timeoutInSecond: int32(c.Int("timeout")),
-		showInfo:        c.Bool("show-info"),
+		labels:          utils.SplitEquality(cmd.StringSlice("label")),
+		timeoutInSecond: int32(cmd.Int("timeout")),
+		showInfo:        cmd.Bool("show-info"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

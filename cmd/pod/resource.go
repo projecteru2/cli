@@ -2,17 +2,18 @@ package pod
 
 import (
 	"context"
+	"errors"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 var re = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)
@@ -137,17 +138,17 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.NodeResources(resChan, o.stream)
+	describe.NodeResources(ctx, resChan, o.stream)
 	return nil
 }
 
-func cmdPodResource(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Pod name must be given")
 	}
@@ -155,8 +156,8 @@ func cmdPodResource(c *cli.Context) error {
 	o := &resourcePodOptions{
 		client: client,
 		name:   name,
-		expr:   c.String("filter"),
-		stream: c.Bool("stream"),
+		expr:   cmd.String("filter"),
+		stream: cmd.Bool("stream"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

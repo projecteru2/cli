@@ -147,7 +147,7 @@ func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface
 		}
 		cells = append(cells, row)
 	}
-	return
+	return header, cells
 }
 
 // WorkloadStatuses describes a list of WorkloadStatus

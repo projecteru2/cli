@@ -2,6 +2,7 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -9,12 +10,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type copyWorkloadsOptions struct {
@@ -26,6 +28,7 @@ type copyWorkloadsOptions struct {
 }
 
 func (o *copyWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.copyWorkloadsOptions.run")
 	targets := map[string]*corepb.CopyPaths{}
 	for id, paths := range o.sources {
 		targets[id] = &corepb.CopyPaths{Paths: paths}
@@ -37,7 +40,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	now := time.Now().Format("2006.01.02.15.04.05")
-	if err := os.MkdirAll(o.dir, os.FileMode(0700)); err != nil {
+	if err := os.MkdirAll(o.dir, os.FileMode(0o700)); err != nil {
 		return err
 	}
 
@@ -53,7 +56,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logrus.Errorf("[Copy] Failed %s %s", coreutils.ShortID(msg.Id), msg.Error)
+			logger.Errorf(ctx, errors.New(msg.Error), "copy from %s failed", coreutils.ShortID(msg.Id))
 			continue
 		}
 
@@ -66,11 +69,11 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		if _, err := os.Stat(storePath); err != nil {
 			f, err := os.Create(storePath)
 			if err != nil {
-				logrus.Errorf("[Copy] Error during create backup file %s: %v", storePath, err)
+				logger.Errorf(ctx, err, "create backup file %s", storePath)
 				continue
 			}
 			if _, err := f.Write(content); err != nil {
-				logrus.Errorf("[Copy] Write file error %v", err)
+				logger.Error(ctx, err, "write file")
 			}
 			f.Close()
 		}
@@ -78,14 +81,14 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdWorkloadCopy(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
 	sources := map[string][]string{}
-	for _, source := range c.Args().Slice() {
+	for _, source := range cmd.Args().Slice() {
 		ps := strings.Split(source, ":")
 		if len(ps) != 2 {
 			continue
@@ -106,7 +109,7 @@ func cmdWorkloadCopy(c *cli.Context) error {
 	o := &copyWorkloadsOptions{
 		client:  client,
 		sources: sources,
-		dir:     c.String("dir"),
+		dir:     cmd.String("dir"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

@@ -2,13 +2,14 @@ package pod
 
 import (
 	"context"
+	"errors"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type addPodOptions struct {
@@ -30,13 +31,13 @@ func (o *addPodOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdPodAdd(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodAdd(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Pod name must be given")
 	}
@@ -44,7 +45,7 @@ func cmdPodAdd(c *cli.Context) error {
 	o := &addPodOptions{
 		client: client,
 		name:   name,
-		desc:   c.String("desc"),
+		desc:   cmd.String("desc"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

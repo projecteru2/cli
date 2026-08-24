@@ -1,17 +1,24 @@
 package lambda
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+
+	"github.com/urfave/cli/v3"
 )
+
+// stopOnFirstArg keeps v2 parsing: everything after the first positional
+// argument is the command line to run, not a flag of eru-cli.
+var stopOnFirstArg = 1
 
 // Command exports lambda subommands
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "lambda",
-		Usage: "run commands in a workload like local",
+		Name:         "lambda",
+		Usage:        "run commands in a workload like local",
+		ArgsUsage:    "-- cmd1 cmd2 cmd3",
+		StopOnNthArg: &stopOnFirstArg,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "name",

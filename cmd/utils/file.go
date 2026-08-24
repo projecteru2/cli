@@ -1,15 +1,17 @@
 package utils
 
 import (
-	"io/ioutil"
+	"context"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
+	"github.com/urfave/cli/v3"
+
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
-
-	"github.com/urfave/cli/v2"
 )
 
 // ReadAllFiles open each pair in files
@@ -46,7 +48,7 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 			fallthrough
 		case len(ps) >= 2:
 			// srcfile:dstfile
-			f.Content, err = ioutil.ReadFile(ps[0])
+			f.Content, err = os.ReadFile(ps[0])
 			if err != nil {
 				break
 			}
@@ -57,12 +59,12 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 }
 
 // GenerateFileOptions returns file options
-func GenerateFileOptions(c *cli.Context) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
+func GenerateFileOptions(cmd *cli.Command) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
 	data := map[string][]byte{}
 	modes := map[string]*corepb.FileMode{}
 	owners := map[string]*corepb.FileOwner{}
 
-	m := ReadAllFiles(c.StringSlice("file"))
+	m := ReadAllFiles(cmd.StringSlice("file"))
 	for dst, file := range m {
 		data[dst] = file.Content
 		modes[dst] = &corepb.FileMode{Mode: file.Mode}
@@ -88,11 +90,15 @@ func SplitFiles(files []string) map[string]string {
 }
 
 // GetSpecFromRemote gets specs from a remote position
-func GetSpecFromRemote(uri string) ([]byte, error) {
-	resp, err := http.Get(uri) //nolint
+func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
+	if err != nil {
+		return nil, err
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+	return io.ReadAll(resp.Body)
 }

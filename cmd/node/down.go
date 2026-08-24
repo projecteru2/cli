@@ -2,14 +2,15 @@ package node
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type setNodeDownOptions struct {
@@ -20,6 +21,7 @@ type setNodeDownOptions struct {
 }
 
 func (o *setNodeDownOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("node.setNodeDownOptions.run")
 	do := true
 	if o.check {
 		timeout, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
@@ -29,7 +31,7 @@ func (o *setNodeDownOptions) run(ctx context.Context) error {
 				Nodename: o.name,
 			},
 		}); err == nil {
-			logrus.Warn("[SetNode] node is not down")
+			logger.Warn(ctx, "node is not down")
 			do = false
 		}
 	}
@@ -42,18 +44,18 @@ func (o *setNodeDownOptions) run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		logrus.Infof("[SetNode] node %s down", o.name)
+		logger.Infof(ctx, "node %s down", o.name)
 	}
 	return nil
 }
 
-func cmdNodeSetDown(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSetDown(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Node name must be given")
 	}
@@ -61,8 +63,8 @@ func cmdNodeSetDown(c *cli.Context) error {
 	o := &setNodeDownOptions{
 		client:       client,
 		name:         name,
-		check:        c.Bool("check"),
-		checkTimeout: c.Int("check-timeout"),
+		check:        cmd.Bool("check"),
+		checkTimeout: cmd.Int("check-timeout"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

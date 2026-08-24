@@ -2,13 +2,14 @@ package node
 
 import (
 	"context"
+	"errors"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type setNodeUpOptions struct {
@@ -24,17 +25,17 @@ func (o *setNodeUpOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("[SetNode] node %s up", o.name)
+	log.WithFunc("node.setNodeUpOptions.run").Infof(ctx, "node %s up", o.name)
 	return nil
 }
 
-func cmdNodeSetUp(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSetUp(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Node name must be given")
 	}
@@ -43,5 +44,5 @@ func cmdNodeSetUp(c *cli.Context) error {
 		client: client,
 		name:   name,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

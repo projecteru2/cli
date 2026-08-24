@@ -3,7 +3,7 @@ package status
 import (
 	"github.com/projecteru2/cli/cmd/utils"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // Command exports status subommands

@@ -1,11 +1,16 @@
 package workload
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+
+	"github.com/urfave/cli/v3"
 )
+
+// stopOnFirstArg keeps v2 parsing: everything after the first positional
+// argument is the command line to run, not a flag of eru-cli.
+var stopOnFirstArg = 1
 
 const (
 	workloadArgsUsage = "workloadID(s)"
@@ -20,7 +25,7 @@ func Command() *cli.Command {
 		Name:    "workload",
 		Aliases: []string{"container"},
 		Usage:   "workload commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:      "get",
 				Usage:     "get workload(s)",
@@ -309,10 +314,11 @@ func Command() *cli.Command {
 				},
 			},
 			{
-				Name:      "exec",
-				Usage:     "run a command in a running workload",
-				ArgsUsage: "workloadID -- cmd1 cmd2 cmd3",
-				Action:    utils.ExitCoder(cmdWorkloadExec),
+				Name:         "exec",
+				Usage:        "run a command in a running workload",
+				ArgsUsage:    "workloadID -- cmd1 cmd2 cmd3",
+				StopOnNthArg: &stopOnFirstArg,
+				Action:       utils.ExitCoder(cmdWorkloadExec),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "interactive",
@@ -553,19 +559,19 @@ func Command() *cli.Command {
 
 // returns --memory-request, --memory-limit
 // or shortcut --memory to override them
-func memoryOption(c *cli.Context) (int64, int64, error) {
-	memRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
+func memoryOption(cmd *cli.Command) (int64, int64, error) {
+	memRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
 	if err != nil {
 		return 0, 0, err
 	}
 
-	memLimit, err := utils.ParseRAMInHuman(c.String("memory-limit"))
+	memLimit, err := utils.ParseRAMInHuman(cmd.String("memory-limit"))
 	if err != nil {
 		return 0, 0, err
 	}
 	// if cpu shortcut is set, then override the above
-	if c.IsSet("memory") {
-		if memory, err := utils.ParseRAMInHuman(c.String("memory")); err == nil {
+	if cmd.IsSet("memory") {
+		if memory, err := utils.ParseRAMInHuman(cmd.String("memory")); err == nil {
 			memRequest = memory
 			memLimit = memory
 		}
@@ -575,19 +581,19 @@ func memoryOption(c *cli.Context) (int64, int64, error) {
 
 // returns --storage-request, --storage-limit
 // or shortcut --storage to override them
-func storageOption(c *cli.Context) (int64, int64, error) {
-	storageRequest, err := utils.ParseRAMInHuman(c.String("storage-request"))
+func storageOption(cmd *cli.Command) (int64, int64, error) {
+	storageRequest, err := utils.ParseRAMInHuman(cmd.String("storage-request"))
 	if err != nil {
 		return 0, 0, err
 	}
 
-	storageLimit, err := utils.ParseRAMInHuman(c.String("storage-limit"))
+	storageLimit, err := utils.ParseRAMInHuman(cmd.String("storage-limit"))
 	if err != nil {
 		return 0, 0, err
 	}
 	// if storage shortcut is set, then override the above
-	if c.IsSet("storage") {
-		if storage, err := utils.ParseRAMInHuman(c.String("storage")); err == nil {
+	if cmd.IsSet("storage") {
+		if storage, err := utils.ParseRAMInHuman(cmd.String("storage")); err == nil {
 			storageRequest = storage
 			storageLimit = storage
 		}
@@ -597,12 +603,12 @@ func storageOption(c *cli.Context) (int64, int64, error) {
 
 // returns --cpu-request, --cpu-limit
 // or shortcut --cpu to override them
-func cpuOption(c *cli.Context) (float64, float64) {
-	cpuRequest := c.Float64("cpu-request")
-	cpuLimit := c.Float64("cpu-limit")
+func cpuOption(cmd *cli.Command) (float64, float64) {
+	cpuRequest := cmd.Float64("cpu-request")
+	cpuLimit := cmd.Float64("cpu-limit")
 	// if cpu shortcut is set, then override the above
-	if c.IsSet("cpu") {
-		cpu := c.Float64("cpu")
+	if cmd.IsSet("cpu") {
+		cpu := cmd.Float64("cpu")
 		cpuRequest = cpu
 		cpuLimit = cpu
 	}

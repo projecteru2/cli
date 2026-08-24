@@ -1,7 +1,9 @@
 package describe
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"sort"
@@ -11,8 +13,8 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
-	"github.com/sirupsen/logrus"
 )
 
 // Nodes describes a list of Node
@@ -146,18 +148,19 @@ func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells []
 
 // NodeResources describes a list of NodeResource
 // output format can be json or yaml or table
-func NodeResources(resources chan *corepb.NodeResource, stream bool) {
+func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
 		describeChNodeResourceAsJSON(resources)
 	case isYAML():
 		describeChNodeResourceAsYAML(resources)
 	default:
-		describeNodeResources(resources, stream)
+		describeNodeResources(ctx, resources, stream)
 	}
 }
 
-func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
+func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
+	logger := log.WithFunc("describe.NodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})
@@ -165,7 +168,7 @@ func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
 	for resource := range resources {
 		cr, sr, err := ToResourcePrecent(resource)
 		if err != nil {
-			logrus.Error(err)
+			logger.Error(ctx, err)
 			continue
 		}
 		rows := [][]string{
@@ -192,23 +195,24 @@ func describeNodeResources(resources chan *corepb.NodeResource, stream bool) {
 
 // NodeStatusMessage describes NodeStatusStreamMessage
 // in json / yaml, or just a line in stdout
-func NodeStatusMessage(ms ...*corepb.NodeStatusStreamMessage) {
+func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
 	switch {
 	case isJSON():
 		describeAsJSON(ms)
 	case isYAML():
 		describeAsYAML(ms)
 	default:
-		describeNodeStatusMessage(ms)
+		describeNodeStatusMessage(ctx, ms)
 	}
 }
 
-func describeNodeStatusMessage(ms []*corepb.NodeStatusStreamMessage) {
+func describeNodeStatusMessage(ctx context.Context, ms []*corepb.NodeStatusStreamMessage) {
+	logger := log.WithFunc("describe.NodeStatusMessage")
 	for _, m := range ms {
 		if m.Error != "" {
-			logrus.Errorf("[WatchNodeStatus] Error when get status for node %s: %s", m.Nodename, m.Error)
+			logger.Errorf(ctx, errors.New(m.Error), "get status for node %s", m.Nodename)
 		} else {
-			logrus.Infof("[WatchNodeStatus] Node %s on pod %s, alive: %v", m.Nodename, m.Podname, m.Alive)
+			logger.Infof(ctx, "node %s on pod %s, alive: %v", m.Nodename, m.Podname, m.Alive)
 		}
 	}
 }

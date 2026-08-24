@@ -3,16 +3,17 @@ package pod
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
 	"github.com/google/uuid"
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type capacityPodOptions struct {
@@ -79,28 +80,28 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdPodCapacity(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Pod name must be given")
 	}
 
-	mem, err := utils.ParseRAMInHuman(c.String("memory"))
+	mem, err := utils.ParseRAMInHuman(cmd.String("memory"))
 	if err != nil {
 		return fmt.Errorf("[cmdPodCapacity] parse memory failed %v", err)
 	}
 
-	storage, err := utils.ParseRAMInHuman(c.String("storage"))
+	storage, err := utils.ParseRAMInHuman(cmd.String("storage"))
 	if err != nil {
 		return fmt.Errorf("[cmdPodCapacity] parse storage failed %v", err)
 	}
 
-	extraResourcesMap, err := utils.ParseExtraResources(c)
+	extraResourcesMap, err := utils.ParseExtraResources(cmd)
 	if err != nil {
 		return fmt.Errorf("[cmdPodCapacity] parse extra resources failed %v", err)
 	}
@@ -108,13 +109,13 @@ func cmdPodCapacity(c *cli.Context) error {
 	o := &capacityPodOptions{
 		client:    client,
 		podname:   name,
-		nodenames: c.StringSlice("node"),
+		nodenames: cmd.StringSlice("node"),
 
-		cpu:            c.Float64("cpu"),
-		cpuBind:        c.Bool("cpu-bind"),
+		cpu:            cmd.Float64("cpu"),
+		cpuBind:        cmd.Bool("cpu-bind"),
 		memory:         mem,
 		storage:        storage,
 		extraResources: extraResourcesMap,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

@@ -5,11 +5,12 @@ import (
 	"io"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 type listWorkloadsOptions struct {
@@ -132,23 +133,23 @@ func (wf filter) hasIntersection(a, b []string) bool {
 	return false
 }
 
-func cmdWorkloadList(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
 	o := &listWorkloadsOptions{
 		client:     client,
-		appname:    c.Args().First(),
-		entrypoint: c.String("entry"),
-		nodename:   c.String("node"),
-		labels:     utils.SplitEquality(c.StringSlice("label")),
-		limit:      c.Int64("limit"),
-		matchIPs:   c.StringSlice("match-ip"),
-		skipIPs:    c.StringSlice("skip-ip"),
-		podnames:   c.StringSlice("pod"),
-		statistics: c.Bool("statistics"),
+		appname:    cmd.Args().First(),
+		entrypoint: cmd.String("entry"),
+		nodename:   cmd.String("node"),
+		labels:     utils.SplitEquality(cmd.StringSlice("label")),
+		limit:      cmd.Int64("limit"),
+		matchIPs:   cmd.StringSlice("match-ip"),
+		skipIPs:    cmd.StringSlice("skip-ip"),
+		podnames:   cmd.StringSlice("pod"),
+		statistics: cmd.Bool("statistics"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

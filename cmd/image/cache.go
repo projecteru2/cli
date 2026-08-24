@@ -2,14 +2,15 @@ package image
 
 import (
 	"context"
+	"errors"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type cacheImageOptions struct {
@@ -21,9 +22,9 @@ type cacheImageOptions struct {
 }
 
 func (o *cacheImageOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("image.cacheImageOptions.run")
 	opts := &corepb.CacheImageOptions{
-		Images: o.images,
-		// Step:      o.step,
+		Images:    o.images,
 		Podname:   o.podname,
 		Nodenames: o.nodenames,
 	}
@@ -41,21 +42,21 @@ func (o *cacheImageOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Success {
-			logrus.Infof("[CacheImage] cache image %s on %s success", msg.Image, msg.Nodename)
+			logger.Infof(ctx, "cache image %s on %s success", msg.Image, msg.Nodename)
 		} else {
-			logrus.Warnf("[CacheImage] cache image %s on %s failed", msg.Image, msg.Nodename)
+			logger.Warnf(ctx, "cache image %s on %s failed", msg.Image, msg.Nodename)
 		}
 	}
 	return nil
 }
 
-func cmdImageCache(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdImageCache(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	images := c.Args().Slice()
+	images := cmd.Args().Slice()
 	if len(images) == 0 {
 		return errors.New("Images must be specified")
 	}
@@ -63,9 +64,9 @@ func cmdImageCache(c *cli.Context) error {
 	o := &cacheImageOptions{
 		client:    client,
 		images:    images,
-		step:      int32(c.Int("concurrent")),
-		podname:   c.String("pod"),
-		nodenames: c.StringSlice("node"),
+		step:      int32(cmd.Int("concurrent")),
+		podname:   cmd.String("pod"),
+		nodenames: cmd.StringSlice("node"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

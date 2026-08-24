@@ -2,13 +2,14 @@ package pod
 
 import (
 	"context"
+	"errors"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type removePodOptions struct {
@@ -24,17 +25,17 @@ func (o *removePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	logrus.Infof("[RemovePod] success, name: %s", o.name)
+	log.WithFunc("pod.removePodOptions.run").Infof(ctx, "remove pod %s success", o.name)
 	return nil
 }
 
-func cmdPodRemove(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodRemove(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("Pod name must be given")
 	}
@@ -43,5 +44,5 @@ func cmdPodRemove(c *cli.Context) error {
 		client: client,
 		name:   name,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

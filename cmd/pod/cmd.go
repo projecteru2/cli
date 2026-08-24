@@ -3,7 +3,7 @@ package pod
 import (
 	"github.com/projecteru2/cli/cmd/utils"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -15,7 +15,7 @@ func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "pod",
 		Usage: "pod commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:   "list",
 				Usage:  "list all pods",

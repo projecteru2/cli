@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"sigs.k8s.io/yaml"
 )
 
 // Format indicates the output format
@@ -62,6 +62,7 @@ func describeChNodeAsJSON(ch <-chan *corepb.Node) {
 		fmt.Println(string(j))
 	}
 }
+
 func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
 	for t := range ch {
 		j, _ := json.MarshalIndent(t, "", "  ")
@@ -80,6 +81,7 @@ func describeChNodeAsYAML(ch <-chan *corepb.Node) {
 		fmt.Println(string(j))
 	}
 }
+
 func describeChNodeResourceAsYAML(ch chan *corepb.NodeResource) {
 	for t := range ch {
 		j, _ := yaml.Marshal(t)

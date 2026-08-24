@@ -3,19 +3,21 @@ package workload
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
+	"github.com/urfave/cli/v3"
+	"gopkg.in/yaml.v3"
+
+	"github.com/projecteru2/core/log"
+	resourcetypes "github.com/projecteru2/core/resource/types"
+	corepb "github.com/projecteru2/core/rpc/gen"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/types"
-	resourcetypes "github.com/projecteru2/core/resource/types"
-	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 type deployWorkloadsOptions struct {
@@ -26,14 +28,15 @@ type deployWorkloadsOptions struct {
 }
 
 func (o *deployWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.deployWorkloadsOptions.run")
 	if o.dryRun {
 		r, err := o.client.CalculateCapacity(ctx, o.opts)
 		if err != nil {
 			return fmt.Errorf("[Deploy] Calculate capacity failed %v", err)
 		}
-		logrus.Infof("[Deploy] Capacity total %v", r.Total)
+		logger.Infof(ctx, "capacity total %v", r.Total)
 		for nodename, capacity := range r.NodeCapacities {
-			logrus.Infof("[Deploy] Node %v capacity %v", nodename, capacity)
+			logger.Infof(ctx, "node %v capacity %v", nodename, capacity)
 		}
 		return nil
 	}
@@ -46,7 +49,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 		Appname:    o.opts.Name,
 		Entrypoint: o.opts.Entrypoint.Name,
 		Labels:     nil,
-		Limit:      1, // 至少有一个可以被替换的
+		Limit:      1, // at least one workload must exist to be replaced
 	}
 	resp, err := o.client.ListWorkloads(ctx, lsOpts)
 	if err != nil {
@@ -54,33 +57,33 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	}
 	_, err = resp.Recv()
 	if err == io.EOF {
-		logrus.Warn("[Deploy] there is no Workloads for replace")
+		logger.Warn(ctx, "there is no workload to replace")
 		return doCreateWorkload(ctx, o.client, o.opts)
 	}
 	if err != nil {
 		return err
 	}
-	// 强制继承网络
+	// network is inherited when no network is given
 	networkInherit := len(o.opts.Networks) == 0
 	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
 }
 
-func cmdWorkloadDeploy(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
 	for _, key := range []string{"pod", "entry", "image"} {
-		if c.String(key) == "" {
+		if cmd.String(key) == "" {
 			return fmt.Errorf("[Deploy] no %s given", key)
 		}
 	}
-	if strings.Contains(c.String("entry"), "_") {
+	if strings.Contains(cmd.String("entry"), "_") {
 		return fmt.Errorf("[Deploy] entry can not contain _")
 	}
 
-	opts, err := generateDeployOptions(c)
+	opts, err := generateDeployOptions(ctx, cmd)
 	if err != nil {
 		return err
 	}
@@ -88,13 +91,14 @@ func cmdWorkloadDeploy(c *cli.Context) error {
 	o := &deployWorkloadsOptions{
 		client:      client,
 		opts:        opts,
-		dryRun:      c.Bool("dry-run"),
-		autoReplace: c.Bool("auto-replace"),
+		dryRun:      cmd.Bool("dry-run"),
+		autoReplace: cmd.Bool("auto-replace"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
 func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions) error {
+	logger := log.WithFunc("workload.doCreateWorkload")
 	resp, err := client.CreateWorkload(ctx, deployOpts)
 	if err != nil {
 		return err
@@ -109,60 +113,60 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 		}
 
 		if msg.Success {
-			logrus.Infof("[Deploy] Success %s %s %s %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
+			logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
 			if len(msg.Hook) > 0 {
-				logrus.Infof("[Deploy] Hook output \n%s", msg.Hook)
+				logger.Infof(ctx, "hook output \n%s", msg.Hook)
 			}
 			for name, publish := range msg.Publish {
-				logrus.Infof("[Deploy] Bound %s ip %s", name, publish)
+				logger.Infof(ctx, "bound %s ip %s", name, publish)
 			}
 		} else {
-			logrus.Errorf("[Deploy] Failed %v", msg.Error)
+			logger.Error(ctx, errors.New(msg.Error), "create workload failed")
 		}
 	}
 	return nil
 }
 
-func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
-	specURI := c.Args().First()
+func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
+	specURI := cmd.Args().First()
 	if specURI == "" {
 		return nil, fmt.Errorf("a specs must be given")
 	}
-	logrus.Debugf("[Deploy] Deploy %s", specURI)
+	log.WithFunc("workload.generateDeployOptions").Debugf(ctx, "deploy %s", specURI)
 
 	var (
 		data []byte
 		err  error
 	)
 	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(specURI)
+		data, err = utils.GetSpecFromRemote(ctx, specURI)
 	} else {
-		data, err = ioutil.ReadFile(specURI)
+		data, err = os.ReadFile(specURI)
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(c)
+	memoryRequest, memoryLimit, err := memoryOption(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
 	}
 
-	storageRequest, storageLimit, err := storageOption(c)
+	storageRequest, storageLimit, err := storageOption(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
 	}
 
-	cpuRequest, cpuLimit := cpuOption(c)
+	cpuRequest, cpuLimit := cpuOption(cmd)
 
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
 		return nil, fmt.Errorf("[generateDeployOptions] get specs failed %v", err)
 	}
 
-	entry := c.String("entry")
+	entry := cmd.String("entry")
 
-	network := c.String("network")
+	network := cmd.String("network")
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
@@ -196,13 +200,13 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		}
 	}
 
-	rawArgs := c.String("raw-args")
+	rawArgs := cmd.String("raw-args")
 	rawArgsByte := []byte{}
 	if rawArgs != "" {
 		rawArgsByte = []byte(rawArgs)
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	cpumem := resourcetypes.RawParams{
 		"cpu-request":    cpuRequest,
@@ -217,7 +221,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		"volumes-limit":   specs.Volumes,
 	}
 
-	if c.Bool("cpu-bind") {
+	if cmd.Bool("cpu-bind") {
 		cpumem["cpu-bind"] = true
 	}
 
@@ -229,7 +233,7 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 		"storage": sb,
 	}
 
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
+	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
 		for k, v := range extraResourcesMap {
 			if _, ok := resources[k]; ok {
 				continue
@@ -256,27 +260,27 @@ func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
 			Sysctls:     entrypoint.Sysctls,
 		},
 		Resources: resources,
-		Podname:   c.String("pod"),
+		Podname:   cmd.String("pod"),
 		NodeFilter: &corepb.NodeFilter{
-			Includes: c.StringSlice("node"),
-			Labels:   utils.SplitEquality(c.StringSlice("nodelabel")),
+			Includes: cmd.StringSlice("node"),
+			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
 		},
-		Image:          c.String("image"),
-		Count:          int32(c.Int("count")),
-		Env:            c.StringSlice("env"),
+		Image:          cmd.String("image"),
+		Count:          int32(cmd.Int("count")),
+		Env:            cmd.StringSlice("env"),
 		Networks:       networks,
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
+		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(cmd.String("deploy-strategy"))]),
 		Data:           content,
 		Modes:          modes,
 		Owners:         owners,
-		User:           c.String("user"),
-		Debug:          c.Bool("debug"),
-		NodesLimit:     int32(c.Int("nodes-limit")),
-		IgnoreHook:     c.Bool("ignore-hook"),
-		AfterCreate:    c.StringSlice("after-create"),
+		User:           cmd.String("user"),
+		Debug:          cmd.Bool("debug"),
+		NodesLimit:     int32(cmd.Int("nodes-limit")),
+		IgnoreHook:     cmd.Bool("ignore-hook"),
+		AfterCreate:    cmd.StringSlice("after-create"),
 		RawArgs:        rawArgsByte,
 	}, nil
 }

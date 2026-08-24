@@ -2,14 +2,16 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type dissociateWorkloadsOptions struct {
@@ -19,6 +21,7 @@ type dissociateWorkloadsOptions struct {
 }
 
 func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.dissociateWorkloadsOptions.run")
 	ids := o.ids
 	for _, node := range o.nodes {
 		wrks, err := o.client.ListNodeWorkloads(ctx, &corepb.GetNodeOptions{Nodename: node})
@@ -48,22 +51,22 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error == "" {
-			logrus.Infof("[Dissociate] Dissociate workload %s from eru success", msg.Id)
+			logger.Infof(ctx, "dissociate workload %s from eru success", msg.Id)
 		} else {
-			logrus.Errorf("[Dissociate] Dissociate workload %s from eru failed %v", msg.Id, msg.Error)
+			logger.Errorf(ctx, errors.New(msg.Error), "dissociate workload %s from eru failed", msg.Id)
 		}
 	}
 	return nil
 }
 
-func cmdWorkloadDissociate(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadDissociate(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	nodes := c.StringSlice("node")
-	ids := c.Args().Slice()
+	nodes := cmd.StringSlice("node")
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 && len(nodes) == 0 {
 		return fmt.Errorf("Workload ID(s) and Node(s) should not be empty")
 	}
@@ -73,5 +76,5 @@ func cmdWorkloadDissociate(c *cli.Context) error {
 		ids:    ids,
 		nodes:  nodes,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

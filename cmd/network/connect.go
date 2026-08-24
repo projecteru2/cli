@@ -2,13 +2,14 @@ package network
 
 import (
 	"context"
+	"errors"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type connectNetworkOptions struct {
@@ -20,6 +21,7 @@ type connectNetworkOptions struct {
 }
 
 func (o *connectNetworkOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("network.connectNetworkOptions.run")
 	for _, id := range o.ids {
 		resp, err := o.client.ConnectNetwork(ctx, &corepb.ConnectNetworkOptions{
 			Network: o.network,
@@ -28,26 +30,26 @@ func (o *connectNetworkOptions) run(ctx context.Context) error {
 			Ipv6:    o.ipv6,
 		})
 		if err != nil {
-			logrus.Warnf("[connectToNetwork] Connect %s to network %s failed", id, o.network)
+			logger.Warnf(ctx, "connect %s to network %s failed: %v", id, o.network, err)
 		} else {
-			logrus.Infof("[connectToNetwork] Connect %s at %v", id, resp.Subnets)
+			logger.Infof(ctx, "connect %s at %v", id, resp.Subnets)
 		}
 	}
 	return nil
 }
 
-func cmdNetworkConnect(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNetworkConnect(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return errors.New("Workload ID(s) must be specified")
 	}
 
-	network := c.String("network")
+	network := cmd.String("network")
 	if network == "" {
 		return errors.New("Network must be specified")
 	}
@@ -56,8 +58,8 @@ func cmdNetworkConnect(c *cli.Context) error {
 		client:  client,
 		ids:     ids,
 		network: network,
-		ipv4:    c.String("ipv4"),
-		ipv6:    c.String("ipv6"),
+		ipv4:    cmd.String("ipv4"),
+		ipv6:    cmd.String("ipv6"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

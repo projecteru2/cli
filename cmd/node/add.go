@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 type addNodeOptions struct {
@@ -31,13 +31,13 @@ func (o *addNodeOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdNodeAdd(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeAdd(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateAddNodeOptions(c)
+	opts, err := generateAddNodeOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func cmdNodeAdd(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
 func getLocalIP() string {
@@ -64,8 +64,8 @@ func getLocalIP() string {
 	return ""
 }
 
-func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, err error) {
-	ca := c.String("ca")
+func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string, err error) {
+	ca := cmd.String("ca")
 	if ca == "" {
 		defaultPath := "/etc/docker/tls/ca.crt"
 		if _, err := os.Stat(defaultPath); err == nil {
@@ -73,14 +73,14 @@ func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, 
 		}
 	}
 	if ca != "" {
-		f, err := ioutil.ReadFile(ca)
+		f, err := os.ReadFile(ca)
 		if err != nil {
 			return "", "", "", fmt.Errorf("Error during reading %s: %v", ca, err)
 		}
 		caContent = string(f)
 	}
 
-	cert := c.String("cert")
+	cert := cmd.String("cert")
 	if cert == "" {
 		defaultPath := "/etc/docker/tls/client.crt"
 		if _, err := os.Stat(defaultPath); err == nil {
@@ -88,14 +88,14 @@ func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, 
 		}
 	}
 	if cert != "" {
-		f, err := ioutil.ReadFile(cert)
+		f, err := os.ReadFile(cert)
 		if err != nil {
 			return "", "", "", fmt.Errorf("Error during reading %s: %v", cert, err)
 		}
 		certContent = string(f)
 	}
 
-	key := c.String("key")
+	key := cmd.String("key")
 	if key == "" {
 		defaultPath := "/etc/docker/tls/client.key"
 		if _, err := os.Stat(defaultPath); err == nil {
@@ -103,7 +103,7 @@ func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, 
 		}
 	}
 	if key != "" {
-		f, err := ioutil.ReadFile(key)
+		f, err := os.ReadFile(key)
 		if err != nil {
 			return "", "", "", fmt.Errorf("Error during reading %s: %v", key, err)
 		}
@@ -112,20 +112,20 @@ func readTLSConfigs(c *cli.Context) (caContent, certContent, keyContent string, 
 	return caContent, certContent, keyContent, nil
 }
 
-func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
-	podname := c.Args().First()
+func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
+	podname := cmd.Args().First()
 	if podname == "" {
 		return nil, fmt.Errorf("podname must not be empty")
 	}
 
-	nodename := c.String("nodename")
+	nodename := cmd.String("nodename")
 
-	ca, cert, key, err := readTLSConfigs(c)
+	ca, cert, key, err := readTLSConfigs(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	endpoint := c.String("endpoint")
+	endpoint := cmd.String("endpoint")
 	if endpoint == "" {
 		ip := getLocalIP()
 		if ip == "" {
@@ -141,29 +141,29 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 	cpumem := resourcetypes.RawParams{}
 	storage := resourcetypes.RawParams{}
 
-	if c.IsSet("cpu") {
-		cpumem["cpu"] = c.Int64("cpu")
+	if cmd.IsSet("cpu") {
+		cpumem["cpu"] = cmd.Int64("cpu")
 	}
-	if c.IsSet("share") {
-		cpumem["share"] = c.String("share")
+	if cmd.IsSet("share") {
+		cpumem["share"] = cmd.String("share")
 	}
-	if c.IsSet("memory") {
-		cpumem["memory"] = c.String("memory")
+	if cmd.IsSet("memory") {
+		cpumem["memory"] = cmd.String("memory")
 	}
-	if c.IsSet("numa-cpu") {
-		cpumem["numa-cpu"] = c.StringSlice("numa-cpu")
+	if cmd.IsSet("numa-cpu") {
+		cpumem["numa-cpu"] = cmd.StringSlice("numa-cpu")
 	}
-	if c.IsSet("numa-memory") {
-		cpumem["numa-memory"] = c.StringSlice("numa-memory")
+	if cmd.IsSet("numa-memory") {
+		cpumem["numa-memory"] = cmd.StringSlice("numa-memory")
 	}
-	if c.IsSet("disk") {
-		storage["disks"] = c.StringSlice("disk")
+	if cmd.IsSet("disk") {
+		storage["disks"] = cmd.StringSlice("disk")
 	}
-	if c.IsSet("storage") {
-		storage["storage"] = c.String("storage")
+	if cmd.IsSet("storage") {
+		storage["storage"] = cmd.String("storage")
 	}
-	if c.IsSet("volume") {
-		storage["volumes"] = c.StringSlice("volume")
+	if cmd.IsSet("volume") {
+		storage["volumes"] = cmd.StringSlice("volume")
 	}
 
 	cb, _ := json.Marshal(cpumem)
@@ -173,7 +173,7 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		"storage": sb,
 	}
 
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
+	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
 		for k, v := range extraResourcesMap {
 			if _, ok := resources[k]; ok {
 				continue
@@ -185,7 +185,7 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		return nil, fmt.Errorf("[generateAddNodeOptions] get extra resources failed %v", err)
 	}
 
-	labels := utils.SplitEquality(c.StringSlice("label"))
+	labels := utils.SplitEquality(cmd.StringSlice("label"))
 	return &corepb.AddNodeOptions{
 		Nodename:  nodename,
 		Endpoint:  endpoint,
@@ -195,6 +195,6 @@ func generateAddNodeOptions(c *cli.Context) (*corepb.AddNodeOptions, error) {
 		Key:       key,
 		Labels:    labels,
 		Resources: resources,
-		Test:      c.Bool("test"),
+		Test:      cmd.Bool("test"),
 	}, nil
 }

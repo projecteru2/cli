@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/urfave/cli/v3"
+
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	"github.com/urfave/cli/v2"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
@@ -47,13 +48,13 @@ func (o *listImageOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdImageList(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdImageList(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateListOptions(c)
+	opts, err := generateListOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -62,13 +63,13 @@ func cmdImageList(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func generateListOptions(c *cli.Context) (*corepb.ListImageOptions, error) {
-	filter := c.String("filter")
-	podname := c.String("pod")
-	nodename := c.StringSlice("node")
+func generateListOptions(cmd *cli.Command) (*corepb.ListImageOptions, error) {
+	filter := cmd.String("filter")
+	podname := cmd.String("pod")
+	nodename := cmd.StringSlice("node")
 	if len(nodename) < 1 && len(podname) < 1 {
 		return nil, errors.New("[List] podname or nodenames should be given")
 	}

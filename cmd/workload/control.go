@@ -2,16 +2,18 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 
-	"github.com/projecteru2/cli/cmd/utils"
 	corecluster "github.com/projecteru2/core/cluster"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type controlWorkloadsOptions struct {
@@ -22,6 +24,7 @@ type controlWorkloadsOptions struct {
 }
 
 func (o *controlWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.controlWorkloadsOptions.run")
 	opts := &corepb.ControlWorkloadOptions{
 		IDs:   o.ids,
 		Type:  o.action,
@@ -40,24 +43,24 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 
-		logrus.Infof("[ControlWorkload] %s %s", o.action, coreutils.ShortID(msg.Id))
+		logger.Infof(ctx, "%s %s", o.action, coreutils.ShortID(msg.Id))
 		if msg.Hook != nil {
-			logrus.Infof("[ControlWorkload] HookOutput %s", string(msg.Hook))
+			logger.Infof(ctx, "hook output %s", string(msg.Hook))
 		}
 		if msg.Error != "" {
-			logrus.Errorf("[ControlWorkload] Failed %s", msg.Error)
+			logger.Error(ctx, errors.New(msg.Error))
 		}
 	}
 	return nil
 }
 
-func createControlWorkloadsOptions(c *cli.Context, action string) (*controlWorkloadsOptions, error) {
-	client, err := utils.NewCoreRPCClient(c)
+func createControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action string) (*controlWorkloadsOptions, error) {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return nil, fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -66,30 +69,30 @@ func createControlWorkloadsOptions(c *cli.Context, action string) (*controlWorkl
 		client: client,
 		ids:    ids,
 		action: action,
-		force:  c.Bool("force"),
+		force:  cmd.Bool("force"),
 	}, nil
 }
 
-func cmdWorkloadStart(c *cli.Context) error {
-	o, err := createControlWorkloadsOptions(c, corecluster.WorkloadStart)
+func cmdWorkloadStart(ctx context.Context, cmd *cli.Command) error {
+	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStart)
 	if err != nil {
 		return err
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func cmdWorkloadStop(c *cli.Context) error {
-	o, err := createControlWorkloadsOptions(c, corecluster.WorkloadStop)
+func cmdWorkloadStop(ctx context.Context, cmd *cli.Command) error {
+	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStop)
 	if err != nil {
 		return err
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func cmdWorkloadRestart(c *cli.Context) error {
-	o, err := createControlWorkloadsOptions(c, corecluster.WorkloadRestart)
+func cmdWorkloadRestart(ctx context.Context, cmd *cli.Command) error {
+	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadRestart)
 	if err != nil {
 		return err
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

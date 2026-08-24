@@ -2,16 +2,18 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"sync"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type sendLargeWorkloadsOptions struct {
@@ -25,9 +27,10 @@ type sendLargeWorkloadsOptions struct {
 }
 
 func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.sendLargeWorkloadsOptions.run")
 	stream, err := o.client.SendLargeFile(ctx)
 	if err != nil {
-		logrus.Errorf("[SendLarge] Failed send %s", o.dst)
+		logger.Errorf(ctx, err, "send %s failed", o.dst)
 		return err
 	}
 
@@ -46,9 +49,9 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			}
 
 			if msg.Error != "" {
-				logrus.Errorf("[SendLarge] Failed send %s to %s", msg.Path, msg.Id)
+				logger.Errorf(ctx, errors.New(msg.Error), "send %s to %s failed", msg.Path, msg.Id)
 			} else {
-				logrus.Infof("[SendLarge] Send %s to %s success", msg.Path, msg.Id)
+				logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 			}
 		}
 	}()
@@ -57,7 +60,7 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	for _, chunk := range fileOptions {
 		err := stream.Send(chunk)
 		if err != nil {
-			logrus.Errorf("[SendLarge] Failed send %s", chunk.Dst)
+			logger.Errorf(ctx, err, "send %s failed", chunk.Dst)
 			return err
 		}
 	}
@@ -85,13 +88,13 @@ func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOption
 	return ret
 }
 
-func cmdWorkloadSendLarge(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(cmd)
 	if len(content) == 0 {
 		return fmt.Errorf("files should not be empty")
 	}
@@ -99,7 +102,7 @@ func cmdWorkloadSendLarge(c *cli.Context) error {
 		return fmt.Errorf("can not send multiple files at the same time")
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -118,5 +121,5 @@ func cmdWorkloadSendLarge(c *cli.Context) error {
 		modes:   modes[targetFileName],
 		owners:  owners[targetFileName],
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

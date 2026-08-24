@@ -3,7 +3,7 @@ package node
 import (
 	"github.com/projecteru2/cli/cmd/utils"
 
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 const (
@@ -15,7 +15,7 @@ func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "node",
 		Usage: "node commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:      "get",
 				Usage:     "get a node",
@@ -200,7 +200,7 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:    "nodename",
 						Usage:   "name of this node, use `hostname` as default",
-						EnvVars: []string{"HOSTNAME"},
+						Sources: cli.EnvVars("HOSTNAME"),
 						Value:   utils.GetHostname(),
 					},
 					&cli.StringFlag{

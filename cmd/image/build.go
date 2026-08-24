@@ -2,22 +2,26 @@ package image
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
+	"os"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
+	"golang.org/x/term"
+	"gopkg.in/yaml.v3"
 
 	dockerengine "github.com/projecteru2/core/engine/docker"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/juju/errors"
-	"github.com/sethgrid/curse"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
+
+// progressRewrite moves the cursor up to a previously printed layer line,
+// rewrites it and returns, so docker pull progress updates in place.
+const progressRewrite = "\x1b7\x1b[%dA\r\x1b[2K%s\x1b8"
 
 type buildImageOptions struct {
 	client corepb.CoreRPCClient
@@ -60,15 +64,10 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 					progess[msg.Id] = p
 					fmt.Println(data)
 					p++
+				} else if term.IsTerminal(int(os.Stdout.Fd())) {
+					fmt.Printf(progressRewrite, p-pos, data)
 				} else {
-					cursor, err := curse.New()
-					if err != nil {
-						fmt.Print(data)
-						continue
-					}
-					cursor.MoveUp(p - pos).EraseCurrentLine()
 					fmt.Print(data)
-					cursor.Reset()
 				}
 			}
 		}
@@ -77,13 +76,13 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdImageBuild(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdImageBuild(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateBuildOptions(c)
+	opts, err := generateBuildOptions(ctx, cmd)
 	if err != nil {
 		return err
 	}
@@ -92,20 +91,20 @@ func cmdImageBuild(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func generateBuildOptions(c *cli.Context) (*corepb.BuildImageOptions, error) {
-	if c.NArg() != 1 {
+func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildImageOptions, error) {
+	if cmd.NArg() != 1 {
 		return nil, errors.New("[Build] no spec")
 	}
 
-	raw := c.Bool("raw")
-	exist := c.Bool("exist")
+	raw := cmd.Bool("raw")
+	exist := cmd.Bool("exist")
 	if raw && exist {
 		return nil, errors.New("[Build] mutually exclusive flag: raw or exist")
 	}
-	stopSignal := c.String("stop-signal")
+	stopSignal := cmd.String("stop-signal")
 
 	var (
 		specs       *corepb.Builds
@@ -116,20 +115,20 @@ func generateBuildOptions(c *cli.Context) (*corepb.BuildImageOptions, error) {
 	switch {
 	case exist:
 		buildMethod = corepb.BuildImageOptions_EXIST
-		existID = c.Args().First()
+		existID = cmd.Args().First()
 	case !raw:
 		buildMethod = corepb.BuildImageOptions_SCM
-		specURI := c.Args().First()
-		logrus.Debugf("[Build] Deploy %s", specURI)
+		specURI := cmd.Args().First()
+		log.WithFunc("image.generateBuildOptions").Debugf(ctx, "deploy %s", specURI)
 
 		var (
 			data []byte
 			err  error
 		)
 		if strings.HasPrefix(specURI, "http") {
-			data, err = utils.GetSpecFromRemote(specURI)
+			data, err = utils.GetSpecFromRemote(ctx, specURI)
 		} else {
-			data, err = ioutil.ReadFile(specURI)
+			data, err = os.ReadFile(specURI)
 		}
 		if err != nil {
 			return nil, fmt.Errorf("[Build] read spec failed %v", err)
@@ -148,24 +147,24 @@ func generateBuildOptions(c *cli.Context) (*corepb.BuildImageOptions, error) {
 		}
 	default:
 		buildMethod = corepb.BuildImageOptions_RAW
-		path := c.Args().First()
+		path := cmd.Args().First()
 		data, err := dockerengine.CreateTarStream(path)
 		if err != nil {
 			return nil, errors.New("[Build] no path")
 		}
-		tar, err = ioutil.ReadAll(data)
+		tar, err = io.ReadAll(data)
 		if err != nil {
 			return nil, errors.New("[Build] create tar stream failed")
 		}
 	}
 
-	name := c.String("name")
+	name := cmd.String("name")
 	if name == "" {
 		return nil, errors.New("[Build] need name")
 	}
-	user := c.String("user")
-	uid := int32(c.Int("uid"))
-	tags := c.StringSlice("tag")
+	user := cmd.String("user")
+	uid := int32(cmd.Int("uid"))
+	tags := cmd.StringSlice("tag")
 	if len(tags) == 0 {
 		tags = append(tags, "latest")
 	}
@@ -179,6 +178,6 @@ func generateBuildOptions(c *cli.Context) (*corepb.BuildImageOptions, error) {
 		Builds:      specs,
 		Tar:         tar,
 		ExistId:     existID,
-		Platform:    c.String("platform"),
+		Platform:    cmd.String("platform"),
 	}, nil
 }

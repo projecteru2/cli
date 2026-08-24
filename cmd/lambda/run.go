@@ -3,16 +3,17 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
+
+	resourcetypes "github.com/projecteru2/core/resource/types"
+	corepb "github.com/projecteru2/core/rpc/gen"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/interactive"
-	resourcetypes "github.com/projecteru2/core/resource/types"
-	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 type runLambdaOptions struct {
@@ -23,21 +24,21 @@ type runLambdaOptions struct {
 	printWorkloadID bool
 }
 
-func (o *runLambdaOptions) run(_ context.Context) error {
-	code, err := lambda(o.client, o.opts, o.stdin, o.count, o.printWorkloadID)
+func (o *runLambdaOptions) run(ctx context.Context) error {
+	code, err := lambda(ctx, o.client, o.opts, o.stdin, o.count, o.printWorkloadID)
 	if err == nil {
 		return cli.Exit("", code)
 	}
 	return err
 }
 
-func cmdLambdaRun(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateLambdaOptions(c)
+	opts, err := generateLambdaOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -45,17 +46,17 @@ func cmdLambdaRun(c *cli.Context) error {
 	o := &runLambdaOptions{
 		client:          client,
 		opts:            opts,
-		stdin:           c.Bool("stdin"),
-		count:           c.Int("count"),
-		printWorkloadID: c.Bool("workload-id"),
+		stdin:           cmd.Bool("stdin"),
+		count:           cmd.Int("count"),
+		printWorkloadID: cmd.Bool("workload-id"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
 var clrf = []byte{0xa}
 
-func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int, printWorkloadID bool) (code int, err error) {
-	resp, err := client.RunAndWait(context.Background())
+func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int, printWorkloadID bool) (code int, err error) {
+	resp, err := client.RunAndWait(ctx)
 	if err != nil {
 		return -1, err
 	}
@@ -66,8 +67,8 @@ func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin b
 
 	iStream := interactive.Stream{
 		Recv: resp.Recv,
-		Send: func(cmd []byte) error {
-			return resp.Send(&corepb.RunAndWaitOptions{Cmd: cmd})
+		Send: func(data []byte) error {
+			return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
 		},
 	}
 
@@ -75,41 +76,41 @@ func lambda(client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin b
 		_ = iStream.Send(clrf)
 	}()
 
-	return interactive.HandleStream(stdin, iStream, count, printWorkloadID)
+	return interactive.HandleStream(ctx, stdin, iStream, count, printWorkloadID)
 }
 
-func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
-	if c.NArg() <= 0 {
+func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) {
+	if cmd.NArg() <= 0 {
 		return nil, errors.New("[Lambda] no commands")
 	}
 
-	network := c.String("network")
+	network := cmd.String("network")
 
-	memoryRequest, err := utils.ParseRAMInHuman(c.String("memory-request"))
+	memoryRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
 	if err != nil {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
-	memoryLimit, err := utils.ParseRAMInHuman(c.String("memory"))
+	memoryLimit, err := utils.ParseRAMInHuman(cmd.String("memory"))
 	if err != nil {
 		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(c)
+	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	cpumem := resourcetypes.RawParams{
-		"cpu-request":    c.Float64("cpu-request"),
-		"cpu-limit":      c.Float64("cpu"),
+		"cpu-request":    cmd.Float64("cpu-request"),
+		"cpu-limit":      cmd.Float64("cpu"),
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
 	storage := resourcetypes.RawParams{
-		"storage-request": c.Int64("storage-request"),
-		"storage-limit":   c.Int64("storage"),
-		"volumes-request": c.StringSlice("volumes-request"),
-		"volumes-limit":   c.StringSlice("volumes"),
+		"storage-request": cmd.Int64("storage-request"),
+		"storage-limit":   cmd.Int64("storage"),
+		"volumes-request": cmd.StringSlice("volumes-request"),
+		"volumes-limit":   cmd.StringSlice("volumes"),
 	}
 
-	if c.Bool("cpu-bind") {
+	if cmd.Bool("cpu-bind") {
 		cpumem["cpu-bind"] = true
 	}
 
@@ -122,31 +123,31 @@ func generateLambdaOptions(c *cli.Context) (*corepb.RunAndWaitOptions, error) {
 	}
 
 	return &corepb.RunAndWaitOptions{
-		Async:        c.Bool("async"),
-		AsyncTimeout: int32(c.Int("async-timeout")),
+		Async:        cmd.Bool("async"),
+		AsyncTimeout: int32(cmd.Int("async-timeout")),
 		DeployOptions: &corepb.DeployOptions{
 			Name: "lambda",
 			Entrypoint: &corepb.EntrypointOptions{
-				Name:       c.String("name"),
-				Commands:   c.Args().Slice(),
-				Privileged: c.Bool("privileged"),
-				Dir:        c.String("working-dir"),
+				Name:       cmd.String("name"),
+				Commands:   cmd.Args().Slice(),
+				Privileged: cmd.Bool("privileged"),
+				Dir:        cmd.String("working-dir"),
 			},
 			Resources: resources,
-			Podname:   c.String("pod"),
+			Podname:   cmd.String("pod"),
 			NodeFilter: &corepb.NodeFilter{
-				Includes: c.StringSlice("node"),
+				Includes: cmd.StringSlice("node"),
 			},
-			Image:          c.String("image"),
-			Count:          int32(c.Int("count")),
-			Env:            c.StringSlice("env"),
+			Image:          cmd.String("image"),
+			Count:          int32(cmd.Int("count")),
+			Env:            cmd.StringSlice("env"),
 			Networks:       utils.GetNetworks(network),
-			OpenStdin:      c.Bool("stdin"),
-			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
+			OpenStdin:      cmd.Bool("stdin"),
+			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(cmd.String("deploy-strategy"))]),
 			Data:           content,
 			Owners:         owners,
 			Modes:          modes,
-			User:           c.String("user"),
+			User:           cmd.String("user"),
 		},
 	}, nil
 }

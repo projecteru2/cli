@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/describe"
 	corepb "github.com/projecteru2/core/rpc/gen"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/cli/describe"
+
+	"github.com/urfave/cli/v3"
 )
 
 type getWorkloadsStatusOptions struct {
@@ -26,13 +27,13 @@ func (o *getWorkloadsStatusOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdWorkloadGetStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadGetStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -41,7 +42,7 @@ func cmdWorkloadGetStatus(c *cli.Context) error {
 		client: client,
 		ids:    ids,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
 type setWorkloadsStatusOptions struct {
@@ -78,13 +79,13 @@ func (o *setWorkloadsStatusOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdWorkloadSetStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadSetStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
 		return fmt.Errorf("Workload ID(s) should not be empty")
 	}
@@ -92,11 +93,11 @@ func cmdWorkloadSetStatus(c *cli.Context) error {
 	o := &setWorkloadsStatusOptions{
 		client:    client,
 		ids:       ids,
-		running:   c.Bool("running"),
-		healthy:   c.Bool("healthy"),
-		ttl:       c.Int64("ttl"),
-		networks:  utils.SplitEquality(c.StringSlice("network")),
-		extension: []byte(c.String("extension")),
+		running:   cmd.Bool("running"),
+		healthy:   cmd.Bool("healthy"),
+		ttl:       cmd.Int64("ttl"),
+		networks:  utils.SplitEquality(cmd.StringSlice("network")),
+		extension: []byte(cmd.String("extension")),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

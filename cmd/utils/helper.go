@@ -2,13 +2,15 @@ package utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"strings"
 	"text/template"
 
 	"github.com/docker/go-units"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 // GetNetworks returns a networkmode -> ip map
@@ -72,10 +74,11 @@ func EnvParser(b []byte) ([]byte, error) {
 
 // ExitCoder wraps a cli Action function into
 // a function with ExitCoder interface
-func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		if err := f(c); err != nil {
-			if exitErr, ok := err.(cli.ExitCoder); ok {
+func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		if err := f(ctx, cmd); err != nil {
+			var exitErr cli.ExitCoder
+			if errors.As(err, &exitErr) {
 				return cli.Exit(exitErr, exitErr.ExitCode())
 			}
 			return cli.Exit(err, -1)
@@ -91,10 +94,10 @@ func GetHostname() string {
 }
 
 // ParseExtraResources .
-func ParseExtraResources(c *cli.Context) (map[string]any, error) {
+func ParseExtraResources(cmd *cli.Command) (map[string]any, error) {
 	var err error
 	extraResourcesMap := make(map[string]any)
-	extraResources := c.String("extra-resources")
+	extraResources := cmd.String("extra-resources")
 	if extraResources != "" {
 		err = json.Unmarshal([]byte(extraResources), &extraResourcesMap)
 	}
