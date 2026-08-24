@@ -84,44 +84,37 @@ func describeStatistics(cpus float64, memory, storage int64) {
 }
 
 func describeWorkloads(workloads []*corepb.Workload) {
+	if len(workloads) == 0 {
+		return
+	}
+
+	resources := make([]resourcetypes.Resources, len(workloads))
+	plugins := map[string]struct{}{}
+	for i, workload := range workloads {
+		resources[i] = unmarshalResources(workload.Resources)
+		for plugin := range resources[i] {
+			plugins[plugin] = struct{}{}
+		}
+	}
+	names := slices.Sorted(maps.Keys(plugins))
+
+	header := []any{"Name/ID/Pod/Node/Privileged", "Networks"}
+	for _, name := range names {
+		header = append(header, name)
+	}
+
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(header)
 
-	first := true
-	for _, c := range workloads {
-		header, cells := parseWorkloadPluginResources(c)
-		if first {
-			first = false
-			header = append([]any{"Name/ID/Pod/Node/Privileged", "Networks"}, header...)
-			t.AppendHeader(header)
-		}
-
-		ns := []string{}
-		if c.Status != nil {
-			for _, name := range slices.Sorted(maps.Keys(c.Status.Networks)) {
-				if published, ok := c.Publish[name]; ok {
-					addresses := strings.Split(published, ",")
-
-					firstLine := fmt.Sprintf("%s: %s", name, addresses[0])
-					ns = append(ns, firstLine)
-
-					if len(addresses) > 1 {
-						format := fmt.Sprintf("%%%ds", len(firstLine))
-						for _, address := range addresses[1:] {
-							ns = append(ns, fmt.Sprintf(format, address))
-						}
-					}
-				} else {
-					ns = append(ns, fmt.Sprintf("%s: %s", name, c.Status.Networks[name]))
-				}
-			}
-		}
-
+	for i, c := range workloads {
 		rows := [][]string{
 			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Privileged: %v", c.Privileged)},
-			ns,
+			workloadNetworks(c),
 		}
-		rows = append(rows, cells...)
+		for _, name := range names {
+			rows = append(rows, parseAll(resources[i][name]))
+		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
 	}
@@ -130,22 +123,35 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	t.Render()
 }
 
-func parseWorkloadPluginResources(workload *corepb.Workload) (header []any, cells [][]string) {
-	usages := resourcetypes.Resources{}
-	if len(workload.Resources) > 0 {
-		_ = json.Unmarshal([]byte(workload.Resources), &usages)
+func workloadNetworks(workload *corepb.Workload) []string {
+	addresses := map[string]string{}
+	if workload.Status != nil {
+		maps.Copy(addresses, workload.Status.Networks)
 	}
-
-	for _, plugin := range slices.Sorted(maps.Keys(usages)) {
-		header = append(header, plugin)
-
-		row := []string{}
-		for _, key := range slices.Sorted(maps.Keys(usages[plugin])) {
-			row = append(row, parse(key, usages[plugin][key])...)
+	for name := range workload.Publish {
+		if _, ok := addresses[name]; !ok {
+			addresses[name] = ""
 		}
-		cells = append(cells, row)
 	}
-	return header, cells
+
+	ns := []string{}
+	for _, name := range slices.Sorted(maps.Keys(addresses)) {
+		published, ok := workload.Publish[name]
+		if !ok {
+			ns = append(ns, fmt.Sprintf("%s: %s", name, addresses[name]))
+			continue
+		}
+
+		parts := strings.Split(published, ",")
+		firstLine := fmt.Sprintf("%s: %s", name, parts[0])
+		ns = append(ns, firstLine)
+
+		format := fmt.Sprintf("%%%ds", len(firstLine))
+		for _, address := range parts[1:] {
+			ns = append(ns, fmt.Sprintf(format, address))
+		}
+	}
+	return ns
 }
 
 func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {

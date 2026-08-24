@@ -243,6 +243,112 @@ func TestNodeStatusMessage(t *testing.T) {
 	}
 }
 
+func TestNodesPluginColumns(t *testing.T) {
+	tests := []struct {
+		name     string
+		showInfo bool
+		nodes    []*corepb.Node
+		want     string
+	}{
+		{
+			name:     "plugins differ between nodes",
+			showInfo: true,
+			nodes: []*corepb.Node{
+				{
+					Name: "n1", Endpoint: "e1", Available: true, Info: "INFO1",
+					ResourceCapacity: `{"cpumem":{"cpu":8}}`,
+					ResourceUsage:    `{"cpumem":{"cpu":2}}`,
+				},
+				{
+					Name: "n2", Endpoint: "e2", Available: true, Info: "INFO2",
+					ResourceCapacity: `{"cpumem":{"cpu":4},"gpu":{"count":2}}`,
+					ResourceUsage:    `{"cpumem":{"cpu":1},"gpu":{"count":1}}`,
+				},
+			},
+			want: `┌──────┬──────────┬────────────────┬──────────────┬──────────────┬───────┐
+│ NAME │ ENDPOINT │ STATUS         │ CPUMEM       │ GPU          │ INFO  │
+├──────┼──────────┼────────────────┼──────────────┼──────────────┼───────┤
+│ n1   │ e1       │ UP             │ Capacity:    │              │ INFO1 │
+│      │          │ bypass false   │              │              │       │
+│      │          │ available true │              │              │       │
+│      │          │ test false     │              │              │       │
+│      │          │                │ cpu: 8       │              │       │
+│      │          │                │ ------------ │              │       │
+│      │          │                │ Usage:       │              │       │
+│      │          │                │ cpu: 2       │              │       │
+├──────┼──────────┼────────────────┼──────────────┼──────────────┼───────┤
+│ n2   │ e2       │ UP             │ Capacity:    │ Capacity:    │ INFO2 │
+│      │          │ bypass false   │              │              │       │
+│      │          │ available true │              │              │       │
+│      │          │ test false     │              │              │       │
+│      │          │                │ cpu: 4       │ count: 2     │       │
+│      │          │                │ ------------ │ ------------ │       │
+│      │          │                │ Usage:       │ Usage:       │       │
+│      │          │                │ cpu: 1       │ count: 1     │       │
+└──────┴──────────┴────────────────┴──────────────┴──────────────┴───────┘
+`,
+		},
+		{
+			name: "plugin with capacity but no usage",
+			nodes: []*corepb.Node{{
+				Name: "n1", Endpoint: "e1", Available: true,
+				ResourceCapacity: `{"cpumem":{"cpu":8},"gpu":{"count":4}}`,
+				ResourceUsage:    `{"cpumem":{"cpu":2}}`,
+			}},
+			want: `┌──────┬──────────┬────────────────┬──────────────┬──────────────┐
+│ NAME │ ENDPOINT │ STATUS         │ CPUMEM       │ GPU          │
+├──────┼──────────┼────────────────┼──────────────┼──────────────┤
+│ n1   │ e1       │ UP             │ Capacity:    │ Capacity:    │
+│      │          │ bypass false   │              │              │
+│      │          │ available true │              │              │
+│      │          │ test false     │              │              │
+│      │          │                │ cpu: 8       │ count: 4     │
+│      │          │                │ ------------ │ ------------ │
+│      │          │                │ Usage:       │ Usage:       │
+│      │          │                │ cpu: 2       │              │
+└──────┴──────────┴────────────────┴──────────────┴──────────────┘
+`,
+		},
+		{
+			name: "usage key without a capacity key",
+			nodes: []*corepb.Node{{
+				Name: "n1", Endpoint: "e1", Available: true,
+				ResourceCapacity: `{"cpumem":{"cpu":8}}`,
+				ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512}}`,
+			}},
+			want: `┌──────┬──────────┬────────────────┬──────────────┐
+│ NAME │ ENDPOINT │ STATUS         │ CPUMEM       │
+├──────┼──────────┼────────────────┼──────────────┤
+│ n1   │ e1       │ UP             │ Capacity:    │
+│      │          │ bypass false   │              │
+│      │          │ available true │              │
+│      │          │ test false     │              │
+│      │          │                │ cpu: 8       │
+│      │          │                │ ------------ │
+│      │          │                │ Usage:       │
+│      │          │                │ cpu: 2       │
+│      │          │                │ memory: 512  │
+└──────┴──────────┴────────────────┴──────────────┘
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := captureStdout(t, func() {
+				if tt.showInfo {
+					NodesWithInfo(ToChan(tt.nodes...), false)
+					return
+				}
+				Nodes(ToChan(tt.nodes...), false)
+			})
+			if got != tt.want {
+				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
+			}
+		})
+	}
+}
+
 func testNodes() []*corepb.Node {
 	return []*corepb.Node{
 		{

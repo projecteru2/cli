@@ -176,6 +176,85 @@ func TestWorkloadStatuses(t *testing.T) {
 	}
 }
 
+func TestWorkloadsPluginColumns(t *testing.T) {
+	workloads := []*corepb.Workload{
+		{Name: "w1", Id: "c1", Resources: `{"cpumem":{"cpu_request":1}}`},
+		{Name: "w2", Id: "c2", Resources: `{"cpumem":{"cpu_request":2},"storage":{"storage_request":10}}`},
+	}
+	want := `┌─────────────────────────────┬──────────┬────────────────┬─────────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS │ CPUMEM         │ STORAGE             │
+├─────────────────────────────┼──────────┼────────────────┼─────────────────────┤
+│ w1                          │          │ cpu_request: 1 │                     │
+│ c1                          │          │                │                     │
+│                             │          │                │                     │
+│                             │          │                │                     │
+│ Privileged: false           │          │                │                     │
+├─────────────────────────────┼──────────┼────────────────┼─────────────────────┤
+│ w2                          │          │ cpu_request: 2 │ storage_request: 10 │
+│ c2                          │          │                │                     │
+│                             │          │                │                     │
+│                             │          │                │                     │
+│ Privileged: false           │          │                │                     │
+└─────────────────────────────┴──────────┴────────────────┴─────────────────────┘
+`
+
+	if got := captureStdout(t, func() { Workloads(workloads...) }); got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
+	}
+}
+
+func TestWorkloadsNetworks(t *testing.T) {
+	tests := []struct {
+		name     string
+		workload *corepb.Workload
+		want     string
+	}{
+		{
+			name: "published network missing from the status",
+			workload: &corepb.Workload{
+				Name: "w1", Id: "c1",
+				Publish: map[string]string{"host": "10.0.0.1:80"},
+				Status:  &corepb.WorkloadStatus{Networks: map[string]string{"bridge": "172.17.0.2"}},
+			},
+			want: `┌─────────────────────────────┬────────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS           │
+├─────────────────────────────┼────────────────────┤
+│ w1                          │ bridge: 172.17.0.2 │
+│ c1                          │ host: 10.0.0.1:80  │
+│                             │                    │
+│                             │                    │
+│ Privileged: false           │                    │
+└─────────────────────────────┴────────────────────┘
+`,
+		},
+		{
+			name: "published network without any status",
+			workload: &corepb.Workload{
+				Name: "w1", Id: "c1",
+				Publish: map[string]string{"host": "10.0.0.1:80"},
+			},
+			want: `┌─────────────────────────────┬───────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS          │
+├─────────────────────────────┼───────────────────┤
+│ w1                          │ host: 10.0.0.1:80 │
+│ c1                          │                   │
+│                             │                   │
+│                             │                   │
+│ Privileged: false           │                   │
+└─────────────────────────────┴───────────────────┘
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := captureStdout(t, func() { Workloads(tt.workload) }); got != tt.want {
+				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
+			}
+		})
+	}
+}
+
 func testWorkloads() []*corepb.Workload {
 	return []*corepb.Workload{
 		{
