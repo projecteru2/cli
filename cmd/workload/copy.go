@@ -10,7 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 	"github.com/urfave/cli/v3"
@@ -25,7 +24,6 @@ type copyWorkloadsOptions struct {
 }
 
 func (o *copyWorkloadsOptions) run(ctx context.Context) error {
-	logger := log.WithFunc("workload.copyWorkloadsOptions.run")
 	targets := map[string]*corepb.CopyPaths{}
 	for id, paths := range o.sources {
 		targets[id] = &corepb.CopyPaths{Paths: paths}
@@ -41,6 +39,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	files := make(map[string][]byte)
 
 	for {
@@ -53,7 +52,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "copy from %s failed", coreutils.ShortID(msg.Id))
+			errs = errors.Join(errs, fmt.Errorf("copy from %s: %s", coreutils.ShortID(msg.Id), msg.Error))
 			continue
 		}
 
@@ -64,13 +63,14 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	for filename, content := range files {
 		storePath := filepath.Join(o.dir, filename)
 		if _, err := os.Stat(storePath); err == nil {
+			errs = errors.Join(errs, fmt.Errorf("%s already exists", storePath))
 			continue
 		}
 		if err := os.WriteFile(storePath, content, 0o600); err != nil {
-			logger.Errorf(ctx, err, "write backup file %s", storePath)
+			errs = errors.Join(errs, fmt.Errorf("write %s: %w", storePath, err))
 		}
 	}
-	return nil
+	return errs
 }
 
 func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {

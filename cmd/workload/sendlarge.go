@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"maps"
 	"slices"
@@ -33,35 +34,40 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var recvErr error
 	wg := sync.WaitGroup{}
 	defer wg.Wait()
 	wg.Go(func() {
 		for {
 			msg, err := stream.Recv()
 			if errors.Is(err, io.EOF) {
-				break
+				return
 			}
 			if err != nil {
+				recvErr = errors.Join(recvErr, err)
 				return
 			}
 
 			if msg.Error != "" {
-				logger.Errorf(ctx, errors.New(msg.Error), "send %s to %s failed", msg.Path, msg.Id)
-			} else {
-				logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
+				recvErr = errors.Join(recvErr, fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error))
+				continue
 			}
+			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 		}
 	})
 
-	fileOptions := o.toSendLargeFileChunks()
-	for _, chunk := range fileOptions {
-		err := stream.Send(chunk)
-		if err != nil {
+	for _, chunk := range o.toSendLargeFileChunks() {
+		if err := stream.Send(chunk); err != nil {
 			logger.Errorf(ctx, err, "send %s failed", chunk.Dst)
 			return err
 		}
 	}
-	return stream.CloseSend()
+	if err := stream.CloseSend(); err != nil {
+		return err
+	}
+
+	wg.Wait()
+	return recvErr
 }
 
 func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {

@@ -25,7 +25,7 @@ func loadSpecs(ctx context.Context, cmd *cli.Command) (*types.Specs, error) {
 		data []byte
 		err  error
 	)
-	if strings.HasPrefix(specURI, "http") {
+	if strings.HasPrefix(specURI, "http://") || strings.HasPrefix(specURI, "https://") {
 		data, err = utils.GetSpecFromRemote(ctx, specURI)
 	} else {
 		data, err = os.ReadFile(specURI) //nolint:gosec
