@@ -1,69 +1,77 @@
+version: "2"
+
 run:
   timeout: 5m
   tests: false
-  skip-dirs:
-    - vendor
-    - tools
   modules-download-mode: readonly
 
-issues:
-  exclude-rules:
-    - linters:
-        - staticcheck
-      text: "SA1019:"
-
-linters-settings:
-  maligned:
-    suggest-new: true
-  gocritic:
-    disabled-checks:
-      - captLocal
-
 linters:
-  disable-all: true
+  default: none
   enable:
+    - asciicheck
     - bodyclose
-      #    - depguard
     - dogsled
+    - errcheck
     - gochecknoinits
     - goconst
+    - gocritic
     - gocyclo
-    - gofmt
-    - goimports
-    - revive
     - goprintffuncname
     - gosec
-    - gosimple
     - govet
     - ineffassign
     - misspell
+    - modernize
     - nakedret
-    - nolintlint
-    - rowserrcheck
-    - exportloopref
+    - nestif
+    - revive
     - staticcheck
-    - typecheck
     - unconvert
     - unparam
     - unused
-    - asciicheck
-    - nestif
-    - errcheck
-    - gocritic
-    #- gocognit
-    #- gomnd
-    #- dupl
-      #Consider this
-      # - godox
-      # - funlen
-      # - lll
-      # - gochecknoglobals
-      # don't enable:
-      # - whitespace
-      # - goerr113
-      # - godot
-      # - maligned
-      # - prealloc
-      # - testpackage
-      # - wsl
-      # - stylecheck
+  settings:
+    gocritic:
+      disabled-checks:
+        - captLocal
+    govet:
+      enable-all: true
+      disable:
+        - fieldalignment
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+    misspell:
+      locale: US
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+    gocyclo:
+      min-complexity: 30
+    nakedret:
+      max-func-lines: 30
+    nestif:
+      min-complexity: 5
+  exclusions:
+    generated: strict
+    paths:
+      - dist
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+          - gosec
+          - unparam
+          - goconst
+          - gocyclo
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    gofumpt:
+      extra-rules: true
+    goimports:
+      local-prefixes:
+        - github.com/projecteru2/cli

@@ -7,7 +7,7 @@ import (
 
 var (
 	// NAME .
-	NAME = "cli"
+	NAME = "eru-cli"
 	// VERSION .
 	VERSION = "unknown"
 	// REVISION .
