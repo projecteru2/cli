@@ -96,13 +96,14 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 func attachTerminal(ctx context.Context, iStream Stream) func() {
 	stdinFd := int(os.Stdin.Fd())
 	ctx, cancel := context.WithCancel(ctx)
-	go pumpStdin(ctx, iStream)
 
 	state, err := term.MakeRaw(stdinFd)
 	if err != nil {
 		// stdin is a pipe or a file: no raw mode and no window size to report.
+		go pumpStdin(ctx, iStream)
 		return cancel
 	}
+	go pumpStdin(ctx, iStream)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGWINCH)

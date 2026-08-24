@@ -18,7 +18,7 @@ func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[s
 		}
 	}
 
-	extra, err := ParseExtraResources(cmd)
+	extra, err := parseExtraResources(cmd)
 	if err != nil {
 		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
@@ -33,8 +33,16 @@ func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[s
 	return encoded, nil
 }
 
-// ParseExtraResources decodes the --extra-resources JSON object.
-func ParseExtraResources(cmd *cli.Command) (map[string]any, error) {
+func encodeResource(encoded map[string][]byte, plugin string, params any) error {
+	b, err := json.Marshal(params)
+	if err != nil {
+		return fmt.Errorf("encode %s resource: %w", plugin, err)
+	}
+	encoded[plugin] = b
+	return nil
+}
+
+func parseExtraResources(cmd *cli.Command) (map[string]any, error) {
 	extraResources := cmd.String("extra-resources")
 	if extraResources == "" {
 		return nil, nil
@@ -44,13 +52,4 @@ func ParseExtraResources(cmd *cli.Command) (map[string]any, error) {
 		return nil, err
 	}
 	return parsed, nil
-}
-
-func encodeResource(encoded map[string][]byte, plugin string, params any) error {
-	b, err := json.Marshal(params)
-	if err != nil {
-		return fmt.Errorf("encode %s resource: %w", plugin, err)
-	}
-	encoded[plugin] = b
-	return nil
 }
