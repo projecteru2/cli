@@ -65,7 +65,7 @@ func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[s
 		sr["storage"] = 0.0
 		sr["volumes"] = 0.0
 		if stCap != 0 {
-			cr["storage"] = stUsage / stCap
+			sr["storage"] = stUsage / stCap
 		}
 		vu := 0.0
 		vc := 0.0
