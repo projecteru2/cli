@@ -21,25 +21,23 @@ import (
 	"github.com/projecteru2/cli/version"
 )
 
-func setupLog(ctx context.Context, cmd *cli.Command) (context.Context, error) {
-	level := "info"
-	if cmd.Bool("debug") {
-		level = "debug"
-	}
-	return ctx, log.SetupLog(ctx, &coretypes.ServerLogConfig{Level: level}, "")
-}
-
 func main() {
 	cli.VersionPrinter = func(_ *cli.Command) {
 		fmt.Print(version.String())
 	}
 
+	if err := newApp().Run(context.Background(), os.Args); err != nil {
+		fmt.Printf("Error running eru-cli: %v\n", err)
+		os.Exit(-1)
+	}
+}
+
+func newApp() *cli.Command {
 	app := &cli.Command{
-		Name:                      version.NAME,
-		Usage:                     "control eru in shell",
-		Version:                   version.VERSION,
-		DisableSliceFlagSeparator: true,
-		Before:                    setupLog,
+		Name:    version.NAME,
+		Usage:   "control eru in shell",
+		Version: version.VERSION,
+		Before:  setupLog,
 		Commands: []*cli.Command{
 			core.Command(),
 			image.Command(),
@@ -89,8 +87,18 @@ func main() {
 		},
 	}
 
-	if err := app.Run(context.Background(), os.Args); err != nil {
-		fmt.Printf("Error running eru-cli: %v\n", err)
-		os.Exit(-1)
+	// v3 reads the separator setting off the command owning the flag, not off the root.
+	_ = app.Walk(func(cmd *cli.Command) error {
+		cmd.DisableSliceFlagSeparator = true
+		return nil
+	})
+	return app
+}
+
+func setupLog(ctx context.Context, cmd *cli.Command) (context.Context, error) {
+	level := "info"
+	if cmd.Bool("debug") {
+		level = "debug"
 	}
+	return ctx, log.SetupLog(ctx, &coretypes.ServerLogConfig{Level: level}, "")
 }
