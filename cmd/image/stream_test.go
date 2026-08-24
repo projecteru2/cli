@@ -1,0 +1,120 @@
+package image
+
+import (
+	"bytes"
+	"context"
+	"io"
+	"strings"
+	"testing"
+
+	"github.com/projecteru2/core/log"
+	corepb "github.com/projecteru2/core/rpc/gen"
+	coretypes "github.com/projecteru2/core/types"
+	"github.com/urfave/cli/v3"
+	"google.golang.org/grpc"
+)
+
+func TestBuildImageReportsFailure(t *testing.T) {
+	tests := []struct {
+		name     string
+		msg      *corepb.BuildImageMessage
+		wantCode int
+		wantMsg  string
+	}{
+		{
+			name:     "error without a detail",
+			msg:      &corepb.BuildImageMessage{Error: "push image failed"},
+			wantCode: -1,
+			wantMsg:  "push image failed",
+		},
+		{
+			name: "error with a detail",
+			msg: &corepb.BuildImageMessage{
+				Error:       "build failed",
+				ErrorDetail: &corepb.ErrorDetail{Code: 7, Message: "no space left on device"},
+			},
+			wantCode: 7,
+			wantMsg:  "no space left on device",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := &buildImageOptions{
+				client: &fakeImageClient{build: &fakeStream[corepb.BuildImageMessage]{msgs: []*corepb.BuildImageMessage{tt.msg}}},
+				opts:   &corepb.BuildImageOptions{},
+			}
+
+			err := o.run(t.Context())
+			exitErr, ok := err.(cli.ExitCoder)
+			if !ok {
+				t.Fatalf("got %v, want a cli.ExitCoder", err)
+			}
+			if exitErr.ExitCode() != tt.wantCode {
+				t.Errorf("code: got %d, want %d", exitErr.ExitCode(), tt.wantCode)
+			}
+			if exitErr.Error() != tt.wantMsg {
+				t.Errorf("message: got %q, want %q", exitErr.Error(), tt.wantMsg)
+			}
+		})
+	}
+}
+
+func TestCacheImageReportsFailureReason(t *testing.T) {
+	o := &cacheImageOptions{
+		client: &fakeImageClient{cache: &fakeStream[corepb.CacheImageMessage]{msgs: []*corepb.CacheImageMessage{
+			{Image: "app:v1", Nodename: "node1", Success: false, Message: "no such image"},
+		}}},
+		images: []string{"app:v1"},
+	}
+
+	got := captureLog(t, func() {
+		if err := o.run(t.Context()); err != nil {
+			t.Fatalf("run: %v", err)
+		}
+	})
+	if !strings.Contains(got, "no such image") {
+		t.Errorf("got %q, want it to carry the failure reason", got)
+	}
+}
+
+func captureLog(t *testing.T, f func()) string {
+	t.Helper()
+	if err := log.SetupLog(t.Context(), &coretypes.ServerLogConfig{Level: "info"}, ""); err != nil {
+		t.Fatalf("setup log: %v", err)
+	}
+	buf := &bytes.Buffer{}
+	logger := log.GetGlobalLogger()
+	*logger = logger.Output(buf)
+	f()
+	return buf.String()
+}
+
+type fakeImageClient struct {
+	corepb.CoreRPCClient
+	build *fakeStream[corepb.BuildImageMessage]
+	cache *fakeStream[corepb.CacheImageMessage]
+}
+
+func (f *fakeImageClient) BuildImage(context.Context, *corepb.BuildImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.BuildImageMessage], error) {
+	return f.build, nil
+}
+
+func (f *fakeImageClient) CacheImage(context.Context, *corepb.CacheImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CacheImageMessage], error) {
+	return f.cache, nil
+}
+
+type fakeStream[T any] struct {
+	grpc.ClientStream
+	msgs []*T
+	next int
+}
+
+func (f *fakeStream[T]) Recv() (*T, error) {
+	if f.next >= len(f.msgs) {
+		return nil, io.EOF
+	}
+	msg := f.msgs[f.next]
+	f.next++
+	return msg, nil
+}

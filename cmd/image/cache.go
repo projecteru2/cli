@@ -42,7 +42,7 @@ func (o *cacheImageOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "cache image %s on %s success", msg.Image, msg.Nodename)
 		} else {
-			logger.Warnf(ctx, "cache image %s on %s failed", msg.Image, msg.Nodename)
+			logger.Errorf(ctx, errors.New(msg.Message), "cache image %s on %s failed", msg.Image, msg.Nodename)
 		}
 	}
 	return nil

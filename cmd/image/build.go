@@ -1,6 +1,7 @@
 package image
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
@@ -46,7 +47,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 
 		switch {
 		case msg.Error != "":
-			return cli.Exit(msg.GetErrorDetail().GetMessage(), int(msg.GetErrorDetail().GetCode()))
+			return cli.Exit(cmp.Or(msg.GetErrorDetail().GetMessage(), msg.Error), cmp.Or(int(msg.GetErrorDetail().GetCode()), -1))
 		case msg.Stream != "":
 			fmt.Print(msg.Stream)
 			if msg.Status == "finished" {
