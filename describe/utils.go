@@ -75,7 +75,9 @@ func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[s
 		for k := range volumesCap {
 			vc += volumesCap.Float64(k)
 		}
-		sr["volumes"] = vu / vc
+		if vc != 0 {
+			sr["volumes"] = vu / vc
+		}
 	}
 	return cr, sr, nil
 }

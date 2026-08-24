@@ -36,6 +36,13 @@ func TestToResourcePrecent(t *testing.T) {
 			wantCPU:  map[string]float64{},
 			wantSt:   map[string]float64{"storage": 0.25, "volumes": 0.25},
 		},
+		{
+			name:     "no volume capacity keeps zero percent",
+			usage:    `{"storage":{"storage":50,"volumes":{}}}`,
+			capacity: `{"storage":{"storage":200,"volumes":{}}}`,
+			wantCPU:  map[string]float64{},
+			wantSt:   map[string]float64{"storage": 0.25, "volumes": 0},
+		},
 	}
 
 	for _, tt := range tests {
