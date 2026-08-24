@@ -57,8 +57,11 @@ func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(cmd)
-	if len(content) == 0 {
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return err
+	}
+	if len(files.Data) == 0 {
 		return errors.New("files should not be empty")
 	}
 
@@ -70,9 +73,9 @@ func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
 	o := &sendWorkloadsOptions{
 		client:  client,
 		ids:     ids,
-		content: content,
-		modes:   modes,
-		owners:  owners,
+		content: files.Data,
+		modes:   files.Modes,
+		owners:  files.Owners,
 	}
 	return o.run(ctx)
 }

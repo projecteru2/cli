@@ -2,6 +2,7 @@ package utils
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -13,59 +14,71 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// ReadAllFiles reads srcfile:dstfile[:mode[:uid:gid]] pairs into a dstfile keyed map.
-func ReadAllFiles(files []string) map[string]*types.LinuxFile {
-	m := map[string]*types.LinuxFile{}
-	for _, file := range files {
-		ps := strings.Split(file, ":")
-		f := &types.LinuxFile{}
-		var err error
-
-		switch {
-		case len(ps) >= 5:
-			var uid, gid int64
-			uid, err = strconv.ParseInt(ps[3], 10, 0)
-			if err != nil {
-				break
-			}
-			gid, err = strconv.ParseInt(ps[4], 10, 0)
-			if err != nil {
-				break
-			}
-			f.UID = int(uid)
-			f.GID = int(gid)
-			fallthrough
-		case len(ps) >= 3:
-			f.Mode, err = strconv.ParseInt(ps[2], 8, 0)
-			if err != nil {
-				break
-			}
-			fallthrough
-		case len(ps) >= 2:
-			f.Content, err = os.ReadFile(ps[0])
-			if err != nil {
-				break
-			}
-			m[ps[1]] = f
-		}
-	}
-	return m
+// FileOptions carries the --file pairs in the shape the core rpc expects.
+type FileOptions struct {
+	Data   map[string][]byte
+	Modes  map[string]*corepb.FileMode
+	Owners map[string]*corepb.FileOwner
 }
 
 // GenerateFileOptions reads the --file pairs into data, mode and owner maps.
-func GenerateFileOptions(cmd *cli.Command) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
-	data := map[string][]byte{}
-	modes := map[string]*corepb.FileMode{}
-	owners := map[string]*corepb.FileOwner{}
-
-	m := ReadAllFiles(cmd.StringSlice("file"))
-	for dst, file := range m {
-		data[dst] = file.Content
-		modes[dst] = &corepb.FileMode{Mode: file.Mode}
-		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)} //nolint:gosec
+func GenerateFileOptions(cmd *cli.Command) (*FileOptions, error) {
+	files, err := ReadAllFiles(cmd.StringSlice("file"))
+	if err != nil {
+		return nil, err
 	}
 
-	return data, modes, owners
+	o := &FileOptions{
+		Data:   map[string][]byte{},
+		Modes:  map[string]*corepb.FileMode{},
+		Owners: map[string]*corepb.FileOwner{},
+	}
+	for dst, file := range files {
+		o.Data[dst] = file.Content
+		o.Modes[dst] = &corepb.FileMode{Mode: file.Mode}
+		o.Owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)} //nolint:gosec
+	}
+	return o, nil
+}
+
+// ReadAllFiles reads srcfile:dstfile[:mode[:uid:gid]] pairs into a dstfile keyed map.
+func ReadAllFiles(files []string) (map[string]*types.LinuxFile, error) {
+	m := map[string]*types.LinuxFile{}
+	for _, file := range files {
+		ps := strings.Split(file, ":")
+		if len(ps) != 2 && len(ps) != 3 && len(ps) != 5 {
+			return nil, fmt.Errorf("invalid file %q, want src:dst[:mode[:uid:gid]]", file)
+		}
+
+		f := &types.LinuxFile{}
+		if len(ps) == 5 {
+			uid, err := strconv.ParseInt(ps[3], 10, 0)
+			if err != nil {
+				return nil, fmt.Errorf("parse uid of %q: %w", file, err)
+			}
+			gid, err := strconv.ParseInt(ps[4], 10, 0)
+			if err != nil {
+				return nil, fmt.Errorf("parse gid of %q: %w", file, err)
+			}
+			f.UID = int(uid)
+			f.GID = int(gid)
+		}
+		if len(ps) >= 3 {
+			mode, err := strconv.ParseInt(ps[2], 8, 0)
+			if err != nil {
+				return nil, fmt.Errorf("parse mode of %q: %w", file, err)
+			}
+			f.Mode = mode
+		}
+
+		content, err := os.ReadFile(ps[0]) //nolint:gosec
+		if err != nil {
+			return nil, fmt.Errorf("read %q: %w", ps[0], err)
+		}
+		f.Content = content
+		m[ps[1]] = f
+	}
+	return m, nil
 }
 
 // SplitFiles turns a list of src:dst strings into a map.

@@ -20,23 +20,30 @@ func TestReadAllFiles(t *testing.T) {
 		wantMode int64
 		wantUID  int
 		wantGID  int
-		wantSkip bool
+		wantErr  bool
 	}{
 		{name: "src and dst only", files: []string{src + ":/tmp/payload"}, wantDst: "/tmp/payload"},
 		{name: "with mode", files: []string{src + ":/tmp/payload:755"}, wantDst: "/tmp/payload", wantMode: 0o755},
 		{name: "with owner", files: []string{src + ":/tmp/payload:644:12:34"}, wantDst: "/tmp/payload", wantMode: 0o644, wantUID: 12, wantGID: 34},
-		{name: "no dst", files: []string{src}, wantSkip: true},
-		{name: "missing source", files: []string{filepath.Join(dir, "nope") + ":/tmp/nope"}, wantSkip: true},
+		{name: "no dst", files: []string{src}, wantErr: true},
+		{name: "uid without gid", files: []string{src + ":/tmp/payload:644:12"}, wantErr: true},
+		{name: "missing source", files: []string{filepath.Join(dir, "nope") + ":/tmp/nope"}, wantErr: true},
+		{name: "unparsable mode", files: []string{src + ":/tmp/payload:whoops"}, wantErr: true},
+		{name: "unparsable uid", files: []string{src + ":/tmp/payload:644:whoops:34"}, wantErr: true},
+		{name: "unparsable gid", files: []string{src + ":/tmp/payload:644:12:whoops"}, wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ReadAllFiles(tt.files)
-			if tt.wantSkip {
-				if len(got) != 0 {
-					t.Fatalf("got %v, want no files", got)
+			got, err := ReadAllFiles(tt.files)
+			if tt.wantErr {
+				if err == nil {
+					t.Fatalf("got %v, want an error", got)
 				}
 				return
+			}
+			if err != nil {
+				t.Fatalf("ReadAllFiles: %v", err)
 			}
 			f, ok := got[tt.wantDst]
 			if !ok {

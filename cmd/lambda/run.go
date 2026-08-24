@@ -93,7 +93,10 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(cmd)
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return nil, err
+	}
 
 	cpumem := resourcetypes.RawParams{
 		"cpu-request":    cmd.Float64("cpu-request"),
@@ -147,9 +150,9 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 			Networks:       utils.GetNetworks(network),
 			OpenStdin:      cmd.Bool("stdin"),
 			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(cmd.String("deploy-strategy"))]),
-			Data:           content,
-			Owners:         owners,
-			Modes:          modes,
+			Data:           files.Data,
+			Owners:         files.Owners,
+			Modes:          files.Modes,
 			User:           cmd.String("user"),
 		},
 	}, nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"maps"
 	"slices"
 	"sync"
 
@@ -84,11 +85,14 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(cmd)
-	if len(content) == 0 {
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return err
+	}
+	if len(files.Data) == 0 {
 		return errors.New("files should not be empty")
 	}
-	if len(content) >= 2 {
+	if len(files.Data) >= 2 {
 		return errors.New("can not send multiple files at the same time")
 	}
 
@@ -97,19 +101,14 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("workload id(s) should not be empty")
 	}
 
-	targetFileName := func() string {
-		for key := range content {
-			return key
-		}
-		return ""
-	}()
+	dst := slices.Collect(maps.Keys(files.Data))[0]
 	o := &sendLargeWorkloadsOptions{
 		client:  client,
 		ids:     ids,
-		dst:     targetFileName,
-		content: content[targetFileName],
-		modes:   modes[targetFileName],
-		owners:  owners[targetFileName],
+		dst:     dst,
+		content: files.Data[dst],
+		modes:   files.Modes[dst],
+		owners:  files.Owners[dst],
 	}
 	return o.run(ctx)
 }

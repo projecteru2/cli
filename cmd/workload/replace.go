@@ -116,7 +116,10 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 		return nil, err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(cmd)
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return nil, err
+	}
 
 	return &corepb.DeployOptions{
 		Name:       specs.Appname,
@@ -133,9 +136,9 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
 		DeployStrategy: corepb.DeployOptions_AUTO,
-		Data:           content,
-		Modes:          modes,
-		Owners:         owners,
+		Data:           files.Data,
+		Modes:          files.Modes,
+		Owners:         files.Owners,
 		User:           cmd.String("user"),
 		Debug:          cmd.Bool("debug"),
 		IgnoreHook:     cmd.Bool("ignore-hook"),
