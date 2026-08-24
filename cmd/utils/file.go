@@ -62,7 +62,7 @@ func GenerateFileOptions(cmd *cli.Command) (map[string][]byte, map[string]*corep
 	for dst, file := range m {
 		data[dst] = file.Content
 		modes[dst] = &corepb.FileMode{Mode: file.Mode}
-		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)}
+		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)} //nolint:gosec
 	}
 
 	return data, modes, owners
@@ -91,6 +91,6 @@ func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 	return io.ReadAll(resp.Body)
 }

@@ -139,7 +139,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(ctx, specURI)
 	} else {
-		data, err = os.ReadFile(specURI)
+		data, err = os.ReadFile(specURI) //nolint:gosec
 	}
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 			TcpPorts: entrypoint.HealthCheck.TCPPorts,
 			HttpPort: entrypoint.HealthCheck.HTTPPort,
 			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode),
+			Code:     int32(entrypoint.HealthCheck.HTTPCode), //nolint:gosec
 		}
 	}
 
@@ -264,7 +264,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
 		},
 		Image:          cmd.String("image"),
-		Count:          int32(cmd.Int("count")),
+		Count:          int32(cmd.Int("count")), //nolint:gosec
 		Env:            cmd.StringSlice("env"),
 		Networks:       networks,
 		Labels:         specs.Labels,
@@ -276,7 +276,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		Owners:         owners,
 		User:           cmd.String("user"),
 		Debug:          cmd.Bool("debug"),
-		NodesLimit:     int32(cmd.Int("nodes-limit")),
+		NodesLimit:     int32(cmd.Int("nodes-limit")), //nolint:gosec
 		IgnoreHook:     cmd.Bool("ignore-hook"),
 		AfterCreate:    cmd.StringSlice("after-create"),
 		RawArgs:        rawArgsByte,

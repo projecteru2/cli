@@ -63,16 +63,11 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 
 	for filename, content := range files {
 		storePath := filepath.Join(o.dir, filename)
-		if _, err := os.Stat(storePath); err != nil {
-			f, err := os.Create(storePath)
-			if err != nil {
-				logger.Errorf(ctx, err, "create backup file %s", storePath)
-				continue
-			}
-			if _, err := f.Write(content); err != nil {
-				logger.Error(ctx, err, "write file")
-			}
-			f.Close()
+		if _, err := os.Stat(storePath); err == nil {
+			continue
+		}
+		if err := os.WriteFile(storePath, content, 0o600); err != nil {
+			logger.Errorf(ctx, err, "write backup file %s", storePath)
 		}
 	}
 	return nil

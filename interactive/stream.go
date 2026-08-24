@@ -36,66 +36,15 @@ type Stream struct {
 }
 
 // HandleStream pumps an attach stream, optionally putting the terminal in raw mode.
-func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
+func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (int, error) {
 	logger := log.WithFunc("interactive.HandleStream")
 
 	if interactive {
-		stdinFd := int(os.Stdin.Fd())
-		state, err := term.MakeRaw(stdinFd)
+		detach, err := attachTerminal(ctx, iStream)
 		if err != nil {
 			return -1, err
 		}
-		defer func() { _ = term.Restore(stdinFd, state) }()
-
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGWINCH)
-		ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-		resize := func() error {
-			col, row, err := term.GetSize(stdinFd)
-			if err != nil {
-				return err
-			}
-			opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)})
-			if err != nil {
-				return err
-			}
-			return iStream.Send(slices.Concat(winchCommand, opts))
-		}
-
-		go func(ctx context.Context) {
-			for {
-				select {
-				case <-ctx.Done():
-					break
-				case _, ok := <-sigs:
-					if !ok {
-						return
-					}
-					if err := resize(); err != nil {
-						logger.Error(ctx, err, "resize")
-					}
-				}
-			}
-		}(ctx)
-
-		go func() {
-			if err := resize(); err != nil {
-				logger.Error(ctx, err, "resize")
-			}
-			scanner := bufio.NewScanner(os.Stdin)
-			scanner.Split(bufio.ScanRunes)
-			for scanner.Scan() {
-				b := scanner.Bytes()
-				if err := iStream.Send(b); err != nil {
-					logger.Errorf(ctx, err, "send command %s", b)
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				logger.Error(ctx, err, "read output from virtual unit")
-				return
-			}
-		}()
+		defer detach()
 	}
 
 	outputTemplate := `{{printf "%s" .Data}}`
@@ -108,50 +57,103 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 		return -1, err
 	}
 
-	exited := 0
+	code, exited := 0, 0
 	for {
 		msg, err := iStream.Recv()
 		if errors.Is(err, io.EOF) {
-			break
+			return code, nil
 		}
 		if err != nil {
 			return -1, err
 		}
 
-		if msg.StdStreamType == corepb.StdStreamType_ERUERROR {
+		switch {
+		case msg.StdStreamType == corepb.StdStreamType_ERUERROR:
 			logger.Error(ctx, errors.New(string(msg.Data)), "error from eru")
 			continue
-		}
-
-		if msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID {
+		case msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID:
 			logger.Infof(ctx, "workload id %s", msg.WorkloadId)
 			continue
-		}
-
-		if bytes.HasPrefix(msg.Data, exitCode) {
-			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
-			code, err = strconv.Atoi(ret)
-			if err == nil && code != 0 {
-				return code, err
+		case bytes.HasPrefix(msg.Data, exitCode):
+			var convErr error
+			code, convErr = strconv.Atoi(string(bytes.TrimLeft(msg.Data, string(exitCode))))
+			if convErr == nil && code != 0 {
+				return code, nil
 			}
 			exited++
 			if exited == exitCount {
-				return code, err
+				return code, convErr
 			}
 			continue
 		}
 
-		var outStream *os.File
-		switch msg.StdStreamType {
-		case corepb.StdStreamType_STDOUT:
+		outStream := os.Stderr
+		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
 			outStream = os.Stdout
-		default:
-			outStream = os.Stderr
 		}
 		if err := outputT.Execute(outStream, msg); err != nil {
 			logger.Error(ctx, err, "render template")
 		}
 	}
+}
 
-	return code, err
+// attachTerminal puts stdin in raw mode and forwards keystrokes and resizes to the stream.
+func attachTerminal(ctx context.Context, iStream Stream) (func(), error) {
+	logger := log.WithFunc("interactive.attachTerminal")
+	stdinFd := int(os.Stdin.Fd())
+	state, err := term.MakeRaw(stdinFd)
+	if err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithCancel(ctx)
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGWINCH)
+
+	resize := func() error {
+		col, row, err := term.GetSize(stdinFd)
+		if err != nil {
+			return err
+		}
+		opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)}) //nolint:gosec // terminal geometry fits in uint16
+		if err != nil {
+			return err
+		}
+		return iStream.Send(slices.Concat(winchCommand, opts))
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				break
+			case <-sigs:
+				if err := resize(); err != nil {
+					logger.Error(ctx, err, "resize")
+				}
+			}
+		}
+	}()
+
+	go func() {
+		if err := resize(); err != nil {
+			logger.Error(ctx, err, "resize")
+		}
+		scanner := bufio.NewScanner(os.Stdin)
+		scanner.Split(bufio.ScanRunes)
+		for scanner.Scan() {
+			if err := iStream.Send(scanner.Bytes()); err != nil {
+				logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
+			}
+		}
+		if err := scanner.Err(); err != nil {
+			logger.Error(ctx, err, "read stdin")
+		}
+	}()
+
+	return func() {
+		cancel()
+		signal.Stop(sigs)
+		_ = term.Restore(stdinFd, state)
+	}, nil
 }

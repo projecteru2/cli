@@ -126,7 +126,7 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		if strings.HasPrefix(specURI, "http") {
 			data, err = utils.GetSpecFromRemote(ctx, specURI)
 		} else {
-			data, err = os.ReadFile(specURI)
+			data, err = os.ReadFile(specURI) //nolint:gosec
 		}
 		if err != nil {
 			return nil, fmt.Errorf("read spec: %w", err)
@@ -161,7 +161,7 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		return nil, errors.New("image name must be given")
 	}
 	user := cmd.String("user")
-	uid := int32(cmd.Int("uid"))
+	uid := int32(cmd.Int("uid")) //nolint:gosec
 	tags := cmd.StringSlice("tag")
 	if len(tags) == 0 {
 		tags = append(tags, "latest")

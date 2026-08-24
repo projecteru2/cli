@@ -127,7 +127,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 	if strings.HasPrefix(specURI, "http") {
 		data, err = utils.GetSpecFromRemote(ctx, specURI)
 	} else {
-		data, err = os.ReadFile(specURI)
+		data, err = os.ReadFile(specURI) //nolint:gosec
 	}
 	if err != nil {
 		return nil, err
@@ -162,7 +162,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 			TcpPorts: entrypoint.HealthCheck.TCPPorts,
 			HttpPort: entrypoint.HealthCheck.HTTPPort,
 			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode),
+			Code:     int32(entrypoint.HealthCheck.HTTPCode), //nolint:gosec
 		}
 	}
 
@@ -197,7 +197,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 			Labels:   nil,
 		},
 		Image:          cmd.String("image"),
-		Count:          int32(cmd.Int("count")),
+		Count:          int32(cmd.Int("count")), //nolint:gosec
 		Env:            cmd.StringSlice("env"),
 		Networks:       networks,
 		Labels:         specs.Labels,

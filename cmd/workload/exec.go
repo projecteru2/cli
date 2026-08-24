@@ -33,7 +33,7 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	if err := resp.Send(opts); err != nil {
+	if err = resp.Send(opts); err != nil {
 		return err
 	}
 

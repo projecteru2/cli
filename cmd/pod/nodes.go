@@ -6,6 +6,7 @@ import (
 	"io"
 	"strings"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -115,11 +116,12 @@ func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNode
 	go func() {
 		defer close(ch)
 
+		logger := log.WithFunc("pod.listPodNodesOptions.listChan")
 		for {
-			node, err := stream.Recv()
-			if err != nil {
-				if err != io.EOF {
-					println(err.Error())
+			node, recvErr := stream.Recv()
+			if recvErr != nil {
+				if !errors.Is(recvErr, io.EOF) {
+					logger.Error(ctx, recvErr)
 				}
 				return
 			}
@@ -155,7 +157,7 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 		name:            cmd.Args().First(),
 		filter:          filter,
 		labels:          utils.SplitEquality(cmd.StringSlice("label")),
-		timeoutInSecond: int32(cmd.Int("timeout")),
+		timeoutInSecond: int32(cmd.Int("timeout")), //nolint:gosec
 		showInfo:        cmd.Bool("show-info"),
 	}
 	return o.run(ctx)

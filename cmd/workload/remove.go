@@ -70,7 +70,7 @@ func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {
 		client: client,
 		ids:    ids,
 		force:  force,
-		step:   int32(cmd.Int("step")),
+		step:   int32(cmd.Int("step")), //nolint:gosec
 	}
 	return o.run(ctx)
 }

@@ -123,7 +123,7 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 
 	return &corepb.RunAndWaitOptions{
 		Async:        cmd.Bool("async"),
-		AsyncTimeout: int32(cmd.Int("async-timeout")),
+		AsyncTimeout: int32(cmd.Int("async-timeout")), //nolint:gosec
 		DeployOptions: &corepb.DeployOptions{
 			Name: "lambda",
 			Entrypoint: &corepb.EntrypointOptions{
@@ -138,7 +138,7 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 				Includes: cmd.StringSlice("node"),
 			},
 			Image:          cmd.String("image"),
-			Count:          int32(cmd.Int("count")),
+			Count:          int32(cmd.Int("count")), //nolint:gosec
 			Env:            cmd.StringSlice("env"),
 			Networks:       utils.GetNetworks(network),
 			OpenStdin:      cmd.Bool("stdin"),

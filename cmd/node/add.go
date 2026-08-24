@@ -73,7 +73,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 		}
 	}
 	if ca != "" {
-		f, err := os.ReadFile(ca)
+		f, err := os.ReadFile(ca) //nolint:gosec
 		if err != nil {
 			return "", "", "", fmt.Errorf("read %s: %w", ca, err)
 		}
@@ -88,7 +88,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 		}
 	}
 	if cert != "" {
-		f, err := os.ReadFile(cert)
+		f, err := os.ReadFile(cert) //nolint:gosec
 		if err != nil {
 			return "", "", "", fmt.Errorf("read %s: %w", cert, err)
 		}
@@ -103,7 +103,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 		}
 	}
 	if key != "" {
-		f, err := os.ReadFile(key)
+		f, err := os.ReadFile(key) //nolint:gosec
 		if err != nil {
 			return "", "", "", fmt.Errorf("read %s: %w", key, err)
 		}

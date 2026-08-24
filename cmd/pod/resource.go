@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -120,11 +121,12 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 	ch = make(chan *corepb.NodeResource)
 	go func() {
 		defer close(ch)
+		logger := log.WithFunc("pod.resourcePodOptions.run")
 		for {
-			resource, err := resp.Recv()
-			if err != nil {
-				if err != io.EOF {
-					println(err.Error())
+			resource, recvErr := resp.Recv()
+			if recvErr != nil {
+				if !errors.Is(recvErr, io.EOF) {
+					logger.Error(ctx, recvErr)
 				}
 				return
 			}
