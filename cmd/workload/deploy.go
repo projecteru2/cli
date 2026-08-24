@@ -55,7 +55,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 		return fmt.Errorf("check workload: %w", err)
 	}
 	_, err = resp.Recv()
-	if err == io.EOF {
+	if errors.Is(err, io.EOF) {
 		logger.Warn(ctx, "there is no workload to replace")
 		return doCreateWorkload(ctx, o.client, o.opts)
 	}
@@ -103,7 +103,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 	}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

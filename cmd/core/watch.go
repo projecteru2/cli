@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 
@@ -24,7 +25,7 @@ func cmdWatchServiceStatus(ctx context.Context, cmd *cli.Command) error {
 	fmt.Println("watch start")
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		for id, addr := range msg.Addresses {

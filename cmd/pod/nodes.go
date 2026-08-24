@@ -71,7 +71,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		unavailNodes = append(unavailNodes, node)
 	}
 
-	o.describeNodes(describe.ToNodeChan(unavailNodes...), true)
+	o.describeNodes(describe.ToChan(unavailNodes...), true)
 	return nil
 }
 
@@ -146,7 +146,7 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	filter := strings.ToLower(cmd.String("filter"))
-	if !(filter == up || filter == down || filter == all) {
+	if filter != up && filter != down && filter != all {
 		return errors.New("filter should be one of up/down/all")
 	}
 

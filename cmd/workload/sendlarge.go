@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"slices"
 	"sync"
 
 	"github.com/projecteru2/core/log"
@@ -32,13 +33,11 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	wg := sync.WaitGroup{}
-	wg.Add(1)
 	defer wg.Wait()
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for {
 			msg, err := stream.Recv()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			if err != nil {
@@ -51,7 +50,7 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 				logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 			}
 		}
-	}()
+	})
 
 	fileOptions := o.toSendLargeFileChunks()
 	for _, chunk := range fileOptions {
@@ -65,22 +64,16 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 }
 
 func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {
-	maxChunkSize := types.SendLargeFileChunkSize
 	ret := make([]*corepb.FileOptions, 0)
-	for idx := 0; idx < len(o.content); idx += maxChunkSize {
-		fileOption := &corepb.FileOptions{
+	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
+		ret = append(ret, &corepb.FileOptions{
 			Ids:   o.ids,
 			Dst:   o.dst,
 			Size:  int64(len(o.content)),
 			Mode:  o.modes,
 			Owner: o.owners,
-		}
-		if idx+maxChunkSize > len(o.content) {
-			fileOption.Chunk = o.content[idx:]
-		} else {
-			fileOption.Chunk = o.content[idx : idx+maxChunkSize]
-		}
-		ret = append(ret, fileOption)
+			Chunk: chunk,
+		})
 	}
 	return ret
 }

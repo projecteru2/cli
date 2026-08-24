@@ -27,7 +27,7 @@ func (o *listImageOptions) run(ctx context.Context) error {
 	msgs := []*corepb.ListImageMessage{}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

@@ -36,7 +36,7 @@ func (o *cleanImageOptions) run(ctx context.Context) error {
 
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err

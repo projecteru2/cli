@@ -2,6 +2,7 @@ package node
 
 import (
 	"context"
+	"errors"
 	"io"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -23,7 +24,7 @@ func (o *watchNodeStatusOptions) run(ctx context.Context) error {
 
 	for {
 		m, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

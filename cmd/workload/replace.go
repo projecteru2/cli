@@ -78,7 +78,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 	}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

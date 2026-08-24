@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"slices"
 	"strconv"
 	"syscall"
 	"text/template"
@@ -59,8 +60,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 			if err != nil {
 				return err
 			}
-			command := append(winchCommand, opts...) //nolint
-			return iStream.Send(command)
+			return iStream.Send(slices.Concat(winchCommand, opts))
 		}
 
 		go func(ctx context.Context) {
@@ -111,7 +111,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 	exited := 0
 	for {
 		msg, err := iStream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

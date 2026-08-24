@@ -3,8 +3,9 @@ package describe
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -96,7 +97,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	for _, c := range workloads {
 		header, cells := parseWorkloadPluginResources(c)
 		once.Do(func() {
-			header = append([]interface{}{"Name/ID/Pod/Node/Priviledged", "Networks"}, header...)
+			header = append([]any{"Name/ID/Pod/Node/Priviledged", "Networks"}, header...)
 			t.AppendHeader(header)
 		})
 
@@ -134,24 +135,17 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	t.Render()
 }
 
-func parseWorkloadPluginResources(workload *corepb.Workload) (header []interface{}, cells [][]string) {
+func parseWorkloadPluginResources(workload *corepb.Workload) (header []any, cells [][]string) {
 	usages := resourcetypes.Resources{}
 	if len(workload.Resources) > 0 {
 		_ = json.Unmarshal([]byte(workload.Resources), &usages)
 	}
 
-	for plugin := range usages {
+	for _, plugin := range slices.Sorted(maps.Keys(usages)) {
 		header = append(header, plugin)
-	}
-	sort.Slice(header, func(i, j int) bool {
-		return header[i].(string) < header[j].(string)
-	})
 
-	for _, plugin := range header {
 		row := []string{}
-		usage := usages[plugin.(string)]
-
-		for key, value := range usage {
+		for key, value := range usages[plugin] {
 			row = append(row, parse(key, value)...)
 		}
 		cells = append(cells, row)

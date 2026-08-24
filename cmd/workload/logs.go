@@ -38,7 +38,7 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

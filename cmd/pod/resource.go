@@ -29,16 +29,16 @@ func match(s string) map[string]string {
 }
 
 func op(op string, left, right float64) bool {
-	switch {
-	case op == ">":
+	switch op {
+	case ">":
 		return left > right
-	case op == ">=":
+	case ">=":
 		return left >= right
-	case op == "<":
+	case "<":
 		return left < right
-	case op == "<=":
+	case "<=":
 		return left <= right
-	case op == "==":
+	case "==":
 		return left == right
 	default:
 		return false
@@ -50,14 +50,14 @@ func attr(nr *corepb.NodeResource, name string) float64 {
 	if err != nil {
 		return 0.0
 	}
-	switch {
-	case name == "cpu":
+	switch name {
+	case "cpu":
 		return cr["cpu"]
-	case name == "memory":
+	case "memory":
 		return cr["memory"]
-	case name == "storage":
+	case "storage":
 		return sr["storage"]
-	case name == "volume":
+	case "volume":
 		return sr["volume"]
 	default:
 		return 0

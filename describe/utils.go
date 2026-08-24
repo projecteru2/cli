@@ -14,30 +14,19 @@ import (
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-// ToNodeChan streams nodes over a channel.
-func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
-	ch := make(chan *corepb.Node)
+// ToChan streams items over a channel.
+func ToChan[T any](items ...T) chan T {
+	ch := make(chan T)
 	go func() {
 		defer close(ch)
-		for _, node := range nodes {
-			ch <- node
+		for _, item := range items {
+			ch <- item
 		}
 	}()
 	return ch
 }
 
-// ToNodeResourceChan streams node resources over a channel.
-func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeResource {
-	ch := make(chan *corepb.NodeResource)
-	go func() {
-		defer close(ch)
-		for _, resource := range resources {
-			ch <- resource
-		}
-	}()
-	return ch
-}
-
+// ToResourcePrecent reports node usage as a fraction of capacity, per resource.
 func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[string]float64, error) {
 	var resUsage resourcetypes.Resources
 	var resCap resourcetypes.Resources
@@ -102,15 +91,13 @@ func toTableRows(rows [][]string) []table.Row {
 	total := len(rows)
 	maxLength := 0
 	for _, row := range rows {
-		if len(row) > maxLength {
-			maxLength = len(row)
-		}
+		maxLength = max(maxLength, len(row))
 	}
 
 	rs := []table.Row{}
-	for i := 0; i < maxLength; i++ {
-		lines := []interface{}{}
-		for j := 0; j < total; j++ {
+	for i := range maxLength {
+		lines := []any{}
+		for j := range total {
 			if i < len(rows[j]) {
 				lines = append(lines, rows[j][i])
 			} else {
@@ -122,40 +109,24 @@ func toTableRows(rows [][]string) []table.Row {
 	return rs
 }
 
-func describeAsJSON(o interface{}) {
+func describeAsJSON(o any) {
 	j, _ := json.MarshalIndent(o, "", "  ")
 	fmt.Println(string(j))
 }
 
-func describeChNodeAsJSON(ch <-chan *corepb.Node) {
-	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
-	}
-}
-
-func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
-	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
-	}
-}
-
-func describeAsYAML(o interface{}) {
+func describeAsYAML(o any) {
 	y, _ := yaml.Marshal(o)
 	fmt.Println(string(y))
 }
 
-func describeChNodeAsYAML(ch <-chan *corepb.Node) {
+func describeChAsJSON[T any](ch <-chan T) {
 	for t := range ch {
-		j, _ := yaml.Marshal(t)
-		fmt.Println(string(j))
+		describeAsJSON(t)
 	}
 }
 
-func describeChNodeResourceAsYAML(ch chan *corepb.NodeResource) {
+func describeChAsYAML[T any](ch <-chan T) {
 	for t := range ch {
-		j, _ := yaml.Marshal(t)
-		fmt.Println(string(j))
+		describeAsYAML(t)
 	}
 }

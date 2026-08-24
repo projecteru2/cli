@@ -36,7 +36,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 	p := 0
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {

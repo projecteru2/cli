@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
-	"sort"
+	"slices"
 	"strings"
 	"sync"
 
@@ -20,9 +21,9 @@ import (
 func Nodes(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeChNodeAsJSON(nodes)
+		describeChAsJSON(nodes)
 	case isYAML():
-		describeChNodeAsYAML(nodes)
+		describeChAsYAML(nodes)
 	default:
 		describeNodes(nodes, false, stream)
 	}
@@ -32,9 +33,9 @@ func Nodes(nodes <-chan *corepb.Node, stream bool) {
 func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
-		describeChNodeAsJSON(nodes)
+		describeChAsJSON(nodes)
 	case isYAML():
-		describeChNodeAsYAML(nodes)
+		describeChAsYAML(nodes)
 	default:
 		describeNodes(nodes, true, stream)
 	}
@@ -44,9 +45,9 @@ func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
-		describeChNodeResourceAsJSON(resources)
+		describeChAsJSON(resources)
 	case isYAML():
-		describeChNodeResourceAsYAML(resources)
+		describeChAsYAML(resources)
 	default:
 		describeNodeResources(ctx, resources, stream)
 	}
@@ -73,7 +74,7 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	for node := range nodes {
 		header, cells := parseNodePluginResources(node)
 		once.Do(func() {
-			header = append([]interface{}{"Name", "Endpoint", "Status"}, header...)
+			header = append([]any{"Name", "Endpoint", "Status"}, header...)
 			if showInfo {
 				header = append(header, "Info")
 			}
@@ -106,18 +107,18 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	}
 }
 
-func toJSON(v interface{}) string {
+func toJSON(v any) string {
 	b, _ := json.Marshal(v)
 	return string(b)
 }
 
-func parse(key, value interface{}) []string {
+func parse(key, value any) []string {
 	res := []string{}
-	if m, ok := value.(map[string]interface{}); ok {
+	if m, ok := value.(map[string]any); ok {
 		for k, v := range m {
 			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v)))
 		}
-	} else if s, ok := value.([]interface{}); ok {
+	} else if s, ok := value.([]any); ok {
 		for i, v := range s {
 			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(v)))
 		}
@@ -127,7 +128,7 @@ func parse(key, value interface{}) []string {
 	return res
 }
 
-func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells [][]string) {
+func parseNodePluginResources(node *corepb.Node) (header []any, cells [][]string) {
 	capacities := resourcetypes.Resources{}
 	usages := resourcetypes.Resources{}
 	if len(node.ResourceCapacity) > 0 {
@@ -137,17 +138,12 @@ func parseNodePluginResources(node *corepb.Node) (header []interface{}, cells []
 		_ = json.Unmarshal([]byte(node.ResourceUsage), &usages)
 	}
 
-	for plugin := range usages {
+	for _, plugin := range slices.Sorted(maps.Keys(usages)) {
 		header = append(header, plugin)
-	}
-	sort.Slice(header, func(i, j int) bool {
-		return header[i].(string) < header[j].(string)
-	})
 
-	for _, plugin := range header {
 		row := []string{}
-		capacity := capacities[plugin.(string)]
-		usage := usages[plugin.(string)]
+		capacity := capacities[plugin]
+		usage := usages[plugin]
 
 		capRows := []string{}
 		usageRows := []string{}

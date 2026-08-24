@@ -73,8 +73,7 @@ func EnvParser(b []byte) ([]byte, error) {
 func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		if err := f(ctx, cmd); err != nil {
-			var exitErr cli.ExitCoder
-			if errors.As(err, &exitErr) {
+			if exitErr, ok := errors.AsType[cli.ExitCoder](err); ok {
 				return cli.Exit(exitErr, exitErr.ExitCode())
 			}
 			return cli.Exit(err, -1)

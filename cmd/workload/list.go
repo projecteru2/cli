@@ -2,7 +2,9 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"io"
+	"slices"
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -44,7 +46,7 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 	workloads := []*corepb.Workload{}
 	for {
 		w, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -117,18 +119,7 @@ func (wf filter) skip(workload *corepb.Workload) bool {
 }
 
 func (wf filter) hasIntersection(a, b []string) bool {
-	hash := map[string]bool{}
-	for _, v := range a {
-		hash[v] = true
-	}
-
-	for _, v := range b {
-		if _, exists := hash[v]; exists {
-			return true
-		}
-	}
-
-	return false
+	return slices.ContainsFunc(b, func(v string) bool { return slices.Contains(a, v) })
 }
 
 func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {

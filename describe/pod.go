@@ -1,9 +1,10 @@
 package describe
 
 import (
+	"cmp"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -46,8 +47,8 @@ func PodCapacity(total int64, capacityMap map[string]int64) {
 		})
 	}
 
-	sort.Slice(capPod.Nodes, func(i, j int) bool {
-		return capPod.Nodes[i].Capacity >= capPod.Nodes[j].Capacity
+	slices.SortFunc(capPod.Nodes, func(a, b *capacityOfNode) int {
+		return cmp.Compare(b.Capacity, a.Capacity)
 	})
 
 	switch {
