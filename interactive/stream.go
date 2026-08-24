@@ -40,11 +40,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 	logger := log.WithFunc("interactive.HandleStream")
 
 	if interactive {
-		detach, err := attachTerminal(ctx, iStream)
-		if err != nil {
-			return -1, err
-		}
-		defer detach()
+		defer attachTerminal(ctx, iStream)()
 	}
 
 	outputTemplate := `{{printf "%s" .Data}}`
@@ -98,62 +94,63 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 }
 
 // attachTerminal puts stdin in raw mode and forwards keystrokes and resizes to the stream.
-func attachTerminal(ctx context.Context, iStream Stream) (func(), error) {
-	logger := log.WithFunc("interactive.attachTerminal")
+func attachTerminal(ctx context.Context, iStream Stream) func() {
 	stdinFd := int(os.Stdin.Fd())
+	ctx, cancel := context.WithCancel(ctx)
+	go pumpStdin(ctx, iStream)
+
 	state, err := term.MakeRaw(stdinFd)
 	if err != nil {
-		return nil, err
+		// stdin is a pipe or a file: no raw mode and no window size to report.
+		return cancel
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGWINCH)
-
-	resize := func() error {
-		col, row, err := term.GetSize(stdinFd)
-		if err != nil {
-			return err
-		}
-		opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)}) //nolint:gosec // terminal geometry fits in uint16
-		if err != nil {
-			return err
-		}
-		return iStream.Send(slices.Concat(winchCommand, opts))
-	}
-
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case <-sigs:
-				if err := resize(); err != nil {
-					logger.Error(ctx, err, "resize")
-				}
-			}
-		}
-	}()
-
-	go func() {
-		if err := resize(); err != nil {
-			logger.Error(ctx, err, "resize")
-		}
-		scanner := bufio.NewScanner(os.Stdin)
-		scanner.Split(bufio.ScanRunes)
-		for scanner.Scan() {
-			if err := iStream.Send(scanner.Bytes()); err != nil {
-				logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
-			}
-		}
-		if err := scanner.Err(); err != nil {
-			logger.Error(ctx, err, "read stdin")
-		}
-	}()
+	go watchWindowSize(ctx, iStream, stdinFd, sigs)
 
 	return func() {
 		cancel()
 		signal.Stop(sigs)
 		_ = term.Restore(stdinFd, state)
-	}, nil
+	}
+}
+
+func pumpStdin(ctx context.Context, iStream Stream) {
+	logger := log.WithFunc("interactive.pumpStdin")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanRunes)
+	for scanner.Scan() {
+		if err := iStream.Send(scanner.Bytes()); err != nil {
+			logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
+		}
+	}
+	logger.Error(ctx, scanner.Err(), "read stdin")
+}
+
+func watchWindowSize(ctx context.Context, iStream Stream, stdinFd int, sigs <-chan os.Signal) {
+	logger := log.WithFunc("interactive.watchWindowSize")
+	send := func() {
+		col, row, err := term.GetSize(stdinFd)
+		if err != nil {
+			logger.Error(ctx, err, "get terminal size")
+			return
+		}
+		opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)}) //nolint:gosec // terminal geometry fits in uint16
+		if err != nil {
+			logger.Error(ctx, err, "encode window size")
+			return
+		}
+		logger.Error(ctx, iStream.Send(slices.Concat(winchCommand, opts)), "send window size")
+	}
+
+	send()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-sigs:
+			send()
+		}
+	}
 }
