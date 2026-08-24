@@ -28,7 +28,7 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 			if err != nil {
 				break
 			}
-			gid, err = strconv.ParseInt(ps[3], 10, 0)
+			gid, err = strconv.ParseInt(ps[4], 10, 0)
 			if err != nil {
 				break
 			}
