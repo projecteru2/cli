@@ -94,7 +94,7 @@ every `N` seconds; without it the status is set once.
 | `workload get` | `<workload id>...` | |
 | `workload list` | `[appname]` | `--entry`, `--node`, `--pod`, `--label`, `--limit`, `--match-ip`, `--skip-ip`, `--statistics` |
 | `workload start`/`stop`/`restart` | `<workload id>...` | `--force` |
-| `workload remove` | `<workload id>...` | `--force`, `--step` |
+| `workload remove` | `<workload id>...` | `--force` |
 | `workload realloc` | `<workload id>` | `--cpu*`, `--memory*`, `--storage*`, `--volumes-request`, `--volumes-limit`, `--cpu-bind`, `--cpu-unbind`, `--extra-resources` |
 | `workload dissociate` | `<workload id>...` | Returns the resources to eru without removing the workload. |
 | `workload exec` | `<workload id> -- cmd...` | `--interactive`, `--env`, `--workdir` |
@@ -130,8 +130,8 @@ eru-cli workload exec -i <workload id> -- ls -al /tmp
 |---|---|---|
 | `image build` | `<spec file uri>` | `--name` (required), `--tag`, `--raw`, `--exist`, `--user`, `--uid`, `--stop-signal`, `--platform` |
 | `image list`, `image ls` | | `--pod` or `--node` (one is required), `--filter` |
-| `image cache` | `<image>...` | `--pod`, `--node`, `--concurrent` |
-| `image remove` | `<image>...` | `--pod`, `--node`, `--concurrent`, `--prune` |
+| `image cache` | `<image>...` | `--pod`, `--node` |
+| `image remove` | `<image>...` | `--pod`, `--node`, `--prune` |
 
 `image build` has three modes. By default the argument is a build spec (see
 [Spec formats](specs.md)) and core clones the repository itself. With `--raw` the argument is a

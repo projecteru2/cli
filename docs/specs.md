@@ -8,9 +8,9 @@ Two commands read a YAML file: `workload deploy` / `workload replace` take a **d
 `image build` takes a **build spec**. Both accept a local path or an `http://` / `https://` URL as
 their single positional argument.
 
-Before parsing, the file is rendered as a Go text template with the process environment as its
-data, so `{{.HOME}}` or `{{.CI_COMMIT_SHA}}` expand to the corresponding environment variable. A
-name that is not set renders empty rather than failing.
+The build spec — and only the build spec — is rendered as a Go text template with the process
+environment as its data before parsing, so `{{.CI_COMMIT_SHA}}` expands to that environment
+variable. A name that is not set renders empty rather than failing.
 
 ## Deploy spec
 
@@ -159,8 +159,8 @@ Each stage takes:
 | `security` | bool | Run the stage with extended privileges. |
 
 Keys are the lowercased protobuf field names, so they are single words: use `stopsignal`, not
-`stop_signal`. In practice the stop signal is set from the command line with `--stop-signal`, which
-applies it to every stage.
+`stop_signal`. `--stop-signal` on the command line overrides every stage; without it the value from
+the spec is kept.
 
 ```shell
 eru-cli image build --name projecteru2/cli --tag latest ./build.yaml
