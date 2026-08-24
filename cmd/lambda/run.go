@@ -118,10 +118,6 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		"volumes-limit":   cmd.StringSlice("volume"),
 	}
 
-	if cmd.Bool("cpu-bind") {
-		cpumem["cpu-bind"] = true
-	}
-
 	cb, _ := json.Marshal(cpumem)
 	sb, _ := json.Marshal(storage)
 
