@@ -8,6 +8,12 @@ import (
 
 const (
 	nodeArgsUsage = "node name"
+
+	flagLabel   = "label"
+	flagStorage = "storage"
+
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
 )
 
 // Command returns the node command tree.
@@ -34,7 +40,7 @@ func Command() *cli.Command {
 				Usage: "list node workloads",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "labels to filter, e.g, a=1, b=2",
 					},
 				},
@@ -135,7 +141,7 @@ func Command() *cli.Command {
                         e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
 					},
 					&cli.StringFlag{
-						Name: "storage",
+						Name: flagStorage,
 						Usage: `storage, unit can be K/M/G/T,
 					            when using --delta flag, this can be a negtive number indicating how much to add to the current value,
 					            e.g. --storage -10G --delta, means storage will be the current value - 10`,
@@ -158,7 +164,7 @@ func Command() *cli.Command {
 								rm-disk is not supported in delta mode`,
 					},
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "label for the node, can set multiple times, e.g. --label a=1 --label b=2",
 					},
 					&cli.BoolFlag{
@@ -238,11 +244,11 @@ func Command() *cli.Command {
 						Usage: "memory like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "storage",
+						Name:  flagStorage,
 						Usage: "storage -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "add label for node, like a=1 b=2, can set multiple times",
 					},
 					&cli.StringSliceFlag{

@@ -11,6 +11,8 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
+const headerName = "Name"
+
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 

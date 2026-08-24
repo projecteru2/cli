@@ -65,10 +65,10 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	}
 
 	var volumesRequest, volumesLimit []string
-	if v := cmd.String("volumes-request"); v != "" {
+	if v := cmd.String(flagVolumesRequest); v != "" {
 		volumesRequest = strings.Split(v, ",")
 	}
-	if v := cmd.String("volumes-limit"); v != "" {
+	if v := cmd.String(flagVolumesLimit); v != "" {
 		volumesLimit = strings.Split(v, ",")
 	}
 
@@ -93,16 +93,16 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	cpuRequest, cpuLimit := cpuOption(cmd)
 
 	cpumem := resourcetypes.RawParams{
-		"cpu-request":    cpuRequest,
-		"cpu-limit":      cpuLimit,
-		"memory-request": memoryRequest,
-		"memory-limit":   memoryLimit,
+		flagCPURequest:    cpuRequest,
+		flagCPULimit:      cpuLimit,
+		flagMemoryRequest: memoryRequest,
+		flagMemoryLimit:   memoryLimit,
 	}
 	storage := resourcetypes.RawParams{
-		"storage-request": storageRequest,
-		"storage-limit":   storageLimit,
-		"volumes-request": volumesRequest,
-		"volumes-limit":   volumesLimit,
+		flagStorageRequest: storageRequest,
+		flagStorageLimit:   storageLimit,
+		flagVolumesRequest: volumesRequest,
+		flagVolumesLimit:   volumesLimit,
 	}
 
 	switch bindCPUOpt {
@@ -116,8 +116,8 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	sb, _ := json.Marshal(storage)
 
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {

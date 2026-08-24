@@ -67,8 +67,8 @@ func cmdImageList(ctx context.Context, cmd *cli.Command) error {
 
 func generateListOptions(cmd *cli.Command) (*corepb.ListImageOptions, error) {
 	filter := cmd.String("filter")
-	podname := cmd.String("pod")
-	nodename := cmd.StringSlice("node")
+	podname := cmd.String(flagPod)
+	nodename := cmd.StringSlice(flagNode)
 	if len(nodename) < 1 && len(podname) < 1 {
 		return nil, errors.New("podname or nodenames should be given")
 	}

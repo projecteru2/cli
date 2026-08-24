@@ -74,7 +74,7 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	for node := range nodes {
 		header, cells := parseNodePluginResources(node)
 		once.Do(func() {
-			header = append([]any{"Name", "Endpoint", "Status"}, header...)
+			header = append([]any{headerName, "Endpoint", "Status"}, header...)
 			if showInfo {
 				header = append(header, "Info")
 			}
@@ -168,7 +168,7 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 	logger := log.WithFunc("describe.NodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Cpu", "Memory", "Storage", "Volume", "Diffs"})
+	t.AppendHeader(table.Row{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"})
 
 	for resource := range resources {
 		cr, sr, err := ToResourcePrecent(resource)

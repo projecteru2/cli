@@ -23,7 +23,7 @@ func Networks(networks ...*corepb.Network) {
 func describeNetworks(networks []*corepb.Network) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Network"})
+	t.AppendHeader(table.Row{headerName, "Network"})
 
 	nameRow := []string{}
 	networkRow := []string{}

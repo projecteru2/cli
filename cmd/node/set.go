@@ -82,8 +82,8 @@ func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.S
 	if cmd.IsSet("disk") {
 		storage["disks"] = cmd.StringSlice("disk")
 	}
-	if cmd.IsSet("storage") {
-		storage["storage"] = cmd.String("storage")
+	if cmd.IsSet(flagStorage) {
+		storage[flagStorage] = cmd.String(flagStorage)
 	}
 	if cmd.IsSet("volume") {
 		storage["volumes"] = cmd.StringSlice("volume")
@@ -95,8 +95,8 @@ func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.S
 	cb, _ := json.Marshal(cpumem)
 	sb, _ := json.Marshal(storage)
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
@@ -114,7 +114,7 @@ func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.S
 	return &corepb.SetNodeOptions{
 		Nodename:      name,
 		Resources:     resources,
-		Labels:        utils.SplitEquality(cmd.StringSlice("label")),
+		Labels:        utils.SplitEquality(cmd.StringSlice(flagLabel)),
 		WorkloadsDown: cmd.Bool("mark-workloads-down"),
 		Endpoint:      cmd.String("endpoint"),
 		Delta:         cmd.Bool("delta"),

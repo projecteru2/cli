@@ -64,8 +64,8 @@ func cmdImageCache(ctx context.Context, cmd *cli.Command) error {
 		client:    client,
 		images:    images,
 		step:      int32(cmd.Int("concurrent")), //nolint:gosec
-		podname:   cmd.String("pod"),
-		nodenames: cmd.StringSlice("node"),
+		podname:   cmd.String(flagPod),
+		nodenames: cmd.StringSlice(flagNode),
 	}
 	return o.run(ctx)
 }

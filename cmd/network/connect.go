@@ -48,7 +48,7 @@ func cmdNetworkConnect(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("workload id(s) must be specified")
 	}
 
-	network := cmd.String("network")
+	network := cmd.String(flagNetwork)
 	if network == "" {
 		return errors.New("network must be specified")
 	}

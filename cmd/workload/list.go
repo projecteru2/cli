@@ -131,13 +131,13 @@ func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {
 	o := &listWorkloadsOptions{
 		client:     client,
 		appname:    cmd.Args().First(),
-		entrypoint: cmd.String("entry"),
-		nodename:   cmd.String("node"),
+		entrypoint: cmd.String(flagEntry),
+		nodename:   cmd.String(flagNode),
 		labels:     utils.SplitEquality(cmd.StringSlice("label")),
 		limit:      cmd.Int64("limit"),
 		matchIPs:   cmd.StringSlice("match-ip"),
 		skipIPs:    cmd.StringSlice("skip-ip"),
-		podnames:   cmd.StringSlice("pod"),
+		podnames:   cmd.StringSlice(flagPod),
 		statistics: cmd.Bool("statistics"),
 	}
 	return o.run(ctx)

@@ -8,6 +8,17 @@ import (
 
 const (
 	podArgsUsage = "pod name"
+
+	up   = "up"
+	down = "down"
+	all  = "all"
+
+	flagCPU     = "cpu"
+	flagMemory  = "memory"
+	flagStorage = "storage"
+
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
 )
 
 // Command returns the pod command tree.
@@ -50,7 +61,7 @@ func Command() *cli.Command {
 						Name:    "filter",
 						Aliases: []string{"f"},
 						Usage:   "filter resource value, can be cpu/memory/storage/volume </<=/>/>=/== 40% or 0.4",
-						Value:   "all",
+						Value:   all,
 					},
 					&cli.BoolFlag{
 						Name:  "stream",
@@ -65,19 +76,19 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdPodCapacity),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
-						Name:     "cpu",
+						Name:     flagCPU,
 						Aliases:  []string{"c"},
 						Usage:    "how many cpu to occupy",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "memory",
+						Name:     flagMemory,
 						Aliases:  []string{"m", "mem"},
 						Usage:    "how much memory to occupy like 1M or 1G, support K, M, G, T",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "storage",
+						Name:     flagStorage,
 						Aliases:  []string{"s"},
 						Usage:    "how much storage to occupy like 1M or 1G, support K, M, G, T",
 						Required: true,
@@ -107,7 +118,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdPodListNodes),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:  "all",
+						Name:  all,
 						Usage: "DEPRECATED, use --filter instead",
 						Value: false,
 					},
@@ -115,7 +126,7 @@ func Command() *cli.Command {
 						Name:    "filter",
 						Aliases: []string{"f"},
 						Usage:   "filter node status, can be up/down/all",
-						Value:   "all",
+						Value:   all,
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",

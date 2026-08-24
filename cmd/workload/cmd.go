@@ -15,6 +15,28 @@ const (
 	specFileURI       = "<spec file uri>"
 	copyArgsUsage     = "workloadID:path1,path2,...,pathn"
 	sendArgsUsage     = "path1,path2,...pathn"
+
+	flagEntry   = "entry"
+	flagNode    = "node"
+	flagPod     = "pod"
+	flagForce   = "force"
+	flagFile    = "file"
+	flagEnv     = "env"
+	flagImage   = "image"
+	flagNetwork = "network"
+	flagStorage = "storage"
+
+	flagCPURequest     = "cpu-request"
+	flagCPULimit       = "cpu-limit"
+	flagMemoryRequest  = "memory-request"
+	flagMemoryLimit    = "memory-limit"
+	flagStorageRequest = "storage-request"
+	flagStorageLimit   = "storage-limit"
+	flagVolumesRequest = "volumes-request"
+	flagVolumesLimit   = "volumes-limit"
+
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
 )
 
 // Command returns the workload command tree.
@@ -81,7 +103,7 @@ func Command() *cli.Command {
 						Value: 0,
 					},
 					&cli.StringSliceFlag{
-						Name:  "network",
+						Name:  flagNetwork,
 						Usage: "network, can set multiple times, name=ip",
 					},
 					&cli.StringFlag{
@@ -98,11 +120,11 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadList),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "entry",
+						Name:  flagEntry,
 						Usage: "filter by entry",
 					},
 					&cli.StringFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "filter by nodename",
 					},
 					&cli.StringSliceFlag{
@@ -122,7 +144,7 @@ func Command() *cli.Command {
 						Usage: "filter out IP",
 					},
 					&cli.StringSliceFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "filter by Pod",
 					},
 					&cli.BoolFlag{
@@ -138,7 +160,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadStop),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:    "force",
+						Name:    flagForce,
 						Usage:   "force to stop",
 						Aliases: []string{"f"},
 						Value:   false,
@@ -152,7 +174,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadStart),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:    "force",
+						Name:    flagForce,
 						Usage:   "force to start",
 						Aliases: []string{"f"},
 						Value:   false,
@@ -166,7 +188,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadRestart),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:    "force",
+						Name:    flagForce,
 						Usage:   "force to restart",
 						Aliases: []string{"f"},
 						Value:   false,
@@ -180,7 +202,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadRemove),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
-						Name:    "force",
+						Name:    flagForce,
 						Usage:   "force to remove",
 						Aliases: []string{"f"},
 						Value:   false,
@@ -214,7 +236,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadSend),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "file",
+						Name:  flagFile,
 						Usage: "copy local files to workload, can use multiple times. src_path:dst_path[:mode[:uid:gid]]",
 					},
 				},
@@ -226,7 +248,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadSendLarge),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "file",
+						Name:  flagFile,
 						Usage: "copy local file to workload, only can use single time. src_path:dst_path[:mode[:uid:gid]]",
 					},
 				},
@@ -250,12 +272,12 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadRealloc),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
-						Name:  "cpu-request",
+						Name:  flagCPURequest,
 						Usage: "cpu request increment/decrement",
 						Value: 0,
 					},
 					&cli.Float64Flag{
-						Name:  "cpu-limit",
+						Name:  flagCPULimit,
 						Usage: "cpu limit increment/decrement",
 						Value: 0,
 					},
@@ -265,11 +287,11 @@ func Command() *cli.Command {
 						Value: 0,
 					},
 					&cli.StringFlag{
-						Name:  "memory-request",
+						Name:  flagMemoryRequest,
 						Usage: "memory request increment/decrement, like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "memory-limit",
+						Name:  flagMemoryLimit,
 						Usage: "memory limit increment/decrement, like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
@@ -277,11 +299,11 @@ func Command() *cli.Command {
 						Usage: "shortcut to set memory-limit/request equally to this value",
 					},
 					&cli.StringFlag{
-						Name:  "volumes-request",
+						Name:  flagVolumesRequest,
 						Usage: `volumes request increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
 					},
 					&cli.StringFlag{
-						Name:  "volumes-limit",
+						Name:  flagVolumesLimit,
 						Usage: `volumes limit increment/decrement, like "AUTO:/data:rw:-1G,/tmp:/tmp"`,
 					},
 					&cli.BoolFlag{
@@ -293,15 +315,15 @@ func Command() *cli.Command {
 						Usage: `unbind the workload relation with cpu`,
 					},
 					&cli.StringFlag{
-						Name:  "storage-request",
+						Name:  flagStorageRequest,
 						Usage: `storage request incr/decr, like "-1G"`,
 					},
 					&cli.StringFlag{
-						Name:  "storage-limit",
+						Name:  flagStorageLimit,
 						Usage: `storage limit incr/decr, like "-1G"`,
 					},
 					&cli.StringFlag{
-						Name:  "storage",
+						Name:  flagStorage,
 						Usage: "shortcut to set storage-limit/request equally to this value",
 					},
 					&cli.StringFlag{
@@ -324,7 +346,7 @@ func Command() *cli.Command {
 						Value:   false,
 					},
 					&cli.StringSliceFlag{
-						Name:    "env",
+						Name:    flagEnv,
 						Aliases: []string{"e"},
 						Usage:   "ENV=value",
 					},
@@ -343,19 +365,19 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadReplace),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "where to replace",
 					},
 					&cli.StringFlag{
-						Name:  "entry",
+						Name:  flagEntry,
 						Usage: "which entry",
 					},
 					&cli.StringFlag{
-						Name:  "image",
+						Name:  flagImage,
 						Usage: "which to replace",
 					},
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "which node to replace",
 					},
 					&cli.IntFlag{
@@ -369,12 +391,12 @@ func Command() *cli.Command {
 						Value: false,
 					},
 					&cli.StringFlag{
-						Name:  "network",
+						Name:  flagNetwork,
 						Usage: "SDN name or host mode",
 						//	Value: "host",
 					},
 					&cli.StringSliceFlag{
-						Name:  "env",
+						Name:  flagEnv,
 						Usage: "set env can use multiple times, e.g., GO111MODULE=on",
 					},
 					&cli.StringFlag{
@@ -387,7 +409,7 @@ func Command() *cli.Command {
 						Usage: "filter workload by labels",
 					},
 					&cli.StringSliceFlag{
-						Name:  "file",
+						Name:  flagFile,
 						Usage: "copy local files to workload, can use multiple times. src_path:dst_path",
 					},
 					&cli.StringSliceFlag{
@@ -420,19 +442,19 @@ func Command() *cli.Command {
 						Usage: "dry run show capacity",
 					},
 					&cli.StringFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "where to run",
 					},
 					&cli.StringFlag{
-						Name:  "entry",
+						Name:  flagEntry,
 						Usage: "which entry",
 					},
 					&cli.StringFlag{
-						Name:  "image",
+						Name:  flagImage,
 						Usage: "which to run",
 					},
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "which node to run",
 					},
 					&cli.IntFlag{
@@ -441,17 +463,17 @@ func Command() *cli.Command {
 						Value: 1,
 					},
 					&cli.StringFlag{
-						Name:  "network",
+						Name:  flagNetwork,
 						Usage: "SDN name or host mode",
 						Value: "host",
 					},
 					&cli.Float64Flag{
-						Name:  "cpu-request",
+						Name:  flagCPURequest,
 						Usage: "how many cpu to request",
 						Value: 0,
 					},
 					&cli.Float64Flag{
-						Name:  "cpu-limit",
+						Name:  flagCPULimit,
 						Usage: "how many cpu to limit; can specify limit without request",
 						Value: 1.0,
 					},
@@ -461,12 +483,12 @@ func Command() *cli.Command {
 						Value: 1.0,
 					},
 					&cli.StringFlag{
-						Name:  "memory-request",
+						Name:  flagMemoryRequest,
 						Usage: "how many memory to request like 1M or 1G, support K, M, G, T",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "memory-limit",
+						Name:  flagMemoryLimit,
 						Usage: "how many memory to limit like 1M or 1G, support K, M, G, T; can specify limit without request",
 						Value: "512M",
 					},
@@ -476,22 +498,22 @@ func Command() *cli.Command {
 						Value: "512M",
 					},
 					&cli.StringFlag{
-						Name:  "storage-request",
+						Name:  flagStorageRequest,
 						Usage: "how many storage to request quota like 1M or 1G, support K, M, G, T",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "storage-limit",
+						Name:  flagStorageLimit,
 						Usage: "how many storage to limit quota like 1M or 1G, support K, M, G, T; can specify limit without request",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "storage",
+						Name:  flagStorage,
 						Usage: "shortcut for storage-request/limit, set them equally to this value",
 						Value: "",
 					},
 					&cli.StringSliceFlag{
-						Name:  "env",
+						Name:  flagEnv,
 						Usage: "set env can use multiple times, e.g., GO111MODULE=on",
 					},
 					&cli.StringSliceFlag{
@@ -509,7 +531,7 @@ func Command() *cli.Command {
 						Value: "root",
 					},
 					&cli.StringSliceFlag{
-						Name:  "file",
+						Name:  flagFile,
 						Usage: "copy local file to workload, can use multiple times. src_path:dst_path",
 					},
 					&cli.StringSliceFlag{
@@ -556,12 +578,12 @@ func Command() *cli.Command {
 }
 
 func memoryOption(cmd *cli.Command) (int64, int64, error) {
-	memRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
+	memRequest, err := utils.ParseRAMInHuman(cmd.String(flagMemoryRequest))
 	if err != nil {
 		return 0, 0, err
 	}
 
-	memLimit, err := utils.ParseRAMInHuman(cmd.String("memory-limit"))
+	memLimit, err := utils.ParseRAMInHuman(cmd.String(flagMemoryLimit))
 	if err != nil {
 		return 0, 0, err
 	}
@@ -575,17 +597,17 @@ func memoryOption(cmd *cli.Command) (int64, int64, error) {
 }
 
 func storageOption(cmd *cli.Command) (int64, int64, error) {
-	storageRequest, err := utils.ParseRAMInHuman(cmd.String("storage-request"))
+	storageRequest, err := utils.ParseRAMInHuman(cmd.String(flagStorageRequest))
 	if err != nil {
 		return 0, 0, err
 	}
 
-	storageLimit, err := utils.ParseRAMInHuman(cmd.String("storage-limit"))
+	storageLimit, err := utils.ParseRAMInHuman(cmd.String(flagStorageLimit))
 	if err != nil {
 		return 0, 0, err
 	}
-	if cmd.IsSet("storage") {
-		if storage, err := utils.ParseRAMInHuman(cmd.String("storage")); err == nil {
+	if cmd.IsSet(flagStorage) {
+		if storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage)); err == nil {
 			storageRequest = storage
 			storageLimit = storage
 		}
@@ -594,8 +616,8 @@ func storageOption(cmd *cli.Command) (int64, int64, error) {
 }
 
 func cpuOption(cmd *cli.Command) (float64, float64) {
-	cpuRequest := cmd.Float64("cpu-request")
-	cpuLimit := cmd.Float64("cpu-limit")
+	cpuRequest := cmd.Float64(flagCPURequest)
+	cpuLimit := cmd.Float64(flagCPULimit)
 	if cmd.IsSet("cpu") {
 		cpu := cmd.Float64("cpu")
 		cpuRequest = cpu

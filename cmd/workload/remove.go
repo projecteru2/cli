@@ -62,7 +62,7 @@ func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("workload id(s) should not be empty")
 	}
 
-	force := cmd.Bool("force")
+	force := cmd.Bool(flagForce)
 	if force {
 		log.WithFunc("workload.cmdWorkloadRemove").Warn(ctx, "if workload not stopped, force to remove will not trigger hook process if set")
 	}

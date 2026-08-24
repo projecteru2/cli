@@ -8,12 +8,14 @@ import (
 
 const (
 	workloadArgsUsage = "workloadID(s)"
+
+	flagNetwork = "network"
 )
 
 // Command returns the network command tree.
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "network",
+		Name:  flagNetwork,
 		Usage: "network commands",
 		Commands: []*cli.Command{
 			{
@@ -23,7 +25,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNetworkConnect),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "network",
+						Name:     flagNetwork,
 						Usage:    "network name",
 						Required: true,
 					},
@@ -44,7 +46,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdNetworkDisconnect),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
-						Name:     "network",
+						Name:     flagNetwork,
 						Usage:    "network name",
 						Required: true,
 					},

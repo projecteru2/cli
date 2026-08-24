@@ -117,8 +117,8 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 	sb, _ := json.Marshal(storage)
 
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	return &corepb.RunAndWaitOptions{

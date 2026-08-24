@@ -85,7 +85,7 @@ func describePodCapacities(capacity *capacityOfPod) {
 func describePods(pods []*corepb.Pod) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Description"})
+	t.AppendHeader(table.Row{headerName, "Description"})
 
 	nameRow := []string{}
 	descRow := []string{}

@@ -72,12 +72,12 @@ func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	for _, key := range []string{"pod", "entry", "image"} {
+	for _, key := range []string{flagPod, flagEntry, flagImage} {
 		if cmd.String(key) == "" {
 			return fmt.Errorf("no %s given", key)
 		}
 	}
-	if strings.Contains(cmd.String("entry"), "_") {
+	if strings.Contains(cmd.String(flagEntry), "_") {
 		return errors.New("entry can not contain _")
 	}
 
@@ -162,9 +162,9 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, fmt.Errorf("parse specs: %w", err)
 	}
 
-	entry := cmd.String("entry")
+	entry := cmd.String(flagEntry)
 
-	network := cmd.String("network")
+	network := cmd.String(flagNetwork)
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
@@ -207,16 +207,16 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	cpumem := resourcetypes.RawParams{
-		"cpu-request":    cpuRequest,
-		"cpu-limit":      cpuLimit,
-		"memory-request": memoryRequest,
-		"memory-limit":   memoryLimit,
+		flagCPURequest:    cpuRequest,
+		flagCPULimit:      cpuLimit,
+		flagMemoryRequest: memoryRequest,
+		flagMemoryLimit:   memoryLimit,
 	}
 	storage := resourcetypes.RawParams{
-		"storage-request": storageRequest,
-		"storage-limit":   storageLimit,
-		"volumes-request": specs.VolumesRequest,
-		"volumes-limit":   specs.Volumes,
+		flagStorageRequest: storageRequest,
+		flagStorageLimit:   storageLimit,
+		flagVolumesRequest: specs.VolumesRequest,
+		flagVolumesLimit:   specs.Volumes,
 	}
 
 	if cmd.Bool("cpu-bind") {
@@ -227,8 +227,8 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	sb, _ := json.Marshal(storage)
 
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
@@ -258,14 +258,14 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 			Sysctls:     entrypoint.Sysctls,
 		},
 		Resources: resources,
-		Podname:   cmd.String("pod"),
+		Podname:   cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
-			Includes: cmd.StringSlice("node"),
+			Includes: cmd.StringSlice(flagNode),
 			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
 		},
-		Image:          cmd.String("image"),
+		Image:          cmd.String(flagImage),
 		Count:          int32(cmd.Int("count")), //nolint:gosec
-		Env:            cmd.StringSlice("env"),
+		Env:            cmd.StringSlice(flagEnv),
 		Networks:       networks,
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,

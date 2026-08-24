@@ -95,7 +95,7 @@ func cmdWorkloadSetStatus(ctx context.Context, cmd *cli.Command) error {
 		running:   cmd.Bool("running"),
 		healthy:   cmd.Bool("healthy"),
 		ttl:       cmd.Int64("ttl"),
-		networks:  utils.SplitEquality(cmd.StringSlice("network")),
+		networks:  utils.SplitEquality(cmd.StringSlice(flagNetwork)),
 		extension: []byte(cmd.String("extension")),
 	}
 	return o.run(ctx)

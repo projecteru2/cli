@@ -73,7 +73,7 @@ func cmdWorkloadExec(ctx context.Context, cmd *cli.Command) error {
 		id:          id,
 		interactive: cmd.Bool("interactive"),
 		commands:    commands,
-		envs:        cmd.StringSlice("env"),
+		envs:        cmd.StringSlice(flagEnv),
 		workdir:     cmd.String("workdir"),
 	}
 	return o.run(ctx)

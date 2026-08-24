@@ -44,7 +44,7 @@ func cmdNodeListWorkloads(ctx context.Context, cmd *cli.Command) error {
 	o := &listNodeWorkloadsOptions{
 		client: client,
 		name:   name,
-		labels: utils.SplitEquality(cmd.StringSlice("label")),
+		labels: utils.SplitEquality(cmd.StringSlice(flagLabel)),
 	}
 	return o.run(ctx)
 }

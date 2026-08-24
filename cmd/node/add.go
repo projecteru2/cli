@@ -159,8 +159,8 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	if cmd.IsSet("disk") {
 		storage["disks"] = cmd.StringSlice("disk")
 	}
-	if cmd.IsSet("storage") {
-		storage["storage"] = cmd.String("storage")
+	if cmd.IsSet(flagStorage) {
+		storage[flagStorage] = cmd.String(flagStorage)
 	}
 	if cmd.IsSet("volume") {
 		storage["volumes"] = cmd.StringSlice("volume")
@@ -169,8 +169,8 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	cb, _ := json.Marshal(cpumem)
 	sb, _ := json.Marshal(storage)
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
@@ -185,7 +185,7 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
 
-	labels := utils.SplitEquality(cmd.StringSlice("label"))
+	labels := utils.SplitEquality(cmd.StringSlice(flagLabel))
 	return &corepb.AddNodeOptions{
 		Nodename:  nodename,
 		Endpoint:  endpoint,

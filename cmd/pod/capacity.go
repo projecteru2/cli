@@ -29,11 +29,11 @@ type capacityPodOptions struct {
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
 	cpumem := resourcetypes.RawParams{
-		"cpu":    o.cpu,
-		"memory": o.memory,
+		flagCPU:    o.cpu,
+		flagMemory: o.memory,
 	}
 	storage := resourcetypes.RawParams{
-		"storage": o.storage,
+		flagStorage: o.storage,
 	}
 
 	if o.cpuBind {
@@ -43,8 +43,8 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	cb, _ := json.Marshal(cpumem)
 	sb, _ := json.Marshal(storage)
 	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+		resourceCPUMem:  cb,
+		resourceStorage: sb,
 	}
 
 	for k, v := range o.extraResources {
@@ -87,12 +87,12 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("pod name must be given")
 	}
 
-	mem, err := utils.ParseRAMInHuman(cmd.String("memory"))
+	mem, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
 	if err != nil {
 		return fmt.Errorf("parse memory: %w", err)
 	}
 
-	storage, err := utils.ParseRAMInHuman(cmd.String("storage"))
+	storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
 	if err != nil {
 		return fmt.Errorf("parse storage: %w", err)
 	}
@@ -107,7 +107,7 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		podname:   name,
 		nodenames: cmd.StringSlice("node"),
 
-		cpu:            cmd.Float64("cpu"),
+		cpu:            cmd.Float64(flagCPU),
 		cpuBind:        cmd.Bool("cpu-bind"),
 		memory:         mem,
 		storage:        storage,

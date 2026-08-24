@@ -14,12 +14,6 @@ import (
 	"github.com/projecteru2/cli/describe"
 )
 
-const (
-	up   = "up"
-	down = "down"
-	all  = "all"
-)
-
 type listPodNodesOptions struct {
 	client          corepb.CoreRPCClient
 	name            string

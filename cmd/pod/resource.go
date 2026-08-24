@@ -52,12 +52,12 @@ func attr(nr *corepb.NodeResource, name string) float64 {
 		return 0.0
 	}
 	switch name {
-	case "cpu":
-		return cr["cpu"]
-	case "memory":
-		return cr["memory"]
-	case "storage":
-		return sr["storage"]
+	case flagCPU:
+		return cr[flagCPU]
+	case flagMemory:
+		return cr[flagMemory]
+	case flagStorage:
+		return sr[flagStorage]
 	case "volume":
 		return sr["volume"]
 	default:

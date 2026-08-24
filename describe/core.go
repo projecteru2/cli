@@ -22,7 +22,7 @@ func Core(info *corepb.CoreInfo) {
 func describeCore(info *corepb.CoreInfo) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Description"})
+	t.AppendHeader(table.Row{headerName, "Description"})
 
 	nameRow := []string{"Version", "Git hash", "Built", "Golang version", "OS/Arch", "Identifier"}
 	// Revison is misspelled in the core protobuf definition.

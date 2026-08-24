@@ -35,12 +35,12 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	for _, key := range []string{"entry", "image"} {
+	for _, key := range []string{flagEntry, flagImage} {
 		if cmd.String(key) == "" {
 			return fmt.Errorf("no %s given", key)
 		}
 	}
-	if strings.Contains(cmd.String("entry"), "_") {
+	if strings.Contains(cmd.String(flagEntry), "_") {
 		return errors.New("entry can not contain _")
 	}
 
@@ -138,9 +138,9 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 		return nil, fmt.Errorf("parse specs: %w", err)
 	}
 
-	entry := cmd.String("entry")
+	entry := cmd.String(flagEntry)
 
-	network := cmd.String("network")
+	network := cmd.String(flagNetwork)
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
@@ -191,14 +191,14 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 			Sysctls:     entrypoint.Sysctls,
 		},
 		Resources: nil,
-		Podname:   cmd.String("pod"),
+		Podname:   cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
-			Includes: cmd.StringSlice("node"),
+			Includes: cmd.StringSlice(flagNode),
 			Labels:   nil,
 		},
-		Image:          cmd.String("image"),
+		Image:          cmd.String(flagImage),
 		Count:          int32(cmd.Int("count")), //nolint:gosec
-		Env:            cmd.StringSlice("env"),
+		Env:            cmd.StringSlice(flagEnv),
 		Networks:       networks,
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,

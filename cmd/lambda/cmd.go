@@ -7,6 +7,11 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
+const (
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
+)
+
 // stopOnFirstArg makes everything after the first positional argument the command to run.
 var stopOnFirstArg = 1
 
