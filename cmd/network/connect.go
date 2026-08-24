@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -21,6 +22,7 @@ type connectNetworkOptions struct {
 
 func (o *connectNetworkOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("network.connectNetworkOptions.run")
+	var errs error
 	for _, id := range o.ids {
 		resp, err := o.client.ConnectNetwork(ctx, &corepb.ConnectNetworkOptions{
 			Network: o.network,
@@ -29,12 +31,12 @@ func (o *connectNetworkOptions) run(ctx context.Context) error {
 			Ipv6:    o.ipv6,
 		})
 		if err != nil {
-			logger.Warnf(ctx, "connect %s to network %s failed: %v", id, o.network, err)
-		} else {
-			logger.Infof(ctx, "connect %s at %v", id, resp.Subnets)
+			errs = errors.Join(errs, fmt.Errorf("connect %s to network %s: %w", id, o.network, err))
+			continue
 		}
+		logger.Infof(ctx, "connect %s at %v", id, resp.Subnets)
 	}
-	return nil
+	return errs
 }
 
 func cmdNetworkConnect(ctx context.Context, cmd *cli.Command) error {
