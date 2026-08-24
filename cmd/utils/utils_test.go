@@ -3,6 +3,8 @@ package utils
 import (
 	"maps"
 	"testing"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 func TestGetNetworks(t *testing.T) {
@@ -96,5 +98,33 @@ func TestEnvParser(t *testing.T) {
 func TestEnvParserBadTemplate(t *testing.T) {
 	if _, err := EnvParser([]byte("{{")); err == nil {
 		t.Fatal("got nil, want a template error")
+	}
+}
+
+func TestParseDeployStrategy(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		want    corepb.DeployOptions_Strategy
+		wantErr bool
+	}{
+		{name: "lower case", value: "auto", want: corepb.DeployOptions_AUTO},
+		{name: "upper case", value: "FILL", want: corepb.DeployOptions_FILL},
+		{name: "drained", value: "drained", want: corepb.DeployOptions_DRAINED},
+		{name: "dummy", value: "dummy", want: corepb.DeployOptions_DUMMY},
+		{name: "typo", value: "fil", wantErr: true},
+		{name: "empty", value: "", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseDeployStrategy(tt.value)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("got %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("got %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

@@ -4,11 +4,15 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/docker/go-units"
+	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 )
 
@@ -42,6 +46,15 @@ func ParseRAMInHuman(ram string) (int64, error) {
 		return 0, err
 	}
 	return ramInBytes * sign, nil
+}
+
+// ParseDeployStrategy maps a --deploy-strategy value onto the core enum.
+func ParseDeployStrategy(name string) (corepb.DeployOptions_Strategy, error) {
+	value, ok := corepb.DeployOptions_Strategy_value[strings.ToUpper(name)]
+	if !ok {
+		return 0, fmt.Errorf("invalid deploy strategy %q, want one of %s", name, strings.Join(slices.Sorted(maps.Keys(corepb.DeployOptions_Strategy_value)), "/"))
+	}
+	return corepb.DeployOptions_Strategy(value), nil
 }
 
 // SplitEquality turns a list of key=value strings into a map.

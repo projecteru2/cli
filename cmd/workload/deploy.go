@@ -173,6 +173,11 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, err
 	}
 
+	deployStrategy, err := utils.ParseDeployStrategy(cmd.String("deploy-strategy"))
+	if err != nil {
+		return nil, err
+	}
+
 	return &corepb.DeployOptions{
 		Name:       specs.Appname,
 		Entrypoint: entrypoint,
@@ -189,7 +194,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(cmd.String("deploy-strategy"))]),
+		DeployStrategy: deployStrategy,
 		Data:           files.Data,
 		Modes:          files.Modes,
 		Owners:         files.Owners,

@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -98,6 +97,11 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		return nil, err
 	}
 
+	deployStrategy, err := utils.ParseDeployStrategy(cmd.String("deploy-strategy"))
+	if err != nil {
+		return nil, err
+	}
+
 	cpumem := resourcetypes.RawParams{
 		"cpu-request":    cmd.Float64("cpu-request"),
 		"cpu-limit":      cmd.Float64("cpu"),
@@ -149,7 +153,7 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 			Env:            cmd.StringSlice("env"),
 			Networks:       utils.GetNetworks(network),
 			OpenStdin:      cmd.Bool("stdin"),
-			DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(cmd.String("deploy-strategy"))]),
+			DeployStrategy: deployStrategy,
 			Data:           files.Data,
 			Owners:         files.Owners,
 			Modes:          files.Modes,

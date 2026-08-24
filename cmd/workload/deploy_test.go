@@ -129,6 +129,7 @@ func TestGenerateDeployOptionsErrors(t *testing.T) {
 		{name: "bad memory", args: []string{"workload", "deploy", "--entry", "release", "--memory", "abc", spec}},
 		{name: "bad storage", args: []string{"workload", "deploy", "--entry", "release", "--storage", "abc", spec}},
 		{name: "bad extra resources", args: []string{"workload", "deploy", "--entry", "release", "--extra-resources", "{", spec}},
+		{name: "unknown deploy strategy", args: []string{"workload", "deploy", "--entry", "release", "--deploy-strategy", "nope", spec}},
 	}
 
 	for _, tt := range tests {
