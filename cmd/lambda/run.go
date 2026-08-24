@@ -102,11 +102,20 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
+	storageRequest, err := utils.ParseRAMInHuman(cmd.String("storage-request"))
+	if err != nil {
+		return nil, fmt.Errorf("parse storage: %w", err)
+	}
+	storageLimit, err := utils.ParseRAMInHuman(cmd.String("storage"))
+	if err != nil {
+		return nil, fmt.Errorf("parse storage: %w", err)
+	}
+
 	storage := resourcetypes.RawParams{
-		"storage-request": cmd.Int64("storage-request"),
-		"storage-limit":   cmd.Int64("storage"),
-		"volumes-request": cmd.StringSlice("volumes-request"),
-		"volumes-limit":   cmd.StringSlice("volumes"),
+		"storage-request": storageRequest,
+		"storage-limit":   storageLimit,
+		"volumes-request": cmd.StringSlice("volume-request"),
+		"volumes-limit":   cmd.StringSlice("volume"),
 	}
 
 	if cmd.Bool("cpu-bind") {
