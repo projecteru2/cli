@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/projecteru2/core/log"
 	coretypes "github.com/projecteru2/core/types"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/core"
@@ -26,9 +28,9 @@ func main() {
 		fmt.Print(version.String())
 	}
 
-	if err := newApp().Run(context.Background(), os.Args); err != nil {
-		fmt.Printf("Error running eru-cli: %v\n", err)
-		os.Exit(-1)
+	ctx := context.Background()
+	if err := newApp().Run(ctx, os.Args); err != nil {
+		log.WithFunc("main").Fatalf(ctx, err, "run eru-cli")
 	}
 }
 
@@ -100,5 +102,12 @@ func setupLog(ctx context.Context, cmd *cli.Command) (context.Context, error) {
 	if cmd.Bool("debug") {
 		level = "debug"
 	}
-	return ctx, log.SetupLog(ctx, &coretypes.ServerLogConfig{Level: level}, "")
+	if err := log.SetupLog(ctx, &coretypes.ServerLogConfig{Level: level}, ""); err != nil {
+		return ctx, err
+	}
+
+	// stdout carries the json and yaml output, so logs go to stderr.
+	logger := log.GetGlobalLogger()
+	*logger = logger.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC822})
+	return ctx, nil
 }
