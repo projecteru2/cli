@@ -46,7 +46,7 @@ func PodCapacity(total int64, capacityMap map[string]int64) {
 	}
 
 	slices.SortFunc(capPod.Nodes, func(a, b *capacityOfNode) int {
-		return cmp.Compare(b.Capacity, a.Capacity)
+		return cmp.Or(cmp.Compare(b.Capacity, a.Capacity), cmp.Compare(a.Name, b.Name))
 	})
 
 	switch {

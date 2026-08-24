@@ -98,7 +98,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 
 		ns := []string{}
 		if c.Status != nil {
-			for name, ip := range c.Status.Networks {
+			for _, name := range slices.Sorted(maps.Keys(c.Status.Networks)) {
 				if published, ok := c.Publish[name]; ok {
 					addresses := strings.Split(published, ",")
 
@@ -112,7 +112,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 						}
 					}
 				} else {
-					ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+					ns = append(ns, fmt.Sprintf("%s: %s", name, c.Status.Networks[name]))
 				}
 			}
 		}
@@ -140,8 +140,8 @@ func parseWorkloadPluginResources(workload *corepb.Workload) (header []any, cell
 		header = append(header, plugin)
 
 		row := []string{}
-		for key, value := range usages[plugin] {
-			row = append(row, parse(key, value)...)
+		for _, key := range slices.Sorted(maps.Keys(usages[plugin])) {
+			row = append(row, parse(key, usages[plugin][key])...)
 		}
 		cells = append(cells, row)
 	}
@@ -155,8 +155,8 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 
 	for _, s := range workloadStatuses {
 		ns := []string{}
-		for name, ip := range s.Networks {
-			ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
+		for _, name := range slices.Sorted(maps.Keys(s.Networks)) {
+			ns = append(ns, fmt.Sprintf("%s: %s", name, s.Networks[name]))
 		}
 
 		extensions := map[string]string{}
@@ -166,8 +166,8 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 			}
 		}
 		es := []string{}
-		for k, v := range extensions {
-			es = append(es, fmt.Sprintf("%s: %s", k, v))
+		for _, k := range slices.Sorted(maps.Keys(extensions)) {
+			es = append(es, fmt.Sprintf("%s: %s", k, extensions[k]))
 		}
 
 		rows := [][]string{

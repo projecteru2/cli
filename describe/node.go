@@ -117,8 +117,8 @@ func toJSON(v any) string {
 func parse(key, value any) []string {
 	res := []string{}
 	if m, ok := value.(map[string]any); ok {
-		for k, v := range m {
-			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v)))
+		for _, k := range slices.Sorted(maps.Keys(m)) {
+			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(m[k])))
 		}
 	} else if s, ok := value.([]any); ok {
 		for i, v := range s {
@@ -150,8 +150,8 @@ func parseNodePluginResources(node *corepb.Node) (header []any, cells [][]string
 		capRows := []string{}
 		usageRows := []string{}
 
-		for key, value := range capacity {
-			capRows = append(capRows, parse(key, value)...)
+		for _, key := range slices.Sorted(maps.Keys(capacity)) {
+			capRows = append(capRows, parse(key, capacity[key])...)
 			if usage != nil && usage[key] != nil {
 				usageRows = append(usageRows, parse(key, usage[key])...)
 			}
