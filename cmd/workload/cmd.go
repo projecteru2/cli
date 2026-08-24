@@ -207,12 +207,6 @@ func Command() *cli.Command {
 						Aliases: []string{"f"},
 						Value:   false,
 					},
-					&cli.IntFlag{
-						Name:    "step",
-						Usage:   "concurrent remove step",
-						Aliases: []string{"s"},
-						Value:   1,
-					},
 				},
 			},
 			{

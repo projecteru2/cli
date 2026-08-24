@@ -15,7 +15,6 @@ import (
 type cacheImageOptions struct {
 	client    corepb.CoreRPCClient
 	images    []string
-	step      int32
 	podname   string
 	nodenames []string
 }
@@ -63,7 +62,6 @@ func cmdImageCache(ctx context.Context, cmd *cli.Command) error {
 	o := &cacheImageOptions{
 		client:    client,
 		images:    images,
-		step:      int32(cmd.Int("concurrent")), //nolint:gosec
 		podname:   cmd.String(flagPod),
 		nodenames: cmd.StringSlice(flagNode),
 	}

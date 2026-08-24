@@ -198,12 +198,6 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		}
 	}
 
-	rawArgs := cmd.String("raw-args")
-	rawArgsByte := []byte{}
-	if rawArgs != "" {
-		rawArgsByte = []byte(rawArgs)
-	}
-
 	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	cpumem := resourcetypes.RawParams{
@@ -279,6 +273,6 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		NodesLimit:     int32(cmd.Int("nodes-limit")), //nolint:gosec
 		IgnoreHook:     cmd.Bool("ignore-hook"),
 		AfterCreate:    cmd.StringSlice("after-create"),
-		RawArgs:        rawArgsByte,
+		RawArgs:        []byte(cmd.String("raw-args")),
 	}, nil
 }

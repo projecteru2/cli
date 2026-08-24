@@ -21,6 +21,7 @@ type listPodNodesOptions struct {
 	labels          map[string]string
 	timeoutInSecond int32
 	showInfo        bool
+	stream          bool
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
@@ -66,7 +67,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		unavailNodes = append(unavailNodes, node)
 	}
 
-	o.describeNodes(describe.ToChan(unavailNodes...), true)
+	o.describeNodes(describe.ToChan(unavailNodes...))
 	return nil
 }
 
@@ -82,7 +83,7 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 		return err
 	}
 
-	o.describeNodes(ch, true)
+	o.describeNodes(ch)
 
 	return nil
 }
@@ -127,11 +128,11 @@ func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNode
 	return ch, nil
 }
 
-func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node, stream bool) {
+func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node) {
 	if o.showInfo {
-		describe.NodesWithInfo(nodes, stream)
+		describe.NodesWithInfo(nodes, o.stream)
 	} else {
-		describe.Nodes(nodes, stream)
+		describe.Nodes(nodes, o.stream)
 	}
 }
 
@@ -153,6 +154,7 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 		labels:          utils.SplitEquality(cmd.StringSlice("label")),
 		timeoutInSecond: int32(cmd.Int("timeout")), //nolint:gosec
 		showInfo:        cmd.Bool("show-info"),
+		stream:          cmd.Bool("stream"),
 	}
 	return o.run(ctx)
 }

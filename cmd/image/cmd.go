@@ -77,11 +77,6 @@ func Command() *cli.Command {
 						Name:  flagPod,
 						Usage: "name of pod, if you want to cache on all nodes in one pod",
 					},
-					&cli.IntFlag{
-						Name:  "concurrent",
-						Usage: "how many workers to pull images",
-						Value: 10,
-					},
 				},
 				Action: utils.ExitCoder(cmdImageCache),
 			},
@@ -97,11 +92,6 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  flagPod,
 						Usage: "name of pod, if you want to clean on all nodes in one pod",
-					},
-					&cli.IntFlag{
-						Name:  "concurrent",
-						Usage: "how many workers to pull images",
-						Value: 10,
 					},
 					&cli.BoolFlag{
 						Name:  "prune",

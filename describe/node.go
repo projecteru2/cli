@@ -93,6 +93,9 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 			{status},
 		}
 		rows = append(rows, cells...)
+		if showInfo {
+			rows = append(rows, []string{node.Info})
+		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
 		if stream {

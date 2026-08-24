@@ -15,7 +15,6 @@ import (
 type cleanImageOptions struct {
 	client    corepb.CoreRPCClient
 	images    []string
-	step      int32
 	podname   string
 	nodenames []string
 	prune     bool
@@ -69,7 +68,6 @@ func cmdImageClean(ctx context.Context, cmd *cli.Command) error {
 	o := &cleanImageOptions{
 		client:    client,
 		images:    images,
-		step:      int32(cmd.Int("concurrent")), //nolint:gosec
 		podname:   cmd.String(flagPod),
 		nodenames: cmd.StringSlice(flagNode),
 		prune:     cmd.Bool("prune"),

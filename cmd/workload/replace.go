@@ -203,7 +203,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[""]),
+		DeployStrategy: corepb.DeployOptions_AUTO,
 		Data:           content,
 		Modes:          modes,
 		Owners:         owners,

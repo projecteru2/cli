@@ -86,12 +86,7 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 			continue
 		}
 
-		fs := strings.Split(ps[1], ",")
-		if len(fs) == 0 {
-			continue
-		}
-
-		sources[ps[0]] = fs
+		sources[ps[0]] = strings.Split(ps[1], ",")
 	}
 
 	if len(sources) == 0 {

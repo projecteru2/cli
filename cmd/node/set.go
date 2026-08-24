@@ -34,7 +34,7 @@ func cmdNodeSet(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	opts, err := generateSetNodeOptions(cmd, client)
+	opts, err := generateSetNodeOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func cmdNodeSet(ctx context.Context, cmd *cli.Command) error {
 	return o.run(ctx)
 }
 
-func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.SetNodeOptions, error) {
+func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 	name := cmd.Args().First()
 	if name == "" {
 		return nil, errors.New("node name must be given")

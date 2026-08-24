@@ -25,7 +25,6 @@ func Command() *cli.Command {
 			{
 				Name:      "get",
 				Usage:     "get a node",
-				Flags:     []cli.Flag{},
 				ArgsUsage: nodeArgsUsage,
 				Action:    utils.ExitCoder(cmdNodeGet),
 			},
