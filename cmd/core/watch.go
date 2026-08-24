@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -22,7 +23,7 @@ func cmdWatchServiceStatus(ctx context.Context, cmd *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("watch start")
+	log.WithFunc("core.cmdWatchServiceStatus").Info(ctx, "watch start")
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {

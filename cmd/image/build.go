@@ -27,6 +27,7 @@ type buildImageOptions struct {
 }
 
 func (o *buildImageOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("image.buildImageOptions.run")
 	resp, err := o.client.BuildImage(ctx, o.opts)
 	if err != nil {
 		return err
@@ -69,7 +70,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			}
 		}
 	}
-	fmt.Printf("build image %s complete\n", o.opts.Name)
+	logger.Infof(ctx, "build image %s complete", o.opts.Name)
 	return nil
 }
 
