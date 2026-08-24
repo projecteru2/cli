@@ -1,7 +1,9 @@
 package describe
 
 import (
+	"io"
 	"math"
+	"os"
 	"testing"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -89,6 +91,29 @@ func TestToTableRows(t *testing.T) {
 			}
 		}
 	}
+}
+
+func captureStdout(t *testing.T, f func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	orig := os.Stdout
+	os.Stdout = w
+	out := make(chan string, 1)
+	go func() {
+		b, _ := io.ReadAll(r)
+		out <- string(b)
+	}()
+
+	f()
+
+	os.Stdout = orig
+	if err := w.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
+	return <-out
 }
 
 func assertPercents(t *testing.T, kind string, got, want map[string]float64) {
