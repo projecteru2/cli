@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -18,45 +17,13 @@ import (
 type capacityPodOptions struct {
 	client    corepb.CoreRPCClient
 	podname   string
-	nodenames []string // node white list
-
-	cpu            float64
-	cpuBind        bool
-	memory         int64
-	storage        int64
-	extraResources map[string]any
+	nodenames []string
+	resources map[string][]byte
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
-	cpumem := resourcetypes.RawParams{
-		flagCPU:    o.cpu,
-		flagMemory: o.memory,
-	}
-	storage := resourcetypes.RawParams{
-		flagStorage: o.storage,
-	}
-
-	if o.cpuBind {
-		cpumem["cpu-bind"] = true
-	}
-
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-	resources := map[string][]byte{
-		resourceCPUMem:  cb,
-		resourceStorage: sb,
-	}
-
-	for k, v := range o.extraResources {
-		if _, ok := resources[k]; ok {
-			continue
-		}
-		eb, _ := json.Marshal(v)
-		resources[k] = eb
-	}
-
 	opts := &corepb.DeployOptions{
-		Resources: resources,
+		Resources: o.resources,
 		Entrypoint: &corepb.EntrypointOptions{
 			Name: uuid.New().String(),
 		},
@@ -87,7 +54,7 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("pod name must be given")
 	}
 
-	mem, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
+	memory, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
 	if err != nil {
 		return fmt.Errorf("parse memory: %w", err)
 	}
@@ -97,21 +64,27 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		return fmt.Errorf("parse storage: %w", err)
 	}
 
-	extraResourcesMap, err := utils.ParseExtraResources(cmd)
+	cpumem := resourcetypes.RawParams{
+		flagCPU:    cmd.Float64(flagCPU),
+		flagMemory: memory,
+	}
+	if cmd.Bool("cpu-bind") {
+		cpumem["cpu-bind"] = true
+	}
+
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: resourcetypes.RawParams{flagStorage: storage},
+	})
 	if err != nil {
-		return fmt.Errorf("parse extra resources: %w", err)
+		return err
 	}
 
 	o := &capacityPodOptions{
 		client:    client,
 		podname:   name,
 		nodenames: cmd.StringSlice("node"),
-
-		cpu:            cmd.Float64(flagCPU),
-		cpuBind:        cmd.Bool("cpu-bind"),
-		memory:         mem,
-		storage:        storage,
-		extraResources: extraResourcesMap,
+		resources: resources,
 	}
 	return o.run(ctx)
 }

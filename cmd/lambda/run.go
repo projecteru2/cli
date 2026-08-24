@@ -2,7 +2,6 @@ package lambda
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -118,12 +117,12 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		"volumes-limit":   cmd.StringSlice("volume"),
 	}
 
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-
-	resources := map[string][]byte{
-		resourceCPUMem:  cb,
-		resourceStorage: sb,
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &corepb.RunAndWaitOptions{

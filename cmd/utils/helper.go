@@ -3,7 +3,6 @@ package utils
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"strings"
@@ -85,15 +84,4 @@ func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname
-}
-
-// ParseExtraResources decodes the --extra-resources JSON object.
-func ParseExtraResources(cmd *cli.Command) (map[string]any, error) {
-	var err error
-	extraResourcesMap := make(map[string]any)
-	extraResources := cmd.String("extra-resources")
-	if extraResources != "" {
-		err = json.Unmarshal([]byte(extraResources), &extraResourcesMap)
-	}
-	return extraResourcesMap, err
 }

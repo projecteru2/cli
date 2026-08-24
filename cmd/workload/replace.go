@@ -5,16 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
-	"gopkg.in/yaml.v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/types"
 )
 
 type replaceWorkloadsOptions struct {
@@ -114,92 +111,29 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 }
 
 func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
-	specURI := cmd.Args().First()
-	if specURI == "" {
-		return nil, errors.New("a spec must be given")
-	}
-	log.WithFunc("workload.generateReplaceOptions").Debugf(ctx, "replace with %s", specURI)
-
-	var (
-		data []byte
-		err  error
-	)
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(ctx, specURI)
-	} else {
-		data, err = os.ReadFile(specURI) //nolint:gosec
-	}
+	specs, err := loadSpecs(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	specs := &types.Specs{}
-	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("parse specs: %w", err)
-	}
-
-	entry := cmd.String(flagEntry)
-
-	network := cmd.String(flagNetwork)
-	networks := utils.GetNetworks(network)
-	entrypoint, ok := specs.Entrypoints[entry]
-	if !ok {
-		return nil, fmt.Errorf("entry %s not found in specs", entry)
-	}
-
-	var hook *corepb.HookOptions
-	if entrypoint.Hook != nil {
-		hook = &corepb.HookOptions{
-			AfterStart: entrypoint.Hook.AfterStart,
-			BeforeStop: entrypoint.Hook.BeforeStop,
-			Force:      entrypoint.Hook.Force,
-		}
-	}
-
-	var healthCheck *corepb.HealthCheckOptions
-	if entrypoint.HealthCheck != nil {
-		healthCheck = &corepb.HealthCheckOptions{
-			TcpPorts: entrypoint.HealthCheck.TCPPorts,
-			HttpPort: entrypoint.HealthCheck.HTTPPort,
-			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode), //nolint:gosec
-		}
-	}
-
-	var logConfig *corepb.LogOptions
-	if entrypoint.Log != nil {
-		logConfig = &corepb.LogOptions{
-			Type:   entrypoint.Log.Type,
-			Config: entrypoint.Log.Config,
-		}
+	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
+	if err != nil {
+		return nil, err
 	}
 
 	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	return &corepb.DeployOptions{
-		Name: specs.Appname,
-		Entrypoint: &corepb.EntrypointOptions{
-			Name:        entry,
-			Commands:    entrypoint.GetCommands(),
-			Privileged:  entrypoint.Privileged,
-			Dir:         entrypoint.Dir,
-			Log:         logConfig,
-			Publish:     entrypoint.Publish,
-			Healthcheck: healthCheck,
-			Hook:        hook,
-			Restart:     entrypoint.Restart,
-			Sysctls:     entrypoint.Sysctls,
-		},
-		Resources: nil,
-		Podname:   cmd.String(flagPod),
+		Name:       specs.Appname,
+		Entrypoint: entrypoint,
+		Podname:    cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: cmd.StringSlice(flagNode),
-			Labels:   nil,
 		},
 		Image:          cmd.String(flagImage),
 		Count:          int32(cmd.Int("count")), //nolint:gosec
 		Env:            cmd.StringSlice(flagEnv),
-		Networks:       networks,
+		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
@@ -209,9 +143,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 		Owners:         owners,
 		User:           cmd.String("user"),
 		Debug:          cmd.Bool("debug"),
-		NodesLimit:     0,
 		IgnoreHook:     cmd.Bool("ignore-hook"),
 		AfterCreate:    cmd.StringSlice("after-create"),
-		RawArgs:        []byte{},
 	}, nil
 }

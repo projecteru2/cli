@@ -2,9 +2,7 @@ package node
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -89,23 +87,12 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 		storage["rm-disks"] = cmd.String("rm-disk")
 	}
 
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-	resources := map[string][]byte{
-		resourceCPUMem:  cb,
-		resourceStorage: sb,
-	}
-
-	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
-		for k, v := range extraResourcesMap {
-			if _, ok := resources[k]; ok {
-				continue
-			}
-			eb, _ := json.Marshal(v)
-			resources[k] = eb
-		}
-	} else {
-		return nil, fmt.Errorf("parse extra resources: %w", err)
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &corepb.SetNodeOptions{

@@ -2,21 +2,17 @@ package workload
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
-	"os"
 	"strings"
 
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
-	"gopkg.in/yaml.v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/types"
 )
 
 type deployWorkloadsOptions struct {
@@ -126,21 +122,12 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 }
 
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
-	specURI := cmd.Args().First()
-	if specURI == "" {
-		return nil, errors.New("a spec must be given")
+	specs, err := loadSpecs(ctx, cmd)
+	if err != nil {
+		return nil, err
 	}
-	log.WithFunc("workload.generateDeployOptions").Debugf(ctx, "deploy %s", specURI)
 
-	var (
-		data []byte
-		err  error
-	)
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(ctx, specURI)
-	} else {
-		data, err = os.ReadFile(specURI) //nolint:gosec
-	}
+	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
 	if err != nil {
 		return nil, err
 	}
@@ -157,54 +144,14 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 
 	cpuRequest, cpuLimit := cpuOption(cmd)
 
-	specs := &types.Specs{}
-	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("parse specs: %w", err)
-	}
-
-	entry := cmd.String(flagEntry)
-
-	network := cmd.String(flagNetwork)
-	networks := utils.GetNetworks(network)
-	entrypoint, ok := specs.Entrypoints[entry]
-	if !ok {
-		return nil, fmt.Errorf("entry %s not found in specs", entry)
-	}
-
-	var hook *corepb.HookOptions
-	if entrypoint.Hook != nil {
-		hook = &corepb.HookOptions{
-			AfterStart: entrypoint.Hook.AfterStart,
-			BeforeStop: entrypoint.Hook.BeforeStop,
-			Force:      entrypoint.Hook.Force,
-		}
-	}
-
-	var healthCheck *corepb.HealthCheckOptions
-	if entrypoint.HealthCheck != nil {
-		healthCheck = &corepb.HealthCheckOptions{
-			TcpPorts: entrypoint.HealthCheck.TCPPorts,
-			HttpPort: entrypoint.HealthCheck.HTTPPort,
-			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode), //nolint:gosec
-		}
-	}
-
-	var logConfig *corepb.LogOptions
-	if entrypoint.Log != nil {
-		logConfig = &corepb.LogOptions{
-			Type:   entrypoint.Log.Type,
-			Config: entrypoint.Log.Config,
-		}
-	}
-
-	content, modes, owners := utils.GenerateFileOptions(cmd)
-
 	cpumem := resourcetypes.RawParams{
 		flagCPURequest:    cpuRequest,
 		flagCPULimit:      cpuLimit,
 		flagMemoryRequest: memoryRequest,
 		flagMemoryLimit:   memoryLimit,
+	}
+	if cmd.Bool("cpu-bind") {
+		cpumem["cpu-bind"] = true
 	}
 	storage := resourcetypes.RawParams{
 		flagStorageRequest: storageRequest,
@@ -213,46 +160,21 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		flagVolumesLimit:   specs.Volumes,
 	}
 
-	if cmd.Bool("cpu-bind") {
-		cpumem["cpu-bind"] = true
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
 	}
 
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-
-	resources := map[string][]byte{
-		resourceCPUMem:  cb,
-		resourceStorage: sb,
-	}
-
-	if extraResourcesMap, err := utils.ParseExtraResources(cmd); err == nil {
-		for k, v := range extraResourcesMap {
-			if _, ok := resources[k]; ok {
-				continue
-			}
-			eb, _ := json.Marshal(v)
-			resources[k] = eb
-		}
-	} else {
-		return nil, fmt.Errorf("parse extra resources: %w", err)
-	}
+	content, modes, owners := utils.GenerateFileOptions(cmd)
 
 	return &corepb.DeployOptions{
-		Name: specs.Appname,
-		Entrypoint: &corepb.EntrypointOptions{
-			Name:        entry,
-			Commands:    entrypoint.GetCommands(),
-			Privileged:  entrypoint.Privileged,
-			Dir:         entrypoint.Dir,
-			Log:         logConfig,
-			Publish:     entrypoint.Publish,
-			Healthcheck: healthCheck,
-			Hook:        hook,
-			Restart:     entrypoint.Restart,
-			Sysctls:     entrypoint.Sysctls,
-		},
-		Resources: resources,
-		Podname:   cmd.String(flagPod),
+		Name:       specs.Appname,
+		Entrypoint: entrypoint,
+		Resources:  resources,
+		Podname:    cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
 			Includes: cmd.StringSlice(flagNode),
 			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
@@ -260,7 +182,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		Image:          cmd.String(flagImage),
 		Count:          int32(cmd.Int("count")), //nolint:gosec
 		Env:            cmd.StringSlice(flagEnv),
-		Networks:       networks,
+		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,

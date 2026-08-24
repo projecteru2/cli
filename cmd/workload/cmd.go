@@ -7,9 +7,6 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// stopOnFirstArg makes everything after the first positional argument the command to run.
-var stopOnFirstArg = 1
-
 const (
 	workloadArgsUsage = "workloadID(s)"
 	specFileURI       = "<spec file uri>"
@@ -38,6 +35,9 @@ const (
 	resourceCPUMem  = "cpumem"
 	resourceStorage = "storage"
 )
+
+// stopOnFirstArg makes everything after the first positional argument the command to run.
+var stopOnFirstArg = 1
 
 // Command returns the workload command tree.
 func Command() *cli.Command {
@@ -570,53 +570,4 @@ func Command() *cli.Command {
 			},
 		},
 	}
-}
-
-func memoryOption(cmd *cli.Command) (int64, int64, error) {
-	memRequest, err := utils.ParseRAMInHuman(cmd.String(flagMemoryRequest))
-	if err != nil {
-		return 0, 0, err
-	}
-
-	memLimit, err := utils.ParseRAMInHuman(cmd.String(flagMemoryLimit))
-	if err != nil {
-		return 0, 0, err
-	}
-	if cmd.IsSet("memory") {
-		if memory, err := utils.ParseRAMInHuman(cmd.String("memory")); err == nil {
-			memRequest = memory
-			memLimit = memory
-		}
-	}
-	return memRequest, memLimit, nil
-}
-
-func storageOption(cmd *cli.Command) (int64, int64, error) {
-	storageRequest, err := utils.ParseRAMInHuman(cmd.String(flagStorageRequest))
-	if err != nil {
-		return 0, 0, err
-	}
-
-	storageLimit, err := utils.ParseRAMInHuman(cmd.String(flagStorageLimit))
-	if err != nil {
-		return 0, 0, err
-	}
-	if cmd.IsSet(flagStorage) {
-		if storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage)); err == nil {
-			storageRequest = storage
-			storageLimit = storage
-		}
-	}
-	return storageRequest, storageLimit, nil
-}
-
-func cpuOption(cmd *cli.Command) (float64, float64) {
-	cpuRequest := cmd.Float64(flagCPURequest)
-	cpuLimit := cmd.Float64(flagCPULimit)
-	if cmd.IsSet("cpu") {
-		cpu := cmd.Float64("cpu")
-		cpuRequest = cpu
-		cpuLimit = cpu
-	}
-	return cpuRequest, cpuLimit
 }
