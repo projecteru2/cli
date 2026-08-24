@@ -26,11 +26,13 @@ func cmdWatchServiceStatus(ctx context.Context, cmd *cli.Command) error {
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
-			break
+			return nil
+		}
+		if err != nil {
+			return err
 		}
 		for id, addr := range msg.Addresses {
 			fmt.Printf("%v: %v\n", id, addr)
 		}
 	}
-	return nil
 }
