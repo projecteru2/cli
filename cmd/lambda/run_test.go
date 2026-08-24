@@ -3,6 +3,7 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"slices"
 	"testing"
 
@@ -73,6 +74,18 @@ func TestGenerateLambdaOptions(t *testing.T) {
 				t.Errorf("commands: got %v, want %v", got, tt.wantCommands)
 			}
 		})
+	}
+}
+
+func TestGenerateLambdaOptionsExtraResources(t *testing.T) {
+	opts := runLambdaCommand(t, []string{"lambda", "--extra-resources", `{"gpu":{"count":1}}`, "echo", "hi"})
+
+	gpu, ok := opts.DeployOptions.Resources["gpu"]
+	if !ok {
+		t.Fatalf("got %v, want a gpu plugin", slices.Sorted(maps.Keys(opts.DeployOptions.Resources)))
+	}
+	if got := decodeParams(t, gpu).Int64("count"); got != 1 {
+		t.Errorf("count: got %d, want 1", got)
 	}
 }
 

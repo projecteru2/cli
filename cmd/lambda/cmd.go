@@ -100,6 +100,10 @@ func Command() *cli.Command {
 				Value:   false,
 			},
 			&cli.StringFlag{
+				Name:  "extra-resources",
+				Usage: "extra resources, e.g., {\"gpu\":{\"count\":1}}",
+			},
+			&cli.StringFlag{
 				Name:  "deploy-strategy",
 				Usage: "deploy method auto/fill/each/global/drained/dummy",
 				Value: strategy.Auto,
