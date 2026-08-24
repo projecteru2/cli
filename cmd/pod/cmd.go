@@ -117,11 +117,6 @@ func Command() *cli.Command {
 				ArgsUsage: podArgsUsage,
 				Action:    utils.ExitCoder(cmdPodListNodes),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  all,
-						Usage: "DEPRECATED, use --filter instead",
-						Value: false,
-					},
 					&cli.StringFlag{
 						Name:    "filter",
 						Aliases: []string{"f"},
