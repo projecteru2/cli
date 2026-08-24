@@ -33,6 +33,12 @@ func TestFilterSkip(t *testing.T) {
 			filter:   filter{ips: []string{"10.0.0.3"}},
 			workload: &corepb.Workload{Podname: "dev", Nodename: "node1"},
 		},
+		{
+			name:     "workload without status still honours the pod filter",
+			filter:   filter{podnames: []string{"prod"}},
+			workload: &corepb.Workload{Podname: "dev", Nodename: "node1"},
+			want:     true,
+		},
 	}
 
 	for _, tt := range tests {

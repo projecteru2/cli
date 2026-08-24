@@ -99,6 +99,9 @@ func (f filter) skip(workload *corepb.Workload) bool {
 	if len(f.nodenames) > 0 && !slices.Contains(f.nodenames, workload.Nodename) {
 		return true
 	}
+	if len(f.podnames) > 0 && !slices.Contains(f.podnames, workload.Podname) {
+		return true
+	}
 
 	if workload.Status == nil {
 		return false
@@ -110,8 +113,7 @@ func (f filter) skip(workload *corepb.Workload) bool {
 	}
 
 	return (len(f.ips) > 0 && !hasIntersection(f.ips, ips)) ||
-		(len(f.skipIPs) > 0 && hasIntersection(f.skipIPs, ips)) ||
-		(len(f.podnames) > 0 && !slices.Contains(f.podnames, workload.Podname))
+		(len(f.skipIPs) > 0 && hasIntersection(f.skipIPs, ips))
 }
 
 func hasIntersection(a, b []string) bool {
