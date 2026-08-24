@@ -7,7 +7,6 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/projecteru2/core v0.0.0-20260824231617-78144ce3a911
-	github.com/rs/zerolog v1.35.1
 	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/term v0.45.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -65,6 +64,7 @@ require (
 	github.com/prometheus/procfs v0.21.1 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
+	github.com/rs/zerolog v1.35.1 // indirect
 	github.com/sirupsen/logrus v1.10.1 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0 // indirect
