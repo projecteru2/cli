@@ -46,13 +46,13 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 			logger.Infof(ctx, "hook output %s", string(msg.Hook))
 		}
 		if msg.Error != "" {
-			logger.Error(ctx, errors.New(msg.Error))
+			logger.Errorf(ctx, errors.New(msg.Error), "%s %s failed", o.action, coreutils.ShortID(msg.Id))
 		}
 	}
 	return nil
 }
 
-func createControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action string) (*controlWorkloadsOptions, error) {
+func newControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action string) (*controlWorkloadsOptions, error) {
 	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func createControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action
 }
 
 func cmdWorkloadStart(ctx context.Context, cmd *cli.Command) error {
-	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStart)
+	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStart)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func cmdWorkloadStart(ctx context.Context, cmd *cli.Command) error {
 }
 
 func cmdWorkloadStop(ctx context.Context, cmd *cli.Command) error {
-	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStop)
+	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStop)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func cmdWorkloadStop(ctx context.Context, cmd *cli.Command) error {
 }
 
 func cmdWorkloadRestart(ctx context.Context, cmd *cli.Command) error {
-	o, err := createControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadRestart)
+	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadRestart)
 	if err != nil {
 		return err
 	}

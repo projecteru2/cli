@@ -13,11 +13,11 @@ import (
 
 type capacityOfNode struct {
 	Name     string `json:"name" yaml:"name"`
-	Capacity int    `json:"capacity" yaml:"capacity"`
+	Capacity int64  `json:"capacity" yaml:"capacity"`
 }
 
 type capacityOfPod struct {
-	Total int               `json:"total" yaml:"total"`
+	Total int64             `json:"total" yaml:"total"`
 	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
@@ -35,15 +35,13 @@ func Pods(pods ...*corepb.Pod) {
 
 // PodCapacity describes the capacity left for a given specification.
 func PodCapacity(total int64, capacityMap map[string]int64) {
-	capPod := &capacityOfPod{
-		Total: int(total),
-	}
+	capPod := &capacityOfPod{Total: total}
 
 	capPod.Nodes = make([]*capacityOfNode, 0, len(capacityMap))
 	for name, capacity := range capacityMap {
 		capPod.Nodes = append(capPod.Nodes, &capacityOfNode{
 			Name:     name,
-			Capacity: int(capacity),
+			Capacity: capacity,
 		})
 	}
 
@@ -72,7 +70,7 @@ func describePodCapacities(capacity *capacityOfPod) {
 	descRow := []string{}
 	for _, node := range capacity.Nodes {
 		nameRow = append(nameRow, node.Name)
-		descRow = append(descRow, strconv.FormatInt(int64(node.Capacity), 10))
+		descRow = append(descRow, strconv.FormatInt(node.Capacity, 10))
 	}
 	rows := [][]string{nameRow, descRow}
 
@@ -92,7 +90,6 @@ func describePods(pods []*corepb.Pod) {
 	for _, pod := range pods {
 		nameRow = append(nameRow, pod.Name)
 		descRow = append(descRow, pod.Desc)
-
 	}
 	rows := [][]string{nameRow, descRow}
 	t.AppendRows(toTableRows(rows))

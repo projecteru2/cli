@@ -16,12 +16,12 @@ import (
 	"github.com/projecteru2/cli/describe"
 )
 
-var re = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)
+var filterExpr = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)
 
 func match(s string) map[string]string {
 	rv := make(map[string]string)
-	founds := re.FindStringSubmatch(s)
-	for i, name := range re.SubexpNames() {
+	founds := filterExpr.FindStringSubmatch(s)
+	for i, name := range filterExpr.SubexpNames() {
 		if i > 0 && i < len(founds) {
 			rv[name] = founds[i]
 		}
@@ -29,8 +29,8 @@ func match(s string) map[string]string {
 	return rv
 }
 
-func op(op string, left, right float64) bool {
-	switch op {
+func compare(operator string, left, right float64) bool {
+	switch operator {
 	case ">":
 		return left > right
 	case ">=":
@@ -100,7 +100,7 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 		defer close(rv)
 		for nr := range ch {
 			l := attr(nr, filter["name"])
-			if !op(filter["op"], l, v) {
+			if !compare(filter["op"], l, v) {
 				continue
 			}
 			rv <- nr
@@ -110,7 +110,6 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 }
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
-	var ch chan *corepb.NodeResource
 	resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
 		Name: o.name,
 	})
@@ -118,7 +117,7 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	ch = make(chan *corepb.NodeResource)
+	ch := make(chan *corepb.NodeResource)
 	go func() {
 		defer close(ch)
 		logger := log.WithFunc("pod.resourcePodOptions.run")

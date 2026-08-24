@@ -15,7 +15,7 @@ const (
 // Command returns the network command tree.
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  flagNetwork,
+		Name:  "network",
 		Usage: "network commands",
 		Commands: []*cli.Command{
 			{
@@ -42,7 +42,7 @@ func Command() *cli.Command {
 			{
 				Name:      "disconnect",
 				ArgsUsage: workloadArgsUsage,
-				Usage:     "disconnect workloads to network",
+				Usage:     "disconnect workloads from network",
 				Action:    utils.ExitCoder(cmdNetworkDisconnect),
 				Flags: []cli.Flag{
 					&cli.StringFlag{

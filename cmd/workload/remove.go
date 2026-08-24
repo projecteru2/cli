@@ -41,7 +41,7 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "remove %s success", msg.Id)
 		} else {
-			logger.Errorf(ctx, errors.New("remove workload failed"), "remove %s", msg.Id)
+			logger.Warnf(ctx, "remove %s failed", msg.Id)
 		}
 		if msg.Hook != "" {
 			logger.Info(ctx, msg.Hook)

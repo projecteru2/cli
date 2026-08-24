@@ -14,7 +14,7 @@ import (
 	"github.com/projecteru2/cli/interactive"
 )
 
-var clrf = []byte{0xa}
+var newline = []byte{'\n'}
 
 type runLambdaOptions struct {
 	client          corepb.CoreRPCClient
@@ -71,7 +71,7 @@ func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAn
 	}
 
 	go func() {
-		_ = iStream.Send(clrf)
+		_ = iStream.Send(newline)
 	}()
 
 	return interactive.HandleStream(ctx, stdin, iStream, count, printWorkloadID)

@@ -45,7 +45,7 @@ func Command() *cli.Command {
 			},
 			&cli.StringSliceFlag{
 				Name:  "volume",
-				Usage: "set volume limitcan use multiple times",
+				Usage: "set volume limit, can use multiple times",
 			},
 			&cli.StringFlag{
 				Name:    "working-dir",

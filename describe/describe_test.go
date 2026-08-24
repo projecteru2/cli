@@ -60,7 +60,7 @@ func TestPods(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			Format = tt.format
-			defer func() { Format = "" }()
+			t.Cleanup(func() { Format = "" })
 
 			if got := captureStdout(t, func() { Pods(pods...) }); got != tt.want {
 				t.Errorf("got\n%s\nwant\n%s", got, tt.want)

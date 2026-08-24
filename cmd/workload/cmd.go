@@ -388,7 +388,6 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  flagNetwork,
 						Usage: "SDN name or host mode",
-						//	Value: "host",
 					},
 					&cli.StringSliceFlag{
 						Name:  flagEnv,

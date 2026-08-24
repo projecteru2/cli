@@ -123,7 +123,7 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name: "memory",
 						Usage: `memory, unit can be K/M/G/T, 
-                          when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                          when using --delta flag, this can be a negative number indicating how much to add to the current value, 
                           e.g. --memory -10G --delta, means memory will be the current value - 10`,
 					},
 					&cli.StringSliceFlag{
@@ -134,7 +134,7 @@ func Command() *cli.Command {
 					&cli.StringSliceFlag{
 						Name: "numa-memory",
 						Usage: `numa memory values, unit can be K/M/G/T, 
-                        when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                        when using --delta flag, this can be a negative number indicating how much to add to the current value, 
                         e.g. --numa-memory -10G --delta, means the value will be current value - 10
                         this value can be set multiple times, the index will be the numa node ID,
                         e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
@@ -142,7 +142,7 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name: flagStorage,
 						Usage: `storage, unit can be K/M/G/T,
-					            when using --delta flag, this can be a negtive number indicating how much to add to the current value,
+					            when using --delta flag, this can be a negative number indicating how much to add to the current value,
 					            e.g. --storage -10G --delta, means storage will be the current value - 10`,
 					},
 					&cli.StringSliceFlag{

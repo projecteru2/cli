@@ -36,7 +36,7 @@ func TestMatch(t *testing.T) {
 	}
 }
 
-func TestOp(t *testing.T) {
+func TestCompare(t *testing.T) {
 	tests := []struct {
 		name string
 		op   string
@@ -52,7 +52,7 @@ func TestOp(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := op(tt.op, 0.5, 0.4); got != tt.want {
+			if got := compare(tt.op, 0.5, 0.4); got != tt.want {
 				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})

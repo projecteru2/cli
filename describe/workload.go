@@ -6,8 +6,8 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -44,30 +44,13 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		stat.Storage += int64(coreutils.Round(res["storage"].Float64("storage_request")))
 	}
 
-	describeStatistics := func() {
-		t := table.NewWriter()
-		t.SetOutputMirror(os.Stdout)
-		t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
-
-		rows := [][]string{
-			{fmt.Sprintf("%f", stat.CPUs)},
-			{fmt.Sprintf("%d", stat.Memory)},
-			{fmt.Sprintf("%d", stat.Storage)},
-		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
-
-		t.SetStyle(table.StyleLight)
-		t.Render()
-	}
-
 	switch {
 	case isJSON():
 		describeAsJSON(stat)
 	case isYAML():
 		describeAsYAML(stat)
 	default:
-		describeStatistics()
+		describeStatistics(stat.CPUs, stat.Memory, stat.Storage)
 	}
 }
 
@@ -83,18 +66,35 @@ func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
 	}
 }
 
+func describeStatistics(cpus float64, memory, storage int64) {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
+
+	rows := [][]string{
+		{fmt.Sprintf("%f", cpus)},
+		{strconv.FormatInt(memory, 10)},
+		{strconv.FormatInt(storage, 10)},
+	}
+	t.AppendRows(toTableRows(rows))
+	t.AppendSeparator()
+
+	t.SetStyle(table.StyleLight)
+	t.Render()
+}
+
 func describeWorkloads(workloads []*corepb.Workload) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
-	var once sync.Once
-
+	first := true
 	for _, c := range workloads {
 		header, cells := parseWorkloadPluginResources(c)
-		once.Do(func() {
-			header = append([]any{"Name/ID/Pod/Node/Priviledged", "Networks"}, header...)
+		if first {
+			first = false
+			header = append([]any{"Name/ID/Pod/Node/Privileged", "Networks"}, header...)
 			t.AppendHeader(header)
-		})
+		}
 
 		ns := []string{}
 		if c.Status != nil {
@@ -118,7 +118,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 		}
 
 		rows := [][]string{
-			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Priviledged: %v", c.Privileged)},
+			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Privileged: %v", c.Privileged)},
 			ns,
 		}
 		rows = append(rows, cells...)

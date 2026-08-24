@@ -99,7 +99,7 @@ func Command() *cli.Command {
 						Value: false,
 					},
 				},
-				Action: utils.ExitCoder(cmdImageClean),
+				Action: utils.ExitCoder(cmdImageRemove),
 			},
 			{
 				Name:      "list",

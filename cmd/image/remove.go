@@ -12,7 +12,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-type cleanImageOptions struct {
+type removeImageOptions struct {
 	client    corepb.CoreRPCClient
 	images    []string
 	podname   string
@@ -20,8 +20,8 @@ type cleanImageOptions struct {
 	prune     bool
 }
 
-func (o *cleanImageOptions) run(ctx context.Context) error {
-	logger := log.WithFunc("image.cleanImageOptions.run")
+func (o *removeImageOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("image.removeImageOptions.run")
 	opts := &corepb.RemoveImageOptions{
 		Images:    o.images,
 		Podname:   o.podname,
@@ -44,7 +44,7 @@ func (o *cleanImageOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "remove %s success", msg.Image)
 		} else {
-			logger.Errorf(ctx, errors.New("remove image failed"), "remove %s", msg.Image)
+			logger.Warnf(ctx, "remove %s failed", msg.Image)
 		}
 		for _, m := range msg.Messages {
 			logger.Info(ctx, m)
@@ -54,7 +54,7 @@ func (o *cleanImageOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdImageClean(ctx context.Context, cmd *cli.Command) error {
+func cmdImageRemove(ctx context.Context, cmd *cli.Command) error {
 	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func cmdImageClean(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("images must be specified")
 	}
 
-	o := &cleanImageOptions{
+	o := &removeImageOptions{
 		client:    client,
 		images:    images,
 		podname:   cmd.String(flagPod),

@@ -21,30 +21,26 @@ type setNodeDownOptions struct {
 
 func (o *setNodeDownOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("node.setNodeDownOptions.run")
-	do := true
 	if o.check {
-		timeout, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
+		checkCtx, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
 		defer cancel()
-		if _, err := o.client.GetNodeResource(timeout, &corepb.GetNodeResourceOptions{
+		if _, err := o.client.GetNodeResource(checkCtx, &corepb.GetNodeResourceOptions{
 			Opts: &corepb.GetNodeOptions{
 				Nodename: o.name,
 			},
 		}); err == nil {
 			logger.Warn(ctx, "node is not down")
-			do = false
+			return nil
 		}
 	}
 
-	if do {
-		_, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
-			Nodename: o.name,
-			Bypass:   corepb.TriOpt_TRUE,
-		})
-		if err != nil {
-			return err
-		}
-		logger.Infof(ctx, "node %s down", o.name)
+	if _, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
+		Nodename: o.name,
+		Bypass:   corepb.TriOpt_TRUE,
+	}); err != nil {
+		return err
 	}
+	logger.Infof(ctx, "node %s down", o.name)
 	return nil
 }
 

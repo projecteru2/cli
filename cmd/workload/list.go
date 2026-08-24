@@ -56,16 +56,12 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	f := filter{
-		ips:       o.matchIPs,
-		skipIPs:   o.skipIPs,
-		nodenames: []string{},
-		podnames:  []string{},
+		ips:      o.matchIPs,
+		skipIPs:  o.skipIPs,
+		podnames: o.podnames,
 	}
-	if len(o.nodename) > 0 {
-		f.nodenames = append(f.nodenames, o.nodename)
-	}
-	if len(o.podnames) > 0 {
-		f.podnames = append(f.podnames, o.podnames...)
+	if o.nodename != "" {
+		f.nodenames = []string{o.nodename}
 	}
 
 	workloads = f.filterIn(workloads)
@@ -86,21 +82,21 @@ type filter struct {
 	podnames  []string
 }
 
-func (wf filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
+func (f filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
 	ans := []*corepb.Workload{}
 	for _, workload := range workloads {
-		if !wf.skip(workload) {
+		if !f.skip(workload) {
 			ans = append(ans, workload)
 		}
 	}
 	return ans
 }
 
-func (wf filter) skip(workload *corepb.Workload) bool {
+func (f filter) skip(workload *corepb.Workload) bool {
 	if workload == nil {
 		return true
 	}
-	if len(wf.nodenames) > 0 && !wf.hasIntersection(wf.nodenames, []string{workload.Nodename}) {
+	if len(f.nodenames) > 0 && !slices.Contains(f.nodenames, workload.Nodename) {
 		return true
 	}
 
@@ -113,12 +109,12 @@ func (wf filter) skip(workload *corepb.Workload) bool {
 		ips = append(ips, strings.Split(cidr, "/")[0])
 	}
 
-	return (len(wf.ips) > 0 && !wf.hasIntersection(wf.ips, ips)) ||
-		(len(wf.skipIPs) > 0 && wf.hasIntersection(wf.skipIPs, ips)) ||
-		(len(wf.podnames) > 0 && !wf.hasIntersection(wf.podnames, []string{workload.Podname}))
+	return (len(f.ips) > 0 && !hasIntersection(f.ips, ips)) ||
+		(len(f.skipIPs) > 0 && hasIntersection(f.skipIPs, ips)) ||
+		(len(f.podnames) > 0 && !slices.Contains(f.podnames, workload.Podname))
 }
 
-func (wf filter) hasIntersection(a, b []string) bool {
+func hasIntersection(a, b []string) bool {
 	return slices.ContainsFunc(b, func(v string) bool { return slices.Contains(a, v) })
 }
 

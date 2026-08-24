@@ -20,19 +20,19 @@ import (
 )
 
 var (
-	exitCode     = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
+	exitCode     = []byte("[exitcode] ")
 	winchCommand = []byte{0x80}
 )
-
-type window struct {
-	Row uint16
-	Col uint16
-}
 
 // Stream carries the send and recv half of an attach stream.
 type Stream struct {
 	Send func(cmd []byte) error
 	Recv func() (*corepb.AttachWorkloadMessage, error)
+}
+
+type window struct {
+	Row uint16
+	Col uint16
 }
 
 // HandleStream pumps an attach stream, optionally putting the terminal in raw mode.
@@ -72,7 +72,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 			continue
 		case bytes.HasPrefix(msg.Data, exitCode):
 			var convErr error
-			code, convErr = strconv.Atoi(string(bytes.TrimLeft(msg.Data, string(exitCode))))
+			code, convErr = strconv.Atoi(string(bytes.TrimPrefix(msg.Data, exitCode)))
 			if convErr == nil && code != 0 {
 				return code, nil
 			}
@@ -93,7 +93,6 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 	}
 }
 
-// attachTerminal puts stdin in raw mode and forwards keystrokes and resizes to the stream.
 func attachTerminal(ctx context.Context, iStream Stream) func() {
 	stdinFd := int(os.Stdin.Fd())
 	ctx, cancel := context.WithCancel(ctx)

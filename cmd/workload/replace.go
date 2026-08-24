@@ -18,12 +18,12 @@ type replaceWorkloadsOptions struct {
 	client         corepb.CoreRPCClient
 	opts           *corepb.DeployOptions
 	labels         map[string]string
-	copys          map[string]string
+	copies         map[string]string
 	networkInherit bool
 }
 
 func (o *replaceWorkloadsOptions) run(ctx context.Context) error {
-	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copys)
+	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copies)
 }
 
 func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
@@ -54,20 +54,20 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 	o := &replaceWorkloadsOptions{
 		client:         client,
 		opts:           opts,
-		copys:          utils.SplitFiles(cmd.StringSlice("copy")),
+		copies:         utils.SplitFiles(cmd.StringSlice("copy")),
 		labels:         utils.SplitEquality(cmd.StringSlice("label")),
 		networkInherit: networkInherit,
 	}
 	return o.run(ctx)
 }
 
-func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels, copys map[string]string) error {
+func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels, copies map[string]string) error {
 	logger := log.WithFunc("workload.doReplaceWorkload")
 	opts := &corepb.ReplaceOptions{
 		DeployOpt:      deployOpts,
 		Networkinherit: networkInherit,
 		FilterLabels:   labels,
-		Copy:           copys,
+		Copy:           copies,
 	}
 	resp, err := client.ReplaceWorkload(ctx, opts)
 	if err != nil {
@@ -93,17 +93,12 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 			logger.Infof(ctx, "hook output \n%s", msg.Remove.Hook)
 		}
 
-		// a remove message is always returned and always succeeds
-		removeMsg := msg.Remove
-		logger.Infof(ctx, "workload %s removed", removeMsg.Id)
-
-		// create has succeeded here, otherwise the error surfaces in msg.Error
-		createMsg := msg.Create
-		logger.Infof(ctx, "new workload %s, resource: %s", createMsg.Name, createMsg.Resources)
-		if len(createMsg.Hook) > 0 {
-			logger.Infof(ctx, "other output \n%s", createMsg.Hook)
+		logger.Infof(ctx, "workload %s removed", msg.Remove.Id)
+		logger.Infof(ctx, "new workload %s, resource: %s", msg.Create.Name, msg.Create.Resources)
+		if len(msg.Create.Hook) > 0 {
+			logger.Infof(ctx, "other output \n%s", msg.Create.Hook)
 		}
-		for name, publish := range createMsg.Publish {
+		for name, publish := range msg.Create.Publish {
 			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
 	}

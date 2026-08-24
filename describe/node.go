@@ -9,7 +9,6 @@ import (
 	"os"
 	"slices"
 	"strings"
-	"sync"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/projecteru2/core/log"
@@ -69,17 +68,17 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 
-	var once sync.Once
-
+	first := true
 	for node := range nodes {
 		header, cells := parseNodePluginResources(node)
-		once.Do(func() {
+		if first {
+			first = false
 			header = append([]any{headerName, "Endpoint", "Status"}, header...)
 			if showInfo {
 				header = append(header, "Info")
 			}
 			t.AppendHeader(header)
-		})
+		}
 
 		status := "DOWN"
 		if !node.Bypass && node.Available {
@@ -168,7 +167,7 @@ func parseNodePluginResources(node *corepb.Node) (header []any, cells [][]string
 }
 
 func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
-	logger := log.WithFunc("describe.NodeResources")
+	logger := log.WithFunc("describe.describeNodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"})
@@ -202,7 +201,7 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 }
 
 func describeNodeStatusMessage(ctx context.Context, ms []*corepb.NodeStatusStreamMessage) {
-	logger := log.WithFunc("describe.NodeStatusMessage")
+	logger := log.WithFunc("describe.describeNodeStatusMessage")
 	for _, m := range ms {
 		if m.Error != "" {
 			logger.Errorf(ctx, errors.New(m.Error), "get status for node %s", m.Nodename)

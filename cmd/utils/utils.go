@@ -32,16 +32,16 @@ func ParseRAMInHuman(ram string) (int64, error) {
 	if ram == "" {
 		return 0, nil
 	}
-	flag := int64(1)
+	sign := int64(1)
 	if strings.HasPrefix(ram, "-") {
-		flag = int64(-1)
-		ram = strings.TrimLeft(ram, "-")
+		sign = int64(-1)
+		ram = strings.TrimPrefix(ram, "-")
 	}
 	ramInBytes, err := units.RAMInBytes(ram)
 	if err != nil {
 		return 0, err
 	}
-	return ramInBytes * flag, nil
+	return ramInBytes * sign, nil
 }
 
 // SplitEquality turns a list of key=value strings into a map.
@@ -81,6 +81,7 @@ func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
 	}
 }
 
+// GetHostname returns the local hostname, empty when it cannot be read.
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname

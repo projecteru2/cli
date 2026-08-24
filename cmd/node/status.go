@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -23,16 +24,16 @@ func (o *setNodeStatusOptions) run(ctx context.Context) error {
 		return o.heartbeat(ctx)
 	}
 
-	timer := time.NewTicker(time.Duration(o.interval) * time.Second)
-	defer timer.Stop()
+	logger := log.WithFunc("node.setNodeStatusOptions.run")
+	ticker := time.NewTicker(time.Duration(o.interval) * time.Second)
+	defer ticker.Stop()
 
-	var err error
 	for {
 		select {
 		case <-ctx.Done():
-			return err
-		case <-timer.C:
-			err = o.heartbeat(ctx)
+			return ctx.Err()
+		case <-ticker.C:
+			logger.Error(ctx, o.heartbeat(ctx), "heartbeat")
 		}
 	}
 }
