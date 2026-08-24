@@ -60,7 +60,7 @@ func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAn
 		return -1, err
 	}
 
-	if resp.Send(opts) != nil {
+	if err := resp.Send(opts); err != nil {
 		return -1, err
 	}
 
