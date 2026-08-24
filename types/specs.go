@@ -28,5 +28,5 @@ func (e Entrypoint) GetCommands() []string {
 	if len(e.Commands) > 0 {
 		return e.Commands
 	}
-	return strings.Split(e.Command, " ")
+	return strings.Fields(e.Command)
 }

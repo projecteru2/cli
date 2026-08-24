@@ -33,6 +33,10 @@ entrypoints:
     commands:
       - /bin/worker
       - --loop
+  spaced:
+    cmd: "  /bin/spaced   -v  "
+  bare:
+    dir: /srv
 volumes:
   - "/tmp:/tmp/host"
 volumes_request:
@@ -108,6 +112,16 @@ func TestEntrypointGetCommands(t *testing.T) {
 			name:  "commands win over cmd",
 			entry: "worker",
 			want:  []string{"/bin/worker", "--loop"},
+		},
+		{
+			name:  "repeated spaces produce no empty arguments",
+			entry: "spaced",
+			want:  []string{"/bin/spaced", "-v"},
+		},
+		{
+			name:  "neither commands nor cmd produces no arguments",
+			entry: "bare",
+			want:  nil,
 		},
 	}
 
