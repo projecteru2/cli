@@ -100,7 +100,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:     "node",
-						Aliases:  []string{"node", "n"},
+						Aliases:  []string{"n"},
 						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
 						Required: false,
 					},
