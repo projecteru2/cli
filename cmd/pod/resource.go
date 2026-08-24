@@ -3,12 +3,12 @@ package pod
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -16,7 +16,7 @@ import (
 	"github.com/projecteru2/cli/describe"
 )
 
-var filterExpr = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)
+var filterExpr = regexp.MustCompile(`^\s*(?P<name>cpu|memory|storage|volume)\s*(?P<op>>=|<=|==|>|<)\s*(?P<value>\d+(?:\.\d+)?%?)\s*$`)
 
 func match(s string) map[string]string {
 	rv := make(map[string]string)
@@ -73,9 +73,13 @@ type resourcePodOptions struct {
 }
 
 func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.NodeResource, error) {
+	if o.expr == "" {
+		return ch, nil
+	}
+
 	filter := match(o.expr)
 	if len(filter) == 0 {
-		return ch, nil
+		return nil, fmt.Errorf("invalid filter %q, want one of cpu/memory/storage/volume with an operator and a value", o.expr)
 	}
 
 	var (
@@ -117,15 +121,15 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var recvErr error
 	ch := make(chan *corepb.NodeResource)
 	go func() {
 		defer close(ch)
-		logger := log.WithFunc("pod.resourcePodOptions.run")
 		for {
-			resource, recvErr := resp.Recv()
-			if recvErr != nil {
-				if !errors.Is(recvErr, io.EOF) {
-					logger.Error(ctx, recvErr)
+			resource, streamErr := resp.Recv()
+			if streamErr != nil {
+				if !errors.Is(streamErr, io.EOF) {
+					recvErr = streamErr
 				}
 				return
 			}
@@ -139,7 +143,7 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 	}
 
 	describe.NodeResources(ctx, resChan, o.stream)
-	return nil
+	return recvErr
 }
 
 func cmdPodResource(ctx context.Context, cmd *cli.Command) error {

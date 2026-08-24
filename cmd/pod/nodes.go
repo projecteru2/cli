@@ -6,7 +6,6 @@ import (
 	"io"
 	"strings"
 
-	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -72,7 +71,7 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 }
 
 func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
-	ch, err := o.listChan(ctx, &corepb.ListNodesOptions{
+	ch, wait, err := o.listChan(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
 		All:             o.filter == all,
 		Labels:          o.labels,
@@ -85,11 +84,11 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 
 	o.describeNodes(ch)
 
-	return nil
+	return wait()
 }
 
 func (o *listPodNodesOptions) list(ctx context.Context, opt *corepb.ListNodesOptions) ([]*corepb.Node, error) {
-	ch, err := o.listChan(ctx, opt)
+	ch, wait, err := o.listChan(ctx, opt)
 	if err != nil {
 		return nil, err
 	}
@@ -98,25 +97,25 @@ func (o *listPodNodesOptions) list(ctx context.Context, opt *corepb.ListNodesOpt
 	for n := range ch {
 		nodes = append(nodes, n)
 	}
-	return nodes, nil
+	return nodes, wait()
 }
 
-func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNodesOptions) (<-chan *corepb.Node, error) {
+func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNodesOptions) (<-chan *corepb.Node, func() error, error) {
 	stream, err := o.client.ListPodNodes(ctx, opt)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
+	var recvErr error
 	ch := make(chan *corepb.Node)
 	go func() {
 		defer close(ch)
 
-		logger := log.WithFunc("pod.listPodNodesOptions.listChan")
 		for {
-			node, recvErr := stream.Recv()
-			if recvErr != nil {
-				if !errors.Is(recvErr, io.EOF) {
-					logger.Error(ctx, recvErr)
+			node, err := stream.Recv()
+			if err != nil {
+				if !errors.Is(err, io.EOF) {
+					recvErr = err
 				}
 				return
 			}
@@ -125,7 +124,7 @@ func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNode
 		}
 	}()
 
-	return ch, nil
+	return ch, func() error { return recvErr }, nil
 }
 
 func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node) {
