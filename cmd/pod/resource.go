@@ -59,7 +59,7 @@ func attr(nr *corepb.NodeResource, name string) float64 {
 	case flagStorage:
 		return sr[flagStorage]
 	case "volume":
-		return sr["volume"]
+		return sr["volumes"]
 	default:
 		return 0
 	}
