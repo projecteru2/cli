@@ -105,6 +105,61 @@ func TestNetworks(t *testing.T) {
 	}
 }
 
+func TestWorkloadsStatistics(t *testing.T) {
+	tests := []struct {
+		name      string
+		workloads []*corepb.Workload
+		want      string
+	}{
+		{
+			name: "cpumem and storage",
+			workloads: []*corepb.Workload{
+				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"storage":{"storage_request":2048}}`},
+				{Resources: `{"cpumem":{"cpu_request":0.5,"memory_request":512},"storage":{"storage_request":512}}`},
+			},
+			want: `{
+  "CPUs": 2,
+  "Memory": 1536,
+  "Storage": 2560
+}
+`,
+		},
+		{
+			name: "workload without a storage plugin",
+			workloads: []*corepb.Workload{
+				{Resources: `{"cpumem":{"cpu_request":1,"memory_request":64}}`},
+			},
+			want: `{
+  "CPUs": 1,
+  "Memory": 64,
+  "Storage": 0
+}
+`,
+		},
+		{
+			name:      "workload without any resources",
+			workloads: []*corepb.Workload{{Resources: `{}`}},
+			want: `{
+  "CPUs": 0,
+  "Memory": 0,
+  "Storage": 0
+}
+`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			Format = "json"
+			t.Cleanup(func() { Format = "" })
+
+			if got := captureStdout(t, func() { WorkloadsStatistics(tt.workloads...) }); got != tt.want {
+				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
+			}
+		})
+	}
+}
+
 func captureStdout(t *testing.T, f func()) string {
 	t.Helper()
 	r, w, err := os.Pipe()

@@ -34,8 +34,8 @@ func (o *statusOptions) run(ctx context.Context) error {
 		Nodename:   o.node,
 		Labels:     o.labels,
 	})
-	if err != nil || resp == nil {
-		return cli.Exit("", -1)
+	if err != nil {
+		return err
 	}
 
 	for {
@@ -43,8 +43,8 @@ func (o *statusOptions) run(ctx context.Context) error {
 		if errors.Is(err, io.EOF) {
 			break
 		}
-		if err != nil || msg == nil {
-			return cli.Exit("", -1)
+		if err != nil {
+			return err
 		}
 
 		if msg.Error != "" {
@@ -65,7 +65,7 @@ func (o *statusOptions) run(ctx context.Context) error {
 			logger.Warnf(ctx, "[%s] %s on %s is stopped", coreutils.ShortID(msg.Id), msg.Workload.Name, msg.Workload.Nodename)
 		case !msg.Status.Healthy:
 			logger.Warnf(ctx, "[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Workload.Name, msg.Workload.Nodename)
-		case msg.Status.Running && msg.Status.Healthy:
+		default:
 			logger.Infof(ctx, "[%s] %s back to life", coreutils.ShortID(msg.Workload.Id), msg.Workload.Name)
 			for networkName, addrs := range msg.Workload.Publish {
 				logger.Infof(ctx, "[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)

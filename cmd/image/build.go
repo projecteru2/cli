@@ -40,20 +40,19 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			fmt.Printf("Build failed: %+v\n", err)
 			return err
 		}
 
-		if msg.Error != "" { //nolint
-			fmt.Printf("Build failed: %s\tErrorDetail: %s\n", msg.Error, msg.ErrorDetail)
-			return cli.Exit(msg.ErrorDetail.Message, int(msg.ErrorDetail.Code))
-		} else if msg.Stream != "" {
+		switch {
+		case msg.Error != "":
+			return cli.Exit(msg.GetErrorDetail().GetMessage(), int(msg.GetErrorDetail().GetCode()))
+		case msg.Stream != "":
 			fmt.Print(msg.Stream)
 			if msg.Status == "finished" {
-				progress = map[string]int{}
+				clear(progress)
 				p = 0
 			}
-		} else if msg.Status != "" {
+		case msg.Status != "":
 			if msg.Id == "" {
 				fmt.Println(msg.Status)
 			} else {
@@ -139,9 +138,10 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		if err = yaml.Unmarshal(data, specs); err != nil {
 			return nil, fmt.Errorf("unmarshal specs: %w", err)
 		}
-		for s := range specs.Builds {
-			b := specs.Builds[s]
-			b.StopSignal = stopSignal
+		if stopSignal != "" {
+			for _, b := range specs.Builds {
+				b.StopSignal = stopSignal
+			}
 		}
 	default:
 		buildMethod = corepb.BuildImageOptions_RAW

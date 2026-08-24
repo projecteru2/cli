@@ -3,7 +3,6 @@ package image
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -31,12 +30,10 @@ func (o *listImageOptions) run(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			fmt.Printf("Build failed: %s\n", err.Error())
 			return err
 		}
 
-		if len(msg.Err) > 1 {
-			fmt.Printf("Build failed: %s\n", msg.Err)
+		if msg.Err != "" {
 			return cli.Exit(msg.Err, -1)
 		}
 
