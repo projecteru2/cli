@@ -36,7 +36,7 @@ func cmdNodeSetUp(ctx context.Context, cmd *cli.Command) error {
 
 	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &setNodeUpOptions{

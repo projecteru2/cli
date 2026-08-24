@@ -14,10 +14,10 @@ import (
 
 type listWorkloadsOptions struct {
 	client corepb.CoreRPCClient
-	// must be set
+
 	appname string
 	limit   int64
-	// filters
+
 	entrypoint string
 	nodename   string
 	labels     map[string]string
@@ -102,7 +102,6 @@ func (wf filter) skip(workload *corepb.Workload) bool {
 		return true
 	}
 
-	// Don't skip any workload if there isn't Status.
 	if workload.Status == nil {
 		return false
 	}

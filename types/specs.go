@@ -6,7 +6,7 @@ import (
 	"github.com/projecteru2/core/types"
 )
 
-// Specs correspond to app.yaml in repository
+// Specs is the deploy spec file of an application.
 type Specs struct {
 	Appname        string                `yaml:"appname,omitempty"`
 	Entrypoints    map[string]Entrypoint `yaml:"entrypoints,omitempty,flow"`
@@ -17,13 +17,13 @@ type Specs struct {
 	ExtraHosts     []string              `yaml:"extra_hosts,omitempty,flow"`
 }
 
-// Entrypoint is a facade of old stype `cmd` and new stype `commands`
+// Entrypoint accepts both the legacy `cmd` string and the current `commands` list.
 type Entrypoint struct {
 	types.Entrypoint `yaml:",inline"`
 	Command          string `yaml:"cmd,omitempty"`
 }
 
-// GetCommands .
+// GetCommands returns commands, falling back to splitting the legacy cmd string.
 func (e Entrypoint) GetCommands() []string {
 	if len(e.Commands) > 0 {
 		return e.Commands

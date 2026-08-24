@@ -10,7 +10,7 @@ const (
 	specFileURI = "<spec file uri>"
 )
 
-// Command exports image subcommands
+// Command returns the image command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "image",

@@ -6,7 +6,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// Command exports core subommands
+// Command returns the core command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "core",

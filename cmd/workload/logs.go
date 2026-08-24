@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -64,7 +63,7 @@ func cmdWorkloadLogs(ctx context.Context, cmd *cli.Command) error {
 
 	id := cmd.Args().First()
 	if id == "" {
-		return fmt.Errorf("Workload ID must be specified")
+		return errors.New("workload id must be specified")
 	}
 
 	o := &workloadLogsOptions{

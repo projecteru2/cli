@@ -10,7 +10,7 @@ const (
 	workloadArgsUsage = "workloadID(s)"
 )
 
-// Command exports network subommands
+// Command returns the network command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "network",

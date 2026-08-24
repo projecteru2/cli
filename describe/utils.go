@@ -11,12 +11,10 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Format indicates the output format
-// can be yaml / yml / json or empty as default
-// default will be table
+// Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-// ToNodeChan is to be rewritten using generic
+// ToNodeChan streams nodes over a channel.
 func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
 	ch := make(chan *corepb.Node)
 	go func() {
@@ -28,7 +26,7 @@ func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
 	return ch
 }
 
-// ToNodeResourceChan is to be rewritten using generic
+// ToNodeResourceChan streams node resources over a channel.
 func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeResource {
 	ch := make(chan *corepb.NodeResource)
 	go func() {
@@ -100,8 +98,6 @@ func isYAML() bool {
 	return y == "yaml" || y == "yml"
 }
 
-// actually i need a `zip longest` function
-// like in python itertools
 func toTableRows(rows [][]string) []table.Row {
 	total := len(rows)
 	maxLength := 0

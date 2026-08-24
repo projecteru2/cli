@@ -7,11 +7,10 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// stopOnFirstArg keeps v2 parsing: everything after the first positional
-// argument is the command line to run, not a flag of eru-cli.
+// stopOnFirstArg makes everything after the first positional argument the command to run.
 var stopOnFirstArg = 1
 
-// Command exports lambda subommands
+// Command returns the lambda command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:         "lambda",

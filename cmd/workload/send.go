@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -14,8 +13,7 @@ import (
 )
 
 type sendWorkloadsOptions struct {
-	client corepb.CoreRPCClient
-	// workload ids
+	client  corepb.CoreRPCClient
 	ids     []string
 	content map[string][]byte
 	modes   map[string]*corepb.FileMode
@@ -61,12 +59,12 @@ func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
 
 	content, modes, owners := utils.GenerateFileOptions(cmd)
 	if len(content) == 0 {
-		return fmt.Errorf("files should not be empty")
+		return errors.New("files should not be empty")
 	}
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
 	o := &sendWorkloadsOptions{

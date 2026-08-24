@@ -49,7 +49,7 @@ func cmdNodeSet(ctx context.Context, cmd *cli.Command) error {
 func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.SetNodeOptions, error) {
 	name := cmd.Args().First()
 	if name == "" {
-		return nil, errors.New("Node name must be given")
+		return nil, errors.New("node name must be given")
 	}
 
 	var (
@@ -108,7 +108,7 @@ func generateSetNodeOptions(cmd *cli.Command, _ corepb.CoreRPCClient) (*corepb.S
 			resources[k] = eb
 		}
 	} else {
-		return nil, fmt.Errorf("[generateSetNodeOptions] get extra resources failed %v", err)
+		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
 
 	return &corepb.SetNodeOptions{

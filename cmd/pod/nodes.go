@@ -76,8 +76,6 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 }
 
 func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
-	// filter == all, list all nodes
-	// filter == up, list available nodes only
 	ch, err := o.listChan(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
 		All:             o.filter == all,

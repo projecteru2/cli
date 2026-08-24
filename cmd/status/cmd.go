@@ -6,7 +6,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// Command exports status subommands
+// Command returns the status command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:      "status",

@@ -7,8 +7,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Core function will describe a coreinfo
-// output format can be json or yaml or table
+// Core describes core info as json, yaml or a table.
 func Core(info *corepb.CoreInfo) {
 	switch {
 	case isJSON():
@@ -26,7 +25,7 @@ func describeCore(info *corepb.CoreInfo) {
 	t.AppendHeader(table.Row{"Name", "Description"})
 
 	nameRow := []string{"Version", "Git hash", "Built", "Golang version", "OS/Arch", "Identifier"}
-	// this stupid Revison typo thing is driving my crazy!!!!!!!!!!!!!!!
+	// Revison is misspelled in the core protobuf definition.
 	descRow := []string{info.Version, info.Revison, info.BuildAt, info.GolangVersion, info.OsArch, info.Identifier}
 	rows := [][]string{nameRow, descRow}
 

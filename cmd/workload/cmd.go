@@ -7,8 +7,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// stopOnFirstArg keeps v2 parsing: everything after the first positional
-// argument is the command line to run, not a flag of eru-cli.
+// stopOnFirstArg makes everything after the first positional argument the command to run.
 var stopOnFirstArg = 1
 
 const (
@@ -18,7 +17,7 @@ const (
 	sendArgsUsage     = "path1,path2,...pathn"
 )
 
-// Command exports workload subommands
+// Command returns the workload command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:    "workload",
@@ -556,8 +555,6 @@ func Command() *cli.Command {
 	}
 }
 
-// returns --memory-request, --memory-limit
-// or shortcut --memory to override them
 func memoryOption(cmd *cli.Command) (int64, int64, error) {
 	memRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
 	if err != nil {
@@ -568,7 +565,6 @@ func memoryOption(cmd *cli.Command) (int64, int64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	// if cpu shortcut is set, then override the above
 	if cmd.IsSet("memory") {
 		if memory, err := utils.ParseRAMInHuman(cmd.String("memory")); err == nil {
 			memRequest = memory
@@ -578,8 +574,6 @@ func memoryOption(cmd *cli.Command) (int64, int64, error) {
 	return memRequest, memLimit, nil
 }
 
-// returns --storage-request, --storage-limit
-// or shortcut --storage to override them
 func storageOption(cmd *cli.Command) (int64, int64, error) {
 	storageRequest, err := utils.ParseRAMInHuman(cmd.String("storage-request"))
 	if err != nil {
@@ -590,7 +584,6 @@ func storageOption(cmd *cli.Command) (int64, int64, error) {
 	if err != nil {
 		return 0, 0, err
 	}
-	// if storage shortcut is set, then override the above
 	if cmd.IsSet("storage") {
 		if storage, err := utils.ParseRAMInHuman(cmd.String("storage")); err == nil {
 			storageRequest = storage
@@ -600,12 +593,9 @@ func storageOption(cmd *cli.Command) (int64, int64, error) {
 	return storageRequest, storageLimit, nil
 }
 
-// returns --cpu-request, --cpu-limit
-// or shortcut --cpu to override them
 func cpuOption(cmd *cli.Command) (float64, float64) {
 	cpuRequest := cmd.Float64("cpu-request")
 	cpuLimit := cmd.Float64("cpu-limit")
-	// if cpu shortcut is set, then override the above
 	if cmd.IsSet("cpu") {
 		cpu := cmd.Float64("cpu")
 		cpuRequest = cpu

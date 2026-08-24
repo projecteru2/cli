@@ -80,18 +80,18 @@ func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAn
 
 func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) {
 	if cmd.NArg() <= 0 {
-		return nil, errors.New("[Lambda] no commands")
+		return nil, errors.New("no commands given")
 	}
 
 	network := cmd.String("network")
 
 	memoryRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
 	if err != nil {
-		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
+		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 	memoryLimit, err := utils.ParseRAMInHuman(cmd.String("memory"))
 	if err != nil {
-		return nil, fmt.Errorf("[Lambda] memory wrong %v", err)
+		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
 	content, modes, owners := utils.GenerateFileOptions(cmd)

@@ -6,17 +6,13 @@ import (
 )
 
 var (
-	// NAME .
-	NAME = "eru-cli"
-	// VERSION .
-	VERSION = "unknown"
-	// REVISION .
+	NAME     = "eru-cli"
+	VERSION  = "unknown"
 	REVISION = "HEAD"
-	// BUILTAT .
-	BUILTAT = "now"
+	BUILTAT  = "now"
 )
 
-// String returns string of version information
+// String renders the build identity.
 func String() string {
 	version := ""
 	version += fmt.Sprintf("Version:        %s\n", VERSION)

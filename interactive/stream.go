@@ -28,14 +28,13 @@ type window struct {
 	Col uint16
 }
 
-// Stream is a wrapper for send and recv method
+// Stream carries the send and recv half of an attach stream.
 type Stream struct {
 	Send func(cmd []byte) error
 	Recv func() (*corepb.AttachWorkloadMessage, error)
 }
 
-// HandleStream will handle a stream with send and recv method
-// with or without interactive mode
+// HandleStream pumps an attach stream, optionally putting the terminal in raw mode.
 func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
 	logger := log.WithFunc("interactive.HandleStream")
 
@@ -47,7 +46,6 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 		}
 		defer func() { _ = term.Restore(stdinFd, state) }()
 
-		// capture SIGWINCH and measure window size
 		sigs := make(chan os.Signal, 1)
 		signal.Notify(sigs, syscall.SIGWINCH)
 		ctx, cancel := context.WithCancel(ctx)
@@ -120,7 +118,6 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 			return -1, err
 		}
 
-		// error should be printed and skipped
 		if msg.StdStreamType == corepb.StdStreamType_ERUERROR {
 			logger.Error(ctx, errors.New(string(msg.Data)), "error from eru")
 			continue

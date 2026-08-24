@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -32,7 +31,7 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 		}
 	}
 	if len(ids) == 0 {
-		return fmt.Errorf("no workloads found")
+		return errors.New("no workloads found")
 	}
 	opts := &corepb.DissociateWorkloadOptions{IDs: ids}
 	resp, err := o.client.DissociateWorkload(ctx, opts)
@@ -67,7 +66,7 @@ func cmdWorkloadDissociate(ctx context.Context, cmd *cli.Command) error {
 	nodes := cmd.StringSlice("node")
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 && len(nodes) == 0 {
-		return fmt.Errorf("Workload ID(s) and Node(s) should not be empty")
+		return errors.New("workload id(s) or node(s) should not be empty")
 	}
 
 	o := &dissociateWorkloadsOptions{

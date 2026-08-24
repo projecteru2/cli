@@ -31,7 +31,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	if o.dryRun {
 		r, err := o.client.CalculateCapacity(ctx, o.opts)
 		if err != nil {
-			return fmt.Errorf("[Deploy] Calculate capacity failed %v", err)
+			return fmt.Errorf("calculate capacity: %w", err)
 		}
 		logger.Infof(ctx, "capacity total %v", r.Total)
 		for nodename, capacity := range r.NodeCapacities {
@@ -52,7 +52,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	}
 	resp, err := o.client.ListWorkloads(ctx, lsOpts)
 	if err != nil {
-		return fmt.Errorf("[Deploy] check workload failed %v", err)
+		return fmt.Errorf("check workload: %w", err)
 	}
 	_, err = resp.Recv()
 	if err == io.EOF {
@@ -62,7 +62,6 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	// network is inherited when no network is given
 	networkInherit := len(o.opts.Networks) == 0
 	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
 }
@@ -75,11 +74,11 @@ func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
 
 	for _, key := range []string{"pod", "entry", "image"} {
 		if cmd.String(key) == "" {
-			return fmt.Errorf("[Deploy] no %s given", key)
+			return fmt.Errorf("no %s given", key)
 		}
 	}
 	if strings.Contains(cmd.String("entry"), "_") {
-		return fmt.Errorf("[Deploy] entry can not contain _")
+		return errors.New("entry can not contain _")
 	}
 
 	opts, err := generateDeployOptions(ctx, cmd)
@@ -129,7 +128,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
 	specURI := cmd.Args().First()
 	if specURI == "" {
-		return nil, fmt.Errorf("a specs must be given")
+		return nil, errors.New("a spec must be given")
 	}
 	log.WithFunc("workload.generateDeployOptions").Debugf(ctx, "deploy %s", specURI)
 
@@ -148,19 +147,19 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 
 	memoryRequest, memoryLimit, err := memoryOption(cmd)
 	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
+		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
 	storageRequest, storageLimit, err := storageOption(cmd)
 	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
+		return nil, fmt.Errorf("parse storage: %w", err)
 	}
 
 	cpuRequest, cpuLimit := cpuOption(cmd)
 
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] get specs failed %v", err)
+		return nil, fmt.Errorf("parse specs: %w", err)
 	}
 
 	entry := cmd.String("entry")
@@ -169,7 +168,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
-		return nil, fmt.Errorf("[generateDeployOptions] get entry failed")
+		return nil, fmt.Errorf("entry %s not found in specs", entry)
 	}
 
 	var hook *corepb.HookOptions
@@ -241,7 +240,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 			resources[k] = eb
 		}
 	} else {
-		return nil, fmt.Errorf("[generateDeployOptions] get extra resources failed %v", err)
+		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
 
 	return &corepb.DeployOptions{

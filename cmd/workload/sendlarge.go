@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"sync"
 
@@ -16,8 +15,7 @@ import (
 )
 
 type sendLargeWorkloadsOptions struct {
-	client corepb.CoreRPCClient
-	// workload ids
+	client  corepb.CoreRPCClient
 	ids     []string
 	dst     string
 	content []byte
@@ -95,15 +93,15 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 
 	content, modes, owners := utils.GenerateFileOptions(cmd)
 	if len(content) == 0 {
-		return fmt.Errorf("files should not be empty")
+		return errors.New("files should not be empty")
 	}
 	if len(content) >= 2 {
-		return fmt.Errorf("can not send multiple files at the same time")
+		return errors.New("can not send multiple files at the same time")
 	}
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
 	targetFileName := func() string {

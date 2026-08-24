@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -60,7 +59,7 @@ func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
 	force := cmd.Bool("force")

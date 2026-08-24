@@ -2,7 +2,7 @@ package workload
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -34,7 +34,7 @@ func cmdWorkloadGetStatus(ctx context.Context, cmd *cli.Command) error {
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
 	o := &getWorkloadsStatusOptions{
@@ -86,7 +86,7 @@ func cmdWorkloadSetStatus(ctx context.Context, cmd *cli.Command) error {
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
 	o := &setWorkloadsStatusOptions{

@@ -17,7 +17,7 @@ import (
 
 type capacityPodOptions struct {
 	client    corepb.CoreRPCClient
-	podname   string   // podname
+	podname   string
 	nodenames []string // node white list
 
 	cpu            float64
@@ -56,10 +56,7 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	}
 
 	opts := &corepb.DeployOptions{
-		// resource definitions
 		Resources: resources,
-
-		// deploy options
 		Entrypoint: &corepb.EntrypointOptions{
 			Name: uuid.New().String(),
 		},
@@ -87,22 +84,22 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 
 	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Pod name must be given")
+		return errors.New("pod name must be given")
 	}
 
 	mem, err := utils.ParseRAMInHuman(cmd.String("memory"))
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse memory failed %v", err)
+		return fmt.Errorf("parse memory: %w", err)
 	}
 
 	storage, err := utils.ParseRAMInHuman(cmd.String("storage"))
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse storage failed %v", err)
+		return fmt.Errorf("parse storage: %w", err)
 	}
 
 	extraResourcesMap, err := utils.ParseExtraResources(cmd)
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse extra resources failed %v", err)
+		return fmt.Errorf("parse extra resources: %w", err)
 	}
 
 	o := &capacityPodOptions{

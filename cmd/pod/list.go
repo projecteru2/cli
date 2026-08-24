@@ -18,7 +18,7 @@ type listPodsOptions struct {
 func (o *listPodsOptions) run(ctx context.Context) error {
 	resp, err := o.client.ListPods(ctx, &corepb.Empty{})
 	if err != nil {
-		return fmt.Errorf("[ListPods] send request failed %v", err)
+		return fmt.Errorf("list pods: %w", err)
 	}
 
 	describe.Pods(resp.GetPods()...)

@@ -10,7 +10,7 @@ const (
 	nodeArgsUsage = "node name"
 )
 
-// Command exports node subommands
+// Command returns the node command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "node",

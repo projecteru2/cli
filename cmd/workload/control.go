@@ -3,7 +3,6 @@ package workload
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 
 	corecluster "github.com/projecteru2/core/cluster"
@@ -61,7 +60,7 @@ func createControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return nil, fmt.Errorf("Workload ID(s) should not be empty")
+		return nil, errors.New("workload id(s) should not be empty")
 	}
 
 	return &controlWorkloadsOptions{

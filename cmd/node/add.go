@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net"
 	"os"
@@ -74,7 +75,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 	if ca != "" {
 		f, err := os.ReadFile(ca)
 		if err != nil {
-			return "", "", "", fmt.Errorf("Error during reading %s: %v", ca, err)
+			return "", "", "", fmt.Errorf("read %s: %w", ca, err)
 		}
 		caContent = string(f)
 	}
@@ -89,7 +90,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 	if cert != "" {
 		f, err := os.ReadFile(cert)
 		if err != nil {
-			return "", "", "", fmt.Errorf("Error during reading %s: %v", cert, err)
+			return "", "", "", fmt.Errorf("read %s: %w", cert, err)
 		}
 		certContent = string(f)
 	}
@@ -104,7 +105,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 	if key != "" {
 		f, err := os.ReadFile(key)
 		if err != nil {
-			return "", "", "", fmt.Errorf("Error during reading %s: %v", key, err)
+			return "", "", "", fmt.Errorf("read %s: %w", key, err)
 		}
 		keyContent = string(f)
 	}
@@ -114,7 +115,7 @@ func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string
 func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	podname := cmd.Args().First()
 	if podname == "" {
-		return nil, fmt.Errorf("podname must not be empty")
+		return nil, errors.New("podname must not be empty")
 	}
 
 	nodename := cmd.String("nodename")
@@ -128,7 +129,7 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	if endpoint == "" {
 		ip := getLocalIP()
 		if ip == "" {
-			return nil, fmt.Errorf("unable to get local ip")
+			return nil, errors.New("unable to get local ip")
 		}
 		port := 2376
 		if ca == "" {
@@ -181,7 +182,7 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 			resources[k] = eb
 		}
 	} else {
-		return nil, fmt.Errorf("[generateAddNodeOptions] get extra resources failed %v", err)
+		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
 
 	labels := utils.SplitEquality(cmd.StringSlice("label"))

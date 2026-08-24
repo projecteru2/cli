@@ -40,12 +40,12 @@ func cmdNetworkDisconnect(ctx context.Context, cmd *cli.Command) error {
 
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return errors.New("Workload ID(s) must be specified")
+		return errors.New("workload id(s) must be specified")
 	}
 
 	network := cmd.String("network")
 	if network == "" {
-		return errors.New("Network must be specified")
+		return errors.New("network must be specified")
 	}
 
 	o := &disconnectNetworkOptions{

@@ -37,11 +37,11 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 
 	for _, key := range []string{"entry", "image"} {
 		if cmd.String(key) == "" {
-			return fmt.Errorf("[Replace] no %s given", key)
+			return fmt.Errorf("no %s given", key)
 		}
 	}
 	if strings.Contains(cmd.String("entry"), "_") {
-		return fmt.Errorf("[Replace] entry can not contain _")
+		return errors.New("entry can not contain _")
 	}
 
 	opts, err := generateReplaceOptions(ctx, cmd)
@@ -116,7 +116,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
 	specURI := cmd.Args().First()
 	if specURI == "" {
-		return nil, fmt.Errorf("a specs must be given")
+		return nil, errors.New("a spec must be given")
 	}
 	log.WithFunc("workload.generateReplaceOptions").Debugf(ctx, "replace with %s", specURI)
 
@@ -135,7 +135,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 
 	specs := &types.Specs{}
 	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateReplaceOptions] get specs failed %v", err)
+		return nil, fmt.Errorf("parse specs: %w", err)
 	}
 
 	entry := cmd.String("entry")
@@ -144,7 +144,7 @@ func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.Depl
 	networks := utils.GetNetworks(network)
 	entrypoint, ok := specs.Entrypoints[entry]
 	if !ok {
-		return nil, fmt.Errorf("[generateReplaceOptions] get entry failed")
+		return nil, fmt.Errorf("entry %s not found in specs", entry)
 	}
 
 	var hook *corepb.HookOptions

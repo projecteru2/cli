@@ -14,8 +14,7 @@ import (
 	coreutils "github.com/projecteru2/core/utils"
 )
 
-// Workloads describes a list of Workload
-// output format can be json or yaml or table
+// Workloads describes workloads as json, yaml or a table.
 func Workloads(workloads ...*corepb.Workload) {
 	switch {
 	case isJSON():
@@ -27,7 +26,7 @@ func Workloads(workloads ...*corepb.Workload) {
 	}
 }
 
-// WorkloadsStatistics describes the statistics of the Workloads
+// WorkloadsStatistics describes the aggregated resource use of workloads.
 func WorkloadsStatistics(workloads ...*corepb.Workload) {
 	stat := struct {
 		CPUs    float64
@@ -76,8 +75,7 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 	}
 }
 
-// WorkloadStatuses describes a list of WorkloadStatus
-// output format can be json or yaml or table
+// WorkloadStatuses describes workload statuses as json, yaml or a table.
 func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
 	switch {
 	case isJSON():
@@ -102,7 +100,6 @@ func describeWorkloads(workloads []*corepb.Workload) {
 			t.AppendHeader(header)
 		})
 
-		// networks
 		ns := []string{}
 		if c.Status != nil {
 			for name, ip := range c.Status.Networks {
@@ -168,13 +165,11 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
 
 	for _, s := range workloadStatuses {
-		// networks
 		ns := []string{}
 		for name, ip := range s.Networks {
 			ns = append(ns, fmt.Sprintf("%s: %s", name, ip))
 		}
 
-		// extensions
 		extensions := map[string]string{}
 		if len(s.Extension) != 0 {
 			if err := json.Unmarshal(s.Extension, &extensions); err != nil {

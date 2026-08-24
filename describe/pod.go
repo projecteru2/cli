@@ -20,8 +20,7 @@ type capacityOfPod struct {
 	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
-// Pods describes a list of Pod
-// output format can be json or yaml or table
+// Pods describes pods as json, yaml or a table.
 func Pods(pods ...*corepb.Pod) {
 	switch {
 	case isJSON():
@@ -33,8 +32,7 @@ func Pods(pods ...*corepb.Pod) {
 	}
 }
 
-// PodCapacity describes the capacity remained based on a given specification.
-// output format can be json or yaml or table
+// PodCapacity describes the capacity left for a given specification.
 func PodCapacity(total int64, capacityMap map[string]int64) {
 	capPod := &capacityOfPod{
 		Total: int(total),
@@ -48,7 +46,6 @@ func PodCapacity(total int64, capacityMap map[string]int64) {
 		})
 	}
 
-	// sort by remained capacity in descending order
 	sort.Slice(capPod.Nodes, func(i, j int) bool {
 		return capPod.Nodes[i].Capacity >= capPod.Nodes[j].Capacity
 	})

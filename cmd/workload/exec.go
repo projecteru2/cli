@@ -2,7 +2,7 @@ package workload
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -60,12 +60,12 @@ func cmdWorkloadExec(ctx context.Context, cmd *cli.Command) error {
 
 	id := cmd.Args().First()
 	if id == "" {
-		return fmt.Errorf("Workload ID should not be empty")
+		return errors.New("workload id should not be empty")
 	}
 
 	commands := cmd.Args().Tail()
 	if len(commands) == 0 {
-		return fmt.Errorf("Commands should not be empty")
+		return errors.New("commands should not be empty")
 	}
 
 	o := &execWorkloadOptions{

@@ -13,9 +13,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// ReadAllFiles open each pair in files
-// and returns a map with key as dstfile, value as linux file
-// files: list of srcfile:dstfile:mode:uid:gid
+// ReadAllFiles reads srcfile:dstfile[:mode[:uid:gid]] pairs into a dstfile keyed map.
 func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 	m := map[string]*types.LinuxFile{}
 	for _, file := range files {
@@ -25,7 +23,6 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 
 		switch {
 		case len(ps) >= 5:
-			// srcfile:dstfile:mode:uid:gid
 			var uid, gid int64
 			uid, err = strconv.ParseInt(ps[3], 10, 0)
 			if err != nil {
@@ -39,14 +36,12 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 			f.GID = int(gid)
 			fallthrough
 		case len(ps) >= 3:
-			// srcfile:dstfile:mode
 			f.Mode, err = strconv.ParseInt(ps[2], 8, 0)
 			if err != nil {
 				break
 			}
 			fallthrough
 		case len(ps) >= 2:
-			// srcfile:dstfile
 			f.Content, err = os.ReadFile(ps[0])
 			if err != nil {
 				break
@@ -57,7 +52,7 @@ func ReadAllFiles(files []string) map[string]*types.LinuxFile {
 	return m
 }
 
-// GenerateFileOptions returns file options
+// GenerateFileOptions reads the --file pairs into data, mode and owner maps.
 func GenerateFileOptions(cmd *cli.Command) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
 	data := map[string][]byte{}
 	modes := map[string]*corepb.FileMode{}
@@ -73,9 +68,7 @@ func GenerateFileOptions(cmd *cli.Command) (map[string][]byte, map[string]*corep
 	return data, modes, owners
 }
 
-// SplitFiles transfers a list of
-// src:dst to
-// {src: dst}
+// SplitFiles turns a list of src:dst strings into a map.
 func SplitFiles(files []string) map[string]string {
 	ret := map[string]string{}
 	for _, f := range files {
@@ -88,7 +81,7 @@ func SplitFiles(files []string) map[string]string {
 	return ret
 }
 
-// GetSpecFromRemote gets specs from a remote position
+// GetSpecFromRemote fetches a spec over HTTP.
 func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {

@@ -19,11 +19,9 @@ import (
 )
 
 type copyWorkloadsOptions struct {
-	client corepb.CoreRPCClient
-	// where to store copied files
-	dir string
-	// map workloadID -> list of path of files
-	sources map[string][]string
+	client  corepb.CoreRPCClient
+	dir     string
+	sources map[string][]string // workload ID -> paths to copy
 }
 
 func (o *copyWorkloadsOptions) run(ctx context.Context) error {
@@ -102,7 +100,7 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	if len(sources) == 0 {
-		return fmt.Errorf("source files should not be empty")
+		return errors.New("source files should not be empty")
 	}
 
 	o := &copyWorkloadsOptions{

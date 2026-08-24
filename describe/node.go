@@ -16,8 +16,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Nodes describes a list of Node
-// output format can be json or yaml or table
+// Nodes describes nodes as json, yaml or a table.
 func Nodes(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
@@ -29,7 +28,7 @@ func Nodes(nodes <-chan *corepb.Node, stream bool) {
 	}
 }
 
-// NodesWithInfo describes a list of Node with their info
+// NodesWithInfo describes nodes together with their engine info.
 func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
@@ -41,8 +40,7 @@ func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 	}
 }
 
-// NodeResources describes a list of NodeResource
-// output format can be json or yaml or table
+// NodeResources describes node resource usage as json, yaml or a table.
 func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
@@ -54,8 +52,7 @@ func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, str
 	}
 }
 
-// NodeStatusMessage describes NodeStatusStreamMessage
-// in json / yaml, or just a line in stdout
+// NodeStatusMessage describes node status messages as json, yaml or log lines.
 func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
 	switch {
 	case isJSON():

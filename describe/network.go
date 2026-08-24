@@ -8,8 +8,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Networks describes a list of Network
-// output format can be json or yaml or table
+// Networks describes networks as json, yaml or a table.
 func Networks(networks ...*corepb.Network) {
 	switch {
 	case isJSON():

@@ -18,8 +18,7 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// progressRewrite moves the cursor up to a previously printed layer line,
-// rewrites it and returns, so docker pull progress updates in place.
+// progressRewrite rewrites an already printed layer line in place.
 const progressRewrite = "\x1b7\x1b[%dA\r\x1b[2K%s\x1b8"
 
 type buildImageOptions struct {
@@ -33,7 +32,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	progess := map[string]int{}
+	progress := map[string]int{}
 	p := 0
 	for {
 		msg, err := resp.Recv()
@@ -51,7 +50,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 		} else if msg.Stream != "" {
 			fmt.Print(msg.Stream)
 			if msg.Status == "finished" {
-				progess = map[string]int{}
+				progress = map[string]int{}
 				p = 0
 			}
 		} else if msg.Status != "" {
@@ -59,8 +58,8 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 				fmt.Println(msg.Status)
 			} else {
 				data := fmt.Sprintf("%s: %s %s", msg.Id, msg.Status, msg.Progress)
-				if pos, ok := progess[msg.Id]; !ok {
-					progess[msg.Id] = p
+				if pos, ok := progress[msg.Id]; !ok {
+					progress[msg.Id] = p
 					fmt.Println(data)
 					p++
 				} else if term.IsTerminal(int(os.Stdout.Fd())) {
@@ -95,13 +94,13 @@ func cmdImageBuild(ctx context.Context, cmd *cli.Command) error {
 
 func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildImageOptions, error) {
 	if cmd.NArg() != 1 {
-		return nil, errors.New("[Build] no spec")
+		return nil, errors.New("no spec given")
 	}
 
 	raw := cmd.Bool("raw")
 	exist := cmd.Bool("exist")
 	if raw && exist {
-		return nil, errors.New("[Build] mutually exclusive flag: raw or exist")
+		return nil, errors.New("--raw and --exist are mutually exclusive")
 	}
 	stopSignal := cmd.String("stop-signal")
 
@@ -130,15 +129,15 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 			data, err = os.ReadFile(specURI)
 		}
 		if err != nil {
-			return nil, fmt.Errorf("[Build] read spec failed %v", err)
+			return nil, fmt.Errorf("read spec: %w", err)
 		}
 		data, err = utils.EnvParser(data)
 		if err != nil {
-			return nil, fmt.Errorf("[Build] parse env failed %v", err)
+			return nil, fmt.Errorf("parse env: %w", err)
 		}
 		specs = &corepb.Builds{}
 		if err = yaml.Unmarshal(data, specs); err != nil {
-			return nil, fmt.Errorf("[Build] unmarshal specs failed %v", err)
+			return nil, fmt.Errorf("unmarshal specs: %w", err)
 		}
 		for s := range specs.Builds {
 			b := specs.Builds[s]
@@ -149,17 +148,17 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		path := cmd.Args().First()
 		data, err := dockerengine.CreateTarStream(path)
 		if err != nil {
-			return nil, errors.New("[Build] no path")
+			return nil, errors.New("build path must be given")
 		}
 		tar, err = io.ReadAll(data)
 		if err != nil {
-			return nil, errors.New("[Build] create tar stream failed")
+			return nil, errors.New("create tar stream failed")
 		}
 	}
 
 	name := cmd.String("name")
 	if name == "" {
-		return nil, errors.New("[Build] need name")
+		return nil, errors.New("image name must be given")
 	}
 	user := cmd.String("user")
 	uid := int32(cmd.Int("uid"))

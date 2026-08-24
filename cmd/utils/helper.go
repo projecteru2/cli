@@ -28,8 +28,7 @@ func GetNetworks(network string) map[string]string {
 	return networks
 }
 
-// ParseRAMInHuman returns int value in bytes of a human readable string
-// e.g. 100KB -> 102400
+// ParseRAMInHuman converts a human readable size such as 100KB into bytes.
 func ParseRAMInHuman(ram string) (int64, error) {
 	if ram == "" {
 		return 0, nil
@@ -46,9 +45,7 @@ func ParseRAMInHuman(ram string) (int64, error) {
 	return ramInBytes * flag, nil
 }
 
-// SplitEquality transfers a list of
-// aaa=bbb, xxx=yyy into
-// {aaa:bbb, xxx:yyy}
+// SplitEquality turns a list of key=value strings into a map.
 func SplitEquality(elements []string) map[string]string {
 	r := map[string]string{}
 	for _, e := range elements {
@@ -61,7 +58,7 @@ func SplitEquality(elements []string) map[string]string {
 	return r
 }
 
-// EnvParser .
+// EnvParser expands Go template references to environment variables in b.
 func EnvParser(b []byte) ([]byte, error) {
 	tmpl, err := template.New("tmpl").Option("missingkey=default").Parse(string(b))
 	if err != nil {
@@ -72,8 +69,7 @@ func EnvParser(b []byte) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-// ExitCoder wraps a cli Action function into
-// a function with ExitCoder interface
+// ExitCoder turns an action error into a cli.ExitCoder.
 func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
 	return func(ctx context.Context, cmd *cli.Command) error {
 		if err := f(ctx, cmd); err != nil {
@@ -87,13 +83,12 @@ func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
 	}
 }
 
-// GetHostname .
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname
 }
 
-// ParseExtraResources .
+// ParseExtraResources decodes the --extra-resources JSON object.
 func ParseExtraResources(cmd *cli.Command) (map[string]any, error) {
 	var err error
 	extraResourcesMap := make(map[string]any)

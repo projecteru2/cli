@@ -56,7 +56,7 @@ func cmdWorkloadRealloc(ctx context.Context, cmd *cli.Command) error {
 func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	id := cmd.Args().First()
 	if id == "" {
-		return nil, errors.New("Workload ID must be given")
+		return nil, errors.New("workload id must be given")
 	}
 
 	memoryRequest, memoryLimit, err := memoryOption(cmd)
@@ -129,7 +129,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 			resources[k] = eb
 		}
 	} else {
-		return nil, fmt.Errorf("[generateReallocOptions] get extra resources failed %v", err)
+		return nil, fmt.Errorf("parse extra resources: %w", err)
 	}
 
 	return &corepb.ReallocOptions{

@@ -10,7 +10,7 @@ const (
 	podArgsUsage = "pod name"
 )
 
-// Command exports pod subommands
+// Command returns the pod command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "pod",

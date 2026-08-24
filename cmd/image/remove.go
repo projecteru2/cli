@@ -63,7 +63,7 @@ func cmdImageClean(ctx context.Context, cmd *cli.Command) error {
 
 	images := cmd.Args().Slice()
 	if len(images) == 0 {
-		return errors.New("Images must be specified")
+		return errors.New("images must be specified")
 	}
 
 	o := &cleanImageOptions{
