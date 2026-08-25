@@ -14,7 +14,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 	"golang.org/x/term"
-	"gopkg.in/yaml.v3"
+	"sigs.k8s.io/yaml"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )
