@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -13,7 +14,6 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
-	"text/template"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -24,6 +24,8 @@ var (
 	exitCode     = []byte("[exitcode] ")
 	winchCommand = []byte{0x80}
 )
+
+type messageWriter func(io.Writer, *corepb.AttachWorkloadMessage) error
 
 type window struct {
 	Row uint16
@@ -57,16 +59,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 		defer attachTerminal(ctx, iStream)()
 	}
 
-	outputTemplate := `{{printf "%s" .Data}}`
-	if printWorkloadID {
-		outputTemplate = `[{{.WorkloadId}}] {{printf "%s" .Data}}`
-	}
-
-	outputT, err := template.New("output").Parse(outputTemplate)
-	if err != nil {
-		return -1, err
-	}
-
+	write := outputWriter(printWorkloadID)
 	code, exited := 0, 0
 	for {
 		msg, err := iStream.Recv()
@@ -101,9 +94,22 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
 			outStream = os.Stdout
 		}
-		if err := outputT.Execute(outStream, msg); err != nil {
-			logger.Error(ctx, err, "render template")
+		if err := write(outStream, msg); err != nil {
+			logger.Error(ctx, err, "write output")
 		}
+	}
+}
+
+func outputWriter(printWorkloadID bool) messageWriter {
+	if printWorkloadID {
+		return func(w io.Writer, msg *corepb.AttachWorkloadMessage) error {
+			_, err := fmt.Fprintf(w, "[%s] %s", msg.WorkloadId, msg.Data)
+			return err
+		}
+	}
+	return func(w io.Writer, msg *corepb.AttachWorkloadMessage) error {
+		_, err := w.Write(msg.Data)
+		return err
 	}
 }
 

@@ -112,13 +112,14 @@ func (f filter) skip(workload *corepb.Workload) bool {
 		return true
 	}
 
-	if workload.Status == nil {
+	if len(f.ips) == 0 && len(f.skipIPs) == 0 || workload.Status == nil {
 		return false
 	}
 
-	ips := []string{}
+	ips := make([]string, 0, len(workload.Status.Networks))
 	for _, cidr := range workload.Status.Networks {
-		ips = append(ips, strings.Split(cidr, "/")[0])
+		ip, _, _ := strings.Cut(cidr, "/")
+		ips = append(ips, ip)
 	}
 
 	return (len(f.ips) > 0 && !hasIntersection(f.ips, ips)) ||
