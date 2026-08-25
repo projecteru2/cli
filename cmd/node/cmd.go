@@ -210,7 +210,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "endpoint",
-						Usage: "endpoint of docker server",
+						Usage: "endpoint of the node, the scheme picks the engine: tcp://, unix://, process://, containerd://, cocoon://, mock://",
 						Value: "",
 					},
 					&cli.StringFlag{

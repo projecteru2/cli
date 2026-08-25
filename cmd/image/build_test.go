@@ -95,6 +95,24 @@ func TestGenerateBuildOptionsStopSignalFlagWins(t *testing.T) {
 	}
 }
 
+func TestGenerateBuildOptionsNodeFilter(t *testing.T) {
+	filter := runBuildCommand(t, []string{
+		"image", "build", "--name", "app",
+		"--pod", "buildpod", "--node", "n1", "--node", "n2", "--label", "role=build",
+		writeBuildSpec(t),
+	}).GetNodeFilter()
+
+	if got := filter.GetPodname(); got != "buildpod" {
+		t.Errorf("podname: got %q, want %q", got, "buildpod")
+	}
+	if got := filter.GetIncludes(); !slices.Equal(got, []string{"n1", "n2"}) {
+		t.Errorf("includes: got %v, want [n1 n2]", got)
+	}
+	if got := filter.GetLabels(); !maps.Equal(got, map[string]string{"role": "build"}) {
+		t.Errorf("labels: got %v, want map[role:build]", got)
+	}
+}
+
 func writeBuildSpec(t *testing.T) string {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "builds.yaml")

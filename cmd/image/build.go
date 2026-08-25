@@ -178,5 +178,10 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		Tar:         tar,
 		ExistId:     existID,
 		Platform:    cmd.String("platform"),
+		NodeFilter: &corepb.NodeFilter{
+			Podname:  cmd.String(flagPod),
+			Includes: cmd.StringSlice(flagNode),
+			Labels:   utils.SplitEquality(cmd.StringSlice(flagLabel)),
+		},
 	}, nil
 }

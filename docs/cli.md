@@ -85,6 +85,23 @@ eru-cli pod capacity --cpu 2 --memory 1G --storage 10G <pod>
 | `node set-status` | `<node name>` | `--ttl 180`, `--interval` |
 | `node watch-status` | | |
 
+The scheme of `--endpoint` picks the engine core drives the node with:
+
+| Endpoint | Engine | What the node needs |
+|---|---|---|
+| `tcp://<host>:<port>` | docker | A docker daemon listening on that address, with the TLS material given by `--ca`/`--cert`/`--key` when it requires TLS. |
+| `unix://<path>` | docker | A docker daemon on that local socket; TLS flags are ignored. |
+| `process://[user@]host[:port]` | process | `sshd`, systemd on cgroup v2 and `oras`; workloads are transient systemd units. |
+| `containerd://[user@]host[:port]` | containerd | `sshd` and a running containerd. |
+| `cocoon://[user@]host[:port]` | cocoon | `sshd` and the cocoon runtime. |
+| `mock://` | fake | Nothing — it answers every operation itself, for tests and dry runs. |
+
+`process://`, `containerd://` and `cocoon://` reach the node over SSH with the key pair in core's
+`ssh` configuration, so that public key has to be authorized for the endpoint's user — which
+defaults to core's configured one when the endpoint omits it. Image builds run on docker nodes,
+picked by core's `build.node_filter`. The engines themselves are documented in core's
+[engine reference](https://projecteru2.github.io/core/engines).
+
 When `--endpoint` is omitted, `node add` derives `tcp://<local ipv4>:2376` — or port `2375` when no
 CA certificate is found — and looks for TLS material under `/etc/docker/tls/`.
 
@@ -140,7 +157,7 @@ skipped. `workload sendlarge` rejects an empty source file.
 
 | Command | Arguments | Notable options |
 |---|---|---|
-| `image build` | `<spec file uri>` | `--name` (required), `--tag`, `--raw`, `--exist`, `--user`, `--uid`, `--stop-signal`, `--platform` |
+| `image build` | `<spec file uri>` | `--name` (required), `--tag`, `--raw`, `--exist`, `--user`, `--uid`, `--stop-signal`, `--platform`, `--pod`, `--node`, `--label` |
 | `image list`, `image ls` | | `--pod` or `--node` (one is required), `--filter` |
 | `image cache` | `<image>...` | `--pod`, `--node` |
 | `image remove` | `<image>...` | `--pod`, `--node`, `--prune` |
@@ -149,6 +166,13 @@ skipped. `workload sendlarge` rejects an empty source file.
 [Spec formats](specs.md)) and core clones the repository itself. With `--raw` the argument is a
 local directory that is streamed to core as a tar. With `--exist` the argument is the id of an
 existing workload that is committed into an image. `--raw` and `--exist` are mutually exclusive.
+
+`--pod`, `--node` (repeatable) and `--label a=1` (repeatable) narrow the nodes core may build on.
+They only ever narrow: core starts from the `build.node_filter` of its own configuration and keeps
+what the request also allows. Requested node names outside the configured list are dropped as long
+as one survives; a request that selects nothing at all is refused — another pod than the configured
+one, only unconfigured node names, or a label value contradicting a configured one. Omitting all
+three builds on core's configured build nodes.
 
 ## network
 
