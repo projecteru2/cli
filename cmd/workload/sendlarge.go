@@ -2,21 +2,23 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
+	"maps"
+	"slices"
 	"sync"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
+	"github.com/urfave/cli/v3"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type sendLargeWorkloadsOptions struct {
-	client corepb.CoreRPCClient
-	// workload ids
+	client  corepb.CoreRPCClient
 	ids     []string
 	dst     string
 	content []byte
@@ -25,98 +27,86 @@ type sendLargeWorkloadsOptions struct {
 }
 
 func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.sendLargeWorkloadsOptions.run")
 	stream, err := o.client.SendLargeFile(ctx)
 	if err != nil {
-		logrus.Errorf("[SendLarge] Failed send %s", o.dst)
+		logger.Errorf(ctx, err, "send %s failed", o.dst)
 		return err
 	}
 
+	var recvErr error
 	wg := sync.WaitGroup{}
-	wg.Add(1)
 	defer wg.Wait()
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		for {
 			msg, err := stream.Recv()
-			if err == io.EOF {
-				break
+			if errors.Is(err, io.EOF) {
+				return
 			}
 			if err != nil {
+				recvErr = errors.Join(recvErr, err)
 				return
 			}
 
 			if msg.Error != "" {
-				logrus.Errorf("[SendLarge] Failed send %s to %s", msg.Path, msg.Id)
-			} else {
-				logrus.Infof("[SendLarge] Send %s to %s success", msg.Path, msg.Id)
+				recvErr = errors.Join(recvErr, fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error))
+				continue
 			}
+			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 		}
-	}()
+	})
 
-	fileOptions := o.toSendLargeFileChunks()
-	for _, chunk := range fileOptions {
-		err := stream.Send(chunk)
-		if err != nil {
-			logrus.Errorf("[SendLarge] Failed send %s", chunk.Dst)
-			return err
-		}
-	}
-	return stream.CloseSend()
-}
-
-func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {
-	maxChunkSize := types.SendLargeFileChunkSize
-	ret := make([]*corepb.FileOptions, 0)
-	for idx := 0; idx < len(o.content); idx += maxChunkSize {
-		fileOption := &corepb.FileOptions{
+	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
+		if err := stream.Send(&corepb.FileOptions{
 			Ids:   o.ids,
 			Dst:   o.dst,
 			Size:  int64(len(o.content)),
 			Mode:  o.modes,
 			Owner: o.owners,
+			Chunk: chunk,
+		}); err != nil {
+			logger.Errorf(ctx, err, "send %s failed", o.dst)
+			return err
 		}
-		if idx+maxChunkSize > len(o.content) {
-			fileOption.Chunk = o.content[idx:]
-		} else {
-			fileOption.Chunk = o.content[idx : idx+maxChunkSize]
-		}
-		ret = append(ret, fileOption)
 	}
-	return ret
+	if err := stream.CloseSend(); err != nil {
+		return err
+	}
+
+	wg.Wait()
+	return recvErr
 }
 
-func cmdWorkloadSendLarge(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	content, modes, owners := utils.GenerateFileOptions(c)
-	if len(content) == 0 {
-		return fmt.Errorf("files should not be empty")
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return err
 	}
-	if len(content) >= 2 {
-		return fmt.Errorf("can not send multiple files at the same time")
+	if len(files.Data) == 0 {
+		return errors.New("files should not be empty")
+	}
+	if len(files.Data) >= 2 {
+		return errors.New("can not send multiple files at the same time")
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
-	targetFileName := func() string {
-		for key := range content {
-			return key
-		}
-		return ""
-	}()
+	dst := slices.Collect(maps.Keys(files.Data))[0]
 	o := &sendLargeWorkloadsOptions{
 		client:  client,
 		ids:     ids,
-		dst:     targetFileName,
-		content: content[targetFileName],
-		modes:   modes[targetFileName],
-		owners:  owners[targetFileName],
+		dst:     dst,
+		content: files.Data[dst],
+		modes:   files.Modes[dst],
+		owners:  files.Owners[dst],
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

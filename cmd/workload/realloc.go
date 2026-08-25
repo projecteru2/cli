@@ -2,17 +2,15 @@ package workload
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"errors"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
+	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type reallocWorkloadsOptions struct {
@@ -26,21 +24,22 @@ func (o *reallocWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	logger := log.WithFunc("workload.reallocWorkloadsOptions.run")
 	if resp.Error != "" {
-		logrus.Infof("[Realloc] Failed by %+v", resp.Error)
+		logger.Error(ctx, errors.New(resp.Error), "realloc failed")
 	} else {
-		logrus.Info("[Realloc] Success")
+		logger.Info(ctx, "realloc success")
 	}
 	return nil
 }
 
-func cmdWorkloadRealloc(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadRealloc(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateReallocOptions(c)
+	opts, err := generateReallocOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -49,86 +48,66 @@ func cmdWorkloadRealloc(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func generateReallocOptions(c *cli.Context) (*corepb.ReallocOptions, error) {
-	id := c.Args().First()
+func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
+	id := cmd.Args().First()
 	if id == "" {
-		return nil, errors.New("Workload ID must be given")
+		return nil, errors.New("workload id must be given")
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(c)
+	memoryRequest, memoryLimit, err := memoryOption(cmd)
 	if err != nil {
 		return nil, err
 	}
 
 	var volumesRequest, volumesLimit []string
-	if v := c.String("volumes-request"); v != "" {
+	if v := cmd.String(flagVolumesRequest); v != "" {
 		volumesRequest = strings.Split(v, ",")
 	}
-	if v := c.String("volumes-limit"); v != "" {
+	if v := cmd.String(flagVolumesLimit); v != "" {
 		volumesLimit = strings.Split(v, ",")
 	}
 
-	bindCPU := c.Bool("cpu-bind")
-	unbindCPU := c.Bool("cpu-unbind")
+	bindCPU := cmd.Bool("cpu-bind")
+	unbindCPU := cmd.Bool("cpu-unbind")
 	if bindCPU && unbindCPU {
 		return nil, errors.New("cpu-bind and cpu-unbind can not both be set")
 	}
-	bindCPUOpt := corepb.TriOpt_KEEP
-	if bindCPU {
-		bindCPUOpt = corepb.TriOpt_TRUE
-	}
-	if unbindCPU {
-		bindCPUOpt = corepb.TriOpt_FALSE
-	}
-
-	storageRequest, storageLimit, err := storageOption(c)
+	storageRequest, storageLimit, err := storageOption(cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	cpuRequest, cpuLimit := cpuOption(c)
+	cpuRequest, cpuLimit := cpuOption(cmd)
 
 	cpumem := resourcetypes.RawParams{
-		"cpu-request":    cpuRequest,
-		"cpu-limit":      cpuLimit,
-		"memory-request": memoryRequest,
-		"memory-limit":   memoryLimit,
+		flagCPURequest:    cpuRequest,
+		flagCPULimit:      cpuLimit,
+		flagMemoryRequest: memoryRequest,
+		flagMemoryLimit:   memoryLimit,
 	}
 	storage := resourcetypes.RawParams{
-		"storage-request": storageRequest,
-		"storage-limit":   storageLimit,
-		"volumes-request": volumesRequest,
-		"volumes-limit":   volumesLimit,
+		flagStorageRequest: storageRequest,
+		flagStorageLimit:   storageLimit,
+		flagVolumesRequest: volumesRequest,
+		flagVolumesLimit:   volumesLimit,
 	}
 
-	switch bindCPUOpt {
-	case corepb.TriOpt_KEEP:
-		cpumem["keep-cpu-bind"] = true
-	case corepb.TriOpt_TRUE:
+	switch {
+	case bindCPU:
 		cpumem["cpu-bind"] = true
+	case !unbindCPU:
+		cpumem["keep-cpu-bind"] = true
 	}
 
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-
-	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
-	}
-
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
-		for k, v := range extraResourcesMap {
-			if _, ok := resources[k]; ok {
-				continue
-			}
-			eb, _ := json.Marshal(v)
-			resources[k] = eb
-		}
-	} else {
-		return nil, fmt.Errorf("[generateReallocOptions] get extra resources failed %v", err)
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &corepb.ReallocOptions{

@@ -5,12 +5,10 @@ import (
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
-
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Images describes a list of images
-// output format can be json or yaml or table
+// Images describes images as json, yaml or a table.
 func Images(msgs ...*corepb.ListImageMessage) {
 	switch {
 	case isJSON():

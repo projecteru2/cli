@@ -1,0 +1,10 @@
+description: "Eru command-line client: manages pods, nodes, workloads, images, networks and lambdas on eru core over gRPC."
+homepage: https://projecteru2.github.io/cli/
+topics:
+  - eru
+  - golang
+  - cli
+  - grpc
+  - orchestration
+  - docker
+  - virtual-machine

@@ -1,21 +1,32 @@
 package pod
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 const (
 	podArgsUsage = "pod name"
+
+	up   = "up"
+	down = "down"
+	all  = "all"
+
+	flagCPU     = "cpu"
+	flagMemory  = "memory"
+	flagStorage = "storage"
+
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
 )
 
-// Command exports pod subommands
+// Command returns the pod command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "pod",
 		Usage: "pod commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:   "list",
 				Usage:  "list all pods",
@@ -50,7 +61,7 @@ func Command() *cli.Command {
 						Name:    "filter",
 						Aliases: []string{"f"},
 						Usage:   "filter resource value, can be cpu/memory/storage/volume </<=/>/>=/== 40% or 0.4",
-						Value:   "all",
+						Value:   all,
 					},
 					&cli.BoolFlag{
 						Name:  "stream",
@@ -65,19 +76,19 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdPodCapacity),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
-						Name:     "cpu",
+						Name:     flagCPU,
 						Aliases:  []string{"c"},
 						Usage:    "how many cpu to occupy",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "memory",
+						Name:     flagMemory,
 						Aliases:  []string{"m", "mem"},
 						Usage:    "how much memory to occupy like 1M or 1G, support K, M, G, T",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "storage",
+						Name:     flagStorage,
 						Aliases:  []string{"s"},
 						Usage:    "how much storage to occupy like 1M or 1G, support K, M, G, T",
 						Required: true,
@@ -89,7 +100,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringSliceFlag{
 						Name:     "node",
-						Aliases:  []string{"node", "n"},
+						Aliases:  []string{"n"},
 						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
 						Required: false,
 					},
@@ -106,16 +117,11 @@ func Command() *cli.Command {
 				ArgsUsage: podArgsUsage,
 				Action:    utils.ExitCoder(cmdPodListNodes),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:  "all",
-						Usage: "DEPRECATED, use --filter instead",
-						Value: false,
-					},
 					&cli.StringFlag{
 						Name:    "filter",
 						Aliases: []string{"f"},
 						Usage:   "filter node status, can be up/down/all",
-						Value:   "all",
+						Value:   all,
 					},
 					&cli.StringSliceFlag{
 						Name:  "label",

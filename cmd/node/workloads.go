@@ -2,13 +2,13 @@ package node
 
 import (
 	"context"
+	"errors"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
 type listNodeWorkloadsOptions struct {
@@ -30,21 +30,21 @@ func (o *listNodeWorkloadsOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdNodeListWorkloads(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeListWorkloads(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &listNodeWorkloadsOptions{
 		client: client,
 		name:   name,
-		labels: utils.SplitEquality(c.StringSlice("label")),
+		labels: utils.SplitEquality(cmd.StringSlice(flagLabel)),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

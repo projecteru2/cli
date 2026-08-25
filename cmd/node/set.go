@@ -2,16 +2,14 @@ package node
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
+	"errors"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type setNodeOptions struct {
@@ -24,17 +22,17 @@ func (o *setNodeOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("[SetNode] set node %s success", o.opts.Nodename)
+	log.WithFunc("node.setNodeOptions.run").Infof(ctx, "set node %s success", o.opts.Nodename)
 	return nil
 }
 
-func cmdNodeSet(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSet(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateSetNodeOptions(c, client)
+	opts, err := generateSetNodeOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -43,20 +41,16 @@ func cmdNodeSet(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.SetNodeOptions, error) {
-	name := c.Args().First()
+func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
+	name := cmd.Args().First()
 	if name == "" {
-		return nil, errors.New("Node name must be given")
+		return nil, errors.New("node name must be given")
 	}
 
-	var (
-		ca, cert, key string
-		err           error
-	)
-	ca, cert, key, err = readTLSConfigs(c)
+	ca, cert, key, err := readTLSConfigs(cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -64,60 +58,46 @@ func generateSetNodeOptions(c *cli.Context, _ corepb.CoreRPCClient) (*corepb.Set
 	cpumem := resourcetypes.RawParams{}
 	storage := resourcetypes.RawParams{}
 
-	if c.IsSet("cpu") {
-		cpumem["cpu"] = c.String("cpu")
+	if cmd.IsSet("cpu") {
+		cpumem["cpu"] = cmd.String("cpu")
 	}
-	if c.IsSet("share") {
-		cpumem["share"] = c.String("share")
+	if cmd.IsSet("memory") {
+		cpumem["memory"] = cmd.String("memory")
 	}
-	if c.IsSet("memory") {
-		cpumem["memory"] = c.String("memory")
+	if cmd.IsSet("numa-cpu") {
+		cpumem["numa-cpu"] = cmd.StringSlice("numa-cpu")
 	}
-	if c.IsSet("numa-cpu") {
-		cpumem["numa-cpu"] = c.StringSlice("numa-cpu")
+	if cmd.IsSet("numa-memory") {
+		cpumem["numa-memory"] = cmd.StringSlice("numa-memory")
 	}
-	if c.IsSet("numa-memory") {
-		cpumem["numa-memory"] = c.StringSlice("numa-memory")
+	if cmd.IsSet("disk") {
+		storage["disks"] = cmd.StringSlice("disk")
 	}
-	if c.IsSet("disk") {
-		storage["disks"] = c.StringSlice("disk")
+	if cmd.IsSet(flagStorage) {
+		storage[flagStorage] = cmd.String(flagStorage)
 	}
-	if c.IsSet("storage") {
-		storage["storage"] = c.String("storage")
+	if cmd.IsSet("volume") {
+		storage["volumes"] = cmd.StringSlice("volume")
 	}
-	if c.IsSet("volume") {
-		storage["volumes"] = c.StringSlice("volume")
-	}
-	if c.IsSet("rm-disk") {
-		storage["rm-disks"] = c.String("rm-disk")
+	if cmd.IsSet("rm-disk") {
+		storage["rm-disks"] = cmd.String("rm-disk")
 	}
 
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
-	}
-
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
-		for k, v := range extraResourcesMap {
-			if _, ok := resources[k]; ok {
-				continue
-			}
-			eb, _ := json.Marshal(v)
-			resources[k] = eb
-		}
-	} else {
-		return nil, fmt.Errorf("[generateSetNodeOptions] get extra resources failed %v", err)
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
 	}
 
 	return &corepb.SetNodeOptions{
 		Nodename:      name,
 		Resources:     resources,
-		Labels:        utils.SplitEquality(c.StringSlice("label")),
-		WorkloadsDown: c.Bool("mark-workloads-down"),
-		Endpoint:      c.String("endpoint"),
-		Delta:         c.Bool("delta"),
+		Labels:        utils.SplitEquality(cmd.StringSlice(flagLabel)),
+		WorkloadsDown: cmd.Bool("mark-workloads-down"),
+		Endpoint:      cmd.String("endpoint"),
+		Delta:         cmd.Bool("delta"),
 		Ca:            ca,
 		Cert:          cert,
 		Key:           key,

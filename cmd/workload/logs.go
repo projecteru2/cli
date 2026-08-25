@@ -2,15 +2,15 @@ package workload
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type workloadLogsOptions struct {
@@ -23,6 +23,7 @@ type workloadLogsOptions struct {
 }
 
 func (o *workloadLogsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.workloadLogsOptions.run")
 	opts := &corepb.LogStreamOptions{
 		Id:     o.id,
 		Tail:   o.tail,
@@ -37,7 +38,7 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -45,33 +46,33 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logrus.Errorf("[GetWorkloadLog] Failed %s %s", coreutils.ShortID(msg.Id), msg.Error)
+			logger.Errorf(ctx, errors.New(msg.Error), "get log of %s failed", coreutils.ShortID(msg.Id))
 			continue
 		}
 
-		logrus.Infof("[GetWorkloadLog] %s", string(msg.Data))
+		logger.Info(ctx, string(msg.Data))
 	}
 	return nil
 }
 
-func cmdWorkloadLogs(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadLogs(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	id := c.Args().First()
+	id := cmd.Args().First()
 	if id == "" {
-		return fmt.Errorf("Workload ID must be specified")
+		return errors.New("workload id must be specified")
 	}
 
 	o := &workloadLogsOptions{
 		client: client,
 		id:     id,
-		tail:   c.String("tail"),
-		since:  c.String("since"),
-		until:  c.String("until"),
-		follow: c.Bool("follow"),
+		tail:   cmd.String("tail"),
+		since:  cmd.String("since"),
+		until:  cmd.String("until"),
+		follow: cmd.Bool("follow"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

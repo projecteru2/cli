@@ -6,23 +6,16 @@ import (
 )
 
 var (
-	// NAME .
-	NAME = "cli"
-	// VERSION .
-	VERSION = "unknown"
-	// REVISION .
+	NAME     = "eru-cli"
+	VERSION  = "unknown"
 	REVISION = "HEAD"
-	// BUILTAT .
-	BUILTAT = "now"
+	BUILTAT  = "now"
 )
 
-// String returns string of version information
+// String renders the build identity.
 func String() string {
-	version := ""
-	version += fmt.Sprintf("Version:        %s\n", VERSION)
-	version += fmt.Sprintf("Git hash:       %s\n", REVISION)
-	version += fmt.Sprintf("Built:          %s\n", BUILTAT)
-	version += fmt.Sprintf("Golang version: %s\n", runtime.Version())
-	version += fmt.Sprintf("OS/Arch:        %s/%s\n", runtime.GOOS, runtime.GOARCH)
-	return version
+	return fmt.Sprintf(
+		"Version:        %s\nGit hash:       %s\nBuilt:          %s\nGolang version: %s\nOS/Arch:        %s/%s\n",
+		VERSION, REVISION, BUILTAT, runtime.Version(), runtime.GOOS, runtime.GOARCH,
+	)
 }

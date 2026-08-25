@@ -2,24 +2,24 @@ package workload
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type removeWorkloadsOptions struct {
 	client corepb.CoreRPCClient
 	ids    []string
-	step   int32
 	force  bool
 }
 
 func (o *removeWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.removeWorkloadsOptions.run")
 	opts := &corepb.RemoveWorkloadOptions{
 		IDs:   o.ids,
 		Force: o.force,
@@ -31,7 +31,7 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -39,37 +39,36 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Success {
-			logrus.Infof("[RemoveWorkload] %s Success", msg.Id)
+			logger.Infof(ctx, "remove %s success", msg.Id)
 		} else {
-			logrus.Errorf("[RemoveWorkload] %s Failed", msg.Id)
+			logger.Warnf(ctx, "remove %s failed", msg.Id)
 		}
 		if msg.Hook != "" {
-			logrus.Info(msg.Hook)
+			logger.Info(ctx, msg.Hook)
 		}
 	}
 	return nil
 }
 
-func cmdWorkloadRemove(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	ids := c.Args().Slice()
+	ids := cmd.Args().Slice()
 	if len(ids) == 0 {
-		return fmt.Errorf("Workload ID(s) should not be empty")
+		return errors.New("workload id(s) should not be empty")
 	}
 
-	force := c.Bool("force")
+	force := cmd.Bool(flagForce)
 	if force {
-		logrus.Warn("[RemoveWorkload] If workload not stopped, force to remove will not trigger hook process if set")
+		log.WithFunc("workload.cmdWorkloadRemove").Warn(ctx, "if workload not stopped, force to remove will not trigger hook process if set")
 	}
 	o := &removeWorkloadsOptions{
 		client: client,
 		ids:    ids,
 		force:  force,
-		step:   int32(c.Int("step")),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

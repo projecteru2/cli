@@ -2,66 +2,31 @@ package pod
 
 import (
 	"context"
-	"encoding/json"
+	"crypto/rand"
+	"errors"
 	"fmt"
+	"strings"
+
+	resourcetypes "github.com/projecteru2/core/resource/types"
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	resourcetypes "github.com/projecteru2/core/resource/types"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/google/uuid"
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
 type capacityPodOptions struct {
 	client    corepb.CoreRPCClient
-	podname   string   // podname
-	nodenames []string // node white list
-
-	cpu            float64
-	cpuBind        bool
-	memory         int64
-	storage        int64
-	extraResources map[string]any
+	podname   string
+	nodenames []string
+	resources map[string][]byte
 }
 
 func (o *capacityPodOptions) run(ctx context.Context) error {
-	cpumem := resourcetypes.RawParams{
-		"cpu":    o.cpu,
-		"memory": o.memory,
-	}
-	storage := resourcetypes.RawParams{
-		"storage": o.storage,
-	}
-
-	if o.cpuBind {
-		cpumem["cpu-bind"] = true
-	}
-
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
-	}
-
-	for k, v := range o.extraResources {
-		if _, ok := resources[k]; ok {
-			continue
-		}
-		eb, _ := json.Marshal(v)
-		resources[k] = eb
-	}
-
 	opts := &corepb.DeployOptions{
-		// resource definitions
-		Resources: resources,
-
-		// deploy options
+		Resources: o.resources,
 		Entrypoint: &corepb.EntrypointOptions{
-			Name: uuid.New().String(),
+			Name: strings.ToLower(rand.Text()),
 		},
 		DeployStrategy: corepb.DeployOptions_DUMMY,
 		Podname:        o.podname,
@@ -79,42 +44,48 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdPodCapacity(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Pod name must be given")
+		return errors.New("pod name must be given")
 	}
 
-	mem, err := utils.ParseRAMInHuman(c.String("memory"))
+	memory, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse memory failed %v", err)
+		return fmt.Errorf("parse memory: %w", err)
 	}
 
-	storage, err := utils.ParseRAMInHuman(c.String("storage"))
+	storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse storage failed %v", err)
+		return fmt.Errorf("parse storage: %w", err)
 	}
 
-	extraResourcesMap, err := utils.ParseExtraResources(c)
+	cpumem := resourcetypes.RawParams{
+		flagCPU:    cmd.Float64(flagCPU),
+		flagMemory: memory,
+	}
+	if cmd.Bool("cpu-bind") {
+		cpumem["cpu-bind"] = true
+	}
+
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: resourcetypes.RawParams{flagStorage: storage},
+	})
 	if err != nil {
-		return fmt.Errorf("[cmdPodCapacity] parse extra resources failed %v", err)
+		return err
 	}
 
 	o := &capacityPodOptions{
 		client:    client,
 		podname:   name,
-		nodenames: c.StringSlice("node"),
-
-		cpu:            c.Float64("cpu"),
-		cpuBind:        c.Bool("cpu-bind"),
-		memory:         mem,
-		storage:        storage,
-		extraResources: extraResourcesMap,
+		nodenames: cmd.StringSlice("node"),
+		resources: resources,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

@@ -2,25 +2,26 @@ package pod
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
 
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
-var re = regexp.MustCompile(`(?P<name>cpu|memory|storage|volume)\s*(?P<op>>|>=|<|<=|==)\s*(?P<value>\d+.?\d*%?)`)
+var filterExpr = regexp.MustCompile(`^\s*(?P<name>cpu|memory|storage|volume)\s*(?P<op>>=|<=|==|>|<)\s*(?P<value>\d+(?:\.\d+)?%?)\s*$`)
 
 func match(s string) map[string]string {
 	rv := make(map[string]string)
-	founds := re.FindStringSubmatch(s)
-	for i, name := range re.SubexpNames() {
+	founds := filterExpr.FindStringSubmatch(s)
+	for i, name := range filterExpr.SubexpNames() {
 		if i > 0 && i < len(founds) {
 			rv[name] = founds[i]
 		}
@@ -28,17 +29,17 @@ func match(s string) map[string]string {
 	return rv
 }
 
-func op(op string, left, right float64) bool {
-	switch {
-	case op == ">":
+func compare(operator string, left, right float64) bool {
+	switch operator {
+	case ">":
 		return left > right
-	case op == ">=":
+	case ">=":
 		return left >= right
-	case op == "<":
+	case "<":
 		return left < right
-	case op == "<=":
+	case "<=":
 		return left <= right
-	case op == "==":
+	case "==":
 		return left == right
 	default:
 		return false
@@ -46,19 +47,19 @@ func op(op string, left, right float64) bool {
 }
 
 func attr(nr *corepb.NodeResource, name string) float64 {
-	cr, sr, err := describe.ToResourcePrecent(nr)
+	cr, sr, err := describe.ToResourcePercent(nr)
 	if err != nil {
 		return 0.0
 	}
-	switch {
-	case name == "cpu":
-		return cr["cpu"]
-	case name == "memory":
-		return cr["memory"]
-	case name == "storage":
-		return sr["storage"]
-	case name == "volume":
-		return sr["volume"]
+	switch name {
+	case flagCPU:
+		return cr[flagCPU]
+	case flagMemory:
+		return cr[flagMemory]
+	case flagStorage:
+		return sr[flagStorage]
+	case "volume":
+		return sr["volumes"]
 	default:
 		return 0
 	}
@@ -72,9 +73,13 @@ type resourcePodOptions struct {
 }
 
 func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.NodeResource, error) {
+	if o.expr == "" {
+		return ch, nil
+	}
+
 	filter := match(o.expr)
 	if len(filter) == 0 {
-		return ch, nil
+		return nil, fmt.Errorf("invalid filter %q, want one of cpu/memory/storage/volume with an operator and a value", o.expr)
 	}
 
 	var (
@@ -99,7 +104,7 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 		defer close(rv)
 		for nr := range ch {
 			l := attr(nr, filter["name"])
-			if !op(filter["op"], l, v) {
+			if !compare(filter["op"], l, v) {
 				continue
 			}
 			rv <- nr
@@ -109,7 +114,6 @@ func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.
 }
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
-	var ch chan *corepb.NodeResource
 	resp, err := o.client.GetPodResource(ctx, &corepb.GetPodOptions{
 		Name: o.name,
 	})
@@ -117,14 +121,15 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	ch = make(chan *corepb.NodeResource)
+	var recvErr error
+	ch := make(chan *corepb.NodeResource)
 	go func() {
 		defer close(ch)
 		for {
-			resource, err := resp.Recv()
-			if err != nil {
-				if err != io.EOF {
-					println(err.Error())
+			resource, streamErr := resp.Recv()
+			if streamErr != nil {
+				if !errors.Is(streamErr, io.EOF) {
+					recvErr = streamErr
 				}
 				return
 			}
@@ -137,26 +142,26 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.NodeResources(resChan, o.stream)
-	return nil
+	describe.NodeResources(ctx, resChan, o.stream)
+	return recvErr
 }
 
-func cmdPodResource(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Pod name must be given")
+		return errors.New("pod name must be given")
 	}
 
 	o := &resourcePodOptions{
 		client: client,
 		name:   name,
-		expr:   c.String("filter"),
-		stream: c.Bool("stream"),
+		expr:   cmd.String("filter"),
+		stream: cmd.Bool("stream"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

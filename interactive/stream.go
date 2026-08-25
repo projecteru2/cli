@@ -5,124 +5,56 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
+	"slices"
 	"strconv"
+	"sync"
 	"syscall"
 	"text/template"
-	"unsafe"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/getlantern/deepcopy"
-	"github.com/pkg/term/termios"
-	"github.com/sirupsen/logrus"
-	"golang.org/x/sys/unix"
+	"golang.org/x/term"
 )
 
 var (
-	exitCode     = []byte{91, 101, 120, 105, 116, 99, 111, 100, 101, 93, 32}
+	exitCode     = []byte("[exitcode] ")
 	winchCommand = []byte{0x80}
 )
 
-type window struct {
-	Row    uint16
-	Col    uint16
-	Xpixel uint16 `json:"-"`
-	Ypixel uint16 `json:"-"`
-}
-
-// Stream is a wrapper for send and recv method
+// Stream carries the send and recv half of an attach stream.
 type Stream struct {
 	Send func(cmd []byte) error
 	Recv func() (*corepb.AttachWorkloadMessage, error)
 }
 
-// HandleStream will handle a stream with send and recv method
-// with or without interactive mode
-func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (code int, err error) {
-	if interactive { //nolint
-		stdinFd := os.Stdin.Fd()
-		terminal := &unix.Termios{}
-		_ = termios.Tcgetattr(stdinFd, terminal)
-		terminalBak := &unix.Termios{}
-		_ = deepcopy.Copy(terminalBak, terminal)
-		defer func() { _ = termios.Tcsetattr(stdinFd, termios.TCSANOW, terminalBak) }()
+// NewStream serializes send, which grpc forbids calling from several goroutines.
+func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadMessage, error)) Stream {
+	var mu sync.Mutex
+	return Stream{
+		Send: func(cmd []byte) error {
+			mu.Lock()
+			defer mu.Unlock()
+			return send(cmd)
+		},
+		Recv: recv,
+	}
+}
 
-		terminal.Lflag &^= syscall.ECHO   // off echoing
-		terminal.Lflag &^= syscall.ICANON // noncanonical mode
-		terminal.Lflag &^= syscall.ISIG   // disable signals
-		terminal.Lflag &^= syscall.IEXTEN // extended input processing
+type window struct {
+	Row uint16
+	Col uint16
+}
 
-		terminal.Iflag &^= syscall.BRKINT // disable special handling of BREAK
-		terminal.Iflag &^= syscall.ICRNL  // disable special handling of CR
-		terminal.Iflag &^= syscall.IGNBRK // disable special handling of BREAK
-		terminal.Iflag &^= syscall.IGNCR  // disable special handling of CR
-		terminal.Iflag &^= syscall.INLCR  // disable special handling of NL
-		terminal.Iflag &^= syscall.INPCK  // no parity error handling
-		terminal.Iflag &^= syscall.ISTRIP // no 8th-bit stripping
-		terminal.Iflag &^= syscall.IXON   // disable output flow control
-		terminal.Iflag &^= syscall.PARMRK // no parity error handling
+// HandleStream pumps an attach stream, optionally putting the terminal in raw mode.
+func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCount int, printWorkloadID bool) (int, error) {
+	logger := log.WithFunc("interactive.HandleStream")
 
-		terminal.Oflag &^= syscall.OPOST // disable all output processing
-
-		terminal.Cc[syscall.VMIN] = 1  // character-at-a-time input
-		terminal.Cc[syscall.VTIME] = 0 // blocking
-
-		_ = termios.Tcsetattr(stdinFd, termios.TCSAFLUSH, terminal)
-
-		// capture SIGWINCH and measure window size
-		sigs := make(chan os.Signal, 1)
-		signal.Notify(sigs, syscall.SIGWINCH)
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		resize := func(_ context.Context) error {
-			w := &window{}
-			if _, _, err := syscall.Syscall(syscall.SYS_IOCTL, stdinFd, syscall.TIOCGWINSZ, uintptr(unsafe.Pointer(w))); err != 0 {
-				return err
-			}
-			opts, err := json.Marshal(w)
-			if err != nil {
-				return err
-			}
-			command := append(winchCommand, opts...) //nolint
-			return iStream.Send(command)
-		}
-
-		go func(ctx context.Context) {
-			for {
-				select {
-				case <-ctx.Done():
-					break
-				case _, ok := <-sigs:
-					if !ok {
-						return
-					}
-					if err := resize(ctx); err != nil {
-						logrus.Errorf("[HandleStream] Resize error: %v", err)
-					}
-				}
-			}
-		}(ctx)
-
-		go func() {
-			if err := resize(ctx); err != nil {
-				logrus.Errorf("[HandleStream] Resize error: %v", err)
-			}
-			scanner := bufio.NewScanner(os.Stdin)
-			scanner.Split(bufio.ScanRunes)
-			for scanner.Scan() {
-				b := scanner.Bytes()
-				if err := iStream.Send(b); err != nil {
-					logrus.Errorf("[HandleStream] Send command %s error: %v", b, err)
-				}
-			}
-			if err := scanner.Err(); err != nil {
-				logrus.Errorf("[HandleStream] Failed to read output from virtual unit: %v", err)
-				return
-			}
-		}()
+	if interactive {
+		defer attachTerminal(ctx, iStream)()
 	}
 
 	outputTemplate := `{{printf "%s" .Data}}`
@@ -135,51 +67,107 @@ func HandleStream(interactive bool, iStream Stream, exitCount int, printWorkload
 		return -1, err
 	}
 
-	exited := 0
+	code, exited := 0, 0
 	for {
 		msg, err := iStream.Recv()
-		if err == io.EOF {
-			break
+		if errors.Is(err, io.EOF) {
+			return code, nil
 		}
 		if err != nil {
 			return -1, err
 		}
 
-		// error should be printed and skipped
-		if msg.StdStreamType == corepb.StdStreamType_ERUERROR {
-			logrus.Errorf("[Error From ERU] %s", string(msg.Data))
+		switch {
+		case msg.StdStreamType == corepb.StdStreamType_ERUERROR:
+			logger.Error(ctx, errors.New(string(msg.Data)), "error from eru")
 			continue
-		}
-
-		if msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID {
-			logrus.Infof("[WorkloadID] %s", msg.WorkloadId)
+		case msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID:
+			logger.Infof(ctx, "workload id %s", msg.WorkloadId)
 			continue
-		}
-
-		if bytes.HasPrefix(msg.Data, exitCode) {
-			ret := string(bytes.TrimLeft(msg.Data, string(exitCode)))
-			code, err = strconv.Atoi(ret)
-			if err == nil && code != 0 {
-				return code, err
+		case bytes.HasPrefix(msg.Data, exitCode):
+			var convErr error
+			code, convErr = strconv.Atoi(string(bytes.TrimPrefix(msg.Data, exitCode)))
+			if convErr == nil && code != 0 {
+				return code, nil
 			}
 			exited++
 			if exited == exitCount {
-				return code, err
+				return code, convErr
 			}
 			continue
 		}
 
-		var outStream *os.File
-		switch msg.StdStreamType {
-		case corepb.StdStreamType_STDOUT:
+		outStream := os.Stderr
+		if msg.StdStreamType == corepb.StdStreamType_STDOUT {
 			outStream = os.Stdout
-		default:
-			outStream = os.Stderr
 		}
 		if err := outputT.Execute(outStream, msg); err != nil {
-			logrus.Errorf("[HandleStream] Render template error: %v", err)
+			logger.Error(ctx, err, "render template")
 		}
 	}
+}
 
-	return code, err
+func attachTerminal(ctx context.Context, iStream Stream) func() {
+	stdinFd := int(os.Stdin.Fd())
+	ctx, cancel := context.WithCancel(ctx)
+
+	state, err := term.MakeRaw(stdinFd)
+	if err != nil {
+		// stdin is a pipe or a file: no raw mode and no window size to report.
+		go pumpStdin(ctx, iStream)
+		return cancel
+	}
+	go pumpStdin(ctx, iStream)
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGWINCH)
+	go watchWindowSize(ctx, iStream, stdinFd, sigs)
+
+	return func() {
+		cancel()
+		signal.Stop(sigs)
+		log.WithFunc("interactive.attachTerminal").Error(ctx, term.Restore(stdinFd, state), "restore terminal")
+	}
+}
+
+func pumpStdin(ctx context.Context, iStream Stream) {
+	logger := log.WithFunc("interactive.pumpStdin")
+	scanner := bufio.NewScanner(os.Stdin)
+	scanner.Split(bufio.ScanRunes)
+	for scanner.Scan() {
+		if ctx.Err() != nil {
+			return
+		}
+		if err := iStream.Send(scanner.Bytes()); err != nil {
+			logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
+		}
+	}
+	logger.Error(ctx, scanner.Err(), "read stdin")
+}
+
+func watchWindowSize(ctx context.Context, iStream Stream, stdinFd int, sigs <-chan os.Signal) {
+	logger := log.WithFunc("interactive.watchWindowSize")
+	send := func() {
+		col, row, err := term.GetSize(stdinFd)
+		if err != nil {
+			logger.Error(ctx, err, "get terminal size")
+			return
+		}
+		opts, err := json.Marshal(&window{Row: uint16(row), Col: uint16(col)}) //nolint:gosec // terminal geometry fits in uint16
+		if err != nil {
+			logger.Error(ctx, err, "encode window size")
+			return
+		}
+		logger.Error(ctx, iStream.Send(slices.Concat(winchCommand, opts)), "send window size")
+	}
+
+	send()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-sigs:
+			send()
+		}
+	}
 }

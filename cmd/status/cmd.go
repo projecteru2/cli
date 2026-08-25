@@ -1,12 +1,12 @@
 package status
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// Command exports status subommands
+// Command returns the status command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:      "status",

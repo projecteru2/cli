@@ -2,13 +2,14 @@ package node
 
 import (
 	"context"
+	"errors"
 	"io"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/urfave/cli/v2"
 )
 
 type watchNodeStatusOptions struct {
@@ -23,20 +24,20 @@ func (o *watchNodeStatusOptions) run(ctx context.Context) error {
 
 	for {
 		m, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			return err
 		}
 
-		describe.NodeStatusMessage(m)
+		describe.NodeStatusMessage(ctx, m)
 	}
 	return nil
 }
 
-func cmdNodeWatchStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeWatchStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
@@ -44,5 +45,5 @@ func cmdNodeWatchStatus(c *cli.Context) error {
 	o := &watchNodeStatusOptions{
 		client: client,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

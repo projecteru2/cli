@@ -1,17 +1,17 @@
 package core
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// Command exports core subommands
+// Command returns the core command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "core",
 		Usage: "core commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:   "info",
 				Usage:  "core info",
@@ -19,7 +19,7 @@ func Command() *cli.Command {
 			},
 			{
 				Name:   "watch",
-				Usage:  "",
+				Usage:  "watch core service addresses",
 				Action: utils.ExitCoder(cmdWatchServiceStatus),
 			},
 		},

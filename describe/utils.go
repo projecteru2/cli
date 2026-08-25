@@ -3,115 +3,35 @@ package describe
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
-	"github.com/ghodss/yaml"
 	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"sigs.k8s.io/yaml"
 )
 
-// Format indicates the output format
-// can be yaml / yml / json or empty as default
-// default will be table
+const headerName = "Name"
+
+// Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-func isJSON() bool {
-	return strings.ToLower(Format) == "json"
-}
-
-func isYAML() bool {
-	y := strings.ToLower(Format)
-	return y == "yaml" || y == "yml"
-}
-
-// actually i need a `zip longest` function
-// like in python itertools
-func toTableRows(rows [][]string) []table.Row {
-	total := len(rows)
-	maxLength := 0
-	for _, row := range rows {
-		if len(row) > maxLength {
-			maxLength = len(row)
-		}
-	}
-
-	rs := []table.Row{}
-	for i := 0; i < maxLength; i++ {
-		lines := []interface{}{}
-		for j := 0; j < total; j++ {
-			if i < len(rows[j]) {
-				lines = append(lines, rows[j][i])
-			} else {
-				lines = append(lines, "")
-			}
-		}
-		rs = append(rs, table.Row(lines))
-	}
-	return rs
-}
-
-func describeAsJSON(o interface{}) {
-	j, _ := json.MarshalIndent(o, "", "  ")
-	fmt.Println(string(j))
-}
-
-func describeChNodeAsJSON(ch <-chan *corepb.Node) {
-	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
-	}
-}
-func describeChNodeResourceAsJSON(ch chan *corepb.NodeResource) {
-	for t := range ch {
-		j, _ := json.MarshalIndent(t, "", "  ")
-		fmt.Println(string(j))
-	}
-}
-
-func describeAsYAML(o interface{}) {
-	y, _ := yaml.Marshal(o)
-	fmt.Println(string(y))
-}
-
-func describeChNodeAsYAML(ch <-chan *corepb.Node) {
-	for t := range ch {
-		j, _ := yaml.Marshal(t)
-		fmt.Println(string(j))
-	}
-}
-func describeChNodeResourceAsYAML(ch chan *corepb.NodeResource) {
-	for t := range ch {
-		j, _ := yaml.Marshal(t)
-		fmt.Println(string(j))
-	}
-}
-
-// ToNodeChan is to be rewritten using generic
-func ToNodeChan(nodes ...*corepb.Node) chan *corepb.Node {
-	ch := make(chan *corepb.Node)
+// ToChan streams items over a channel.
+func ToChan[T any](items ...T) chan T {
+	ch := make(chan T)
 	go func() {
 		defer close(ch)
-		for _, node := range nodes {
-			ch <- node
+		for _, item := range items {
+			ch <- item
 		}
 	}()
 	return ch
 }
 
-// ToNodeResourceChan is to be rewritten using generic
-func ToNodeResourceChan(resources ...*corepb.NodeResource) chan *corepb.NodeResource {
-	ch := make(chan *corepb.NodeResource)
-	go func() {
-		defer close(ch)
-		for _, resource := range resources {
-			ch <- resource
-		}
-	}()
-	return ch
-}
-
-func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[string]float64, error) {
+// ToResourcePercent reports node usage as a fraction of capacity, per resource.
+func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[string]float64, err error) {
 	var resUsage resourcetypes.Resources
 	var resCap resourcetypes.Resources
 	if err := json.Unmarshal([]byte(resource.ResourceUsage), &resUsage); err != nil {
@@ -147,7 +67,7 @@ func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[s
 		sr["storage"] = 0.0
 		sr["volumes"] = 0.0
 		if stCap != 0 {
-			cr["storage"] = stUsage / stCap
+			sr["storage"] = stUsage / stCap
 		}
 		vu := 0.0
 		vc := 0.0
@@ -157,7 +77,100 @@ func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[s
 		for k := range volumesCap {
 			vc += volumesCap.Float64(k)
 		}
-		sr["volumes"] = vu / vc
+		if vc != 0 {
+			sr["volumes"] = vu / vc
+		}
 	}
 	return cr, sr, nil
+}
+
+func isJSON() bool {
+	return strings.ToLower(Format) == "json"
+}
+
+func isYAML() bool {
+	y := strings.ToLower(Format)
+	return y == "yaml" || y == "yml"
+}
+
+func toTableRows(rows [][]string) []table.Row {
+	total := len(rows)
+	maxLength := 0
+	for _, row := range rows {
+		maxLength = max(maxLength, len(row))
+	}
+
+	rs := []table.Row{}
+	for i := range maxLength {
+		lines := []any{}
+		for j := range total {
+			if i < len(rows[j]) {
+				lines = append(lines, rows[j][i])
+			} else {
+				lines = append(lines, "")
+			}
+		}
+		rs = append(rs, table.Row(lines))
+	}
+	return rs
+}
+
+func toJSON(v any) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+func parse(key, value any) []string {
+	res := []string{}
+	switch v := value.(type) {
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(v)) {
+			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v[k])))
+		}
+	case []any:
+		for i, item := range v {
+			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(item)))
+		}
+	default:
+		res = append(res, fmt.Sprintf("%s: %v", key, toJSON(value)))
+	}
+	return res
+}
+
+func parseAll(params resourcetypes.RawParams) []string {
+	rows := []string{}
+	for _, key := range slices.Sorted(maps.Keys(params)) {
+		rows = append(rows, parse(key, params[key])...)
+	}
+	return rows
+}
+
+func unmarshalResources(encoded string) resourcetypes.Resources {
+	res := resourcetypes.Resources{}
+	if len(encoded) > 0 {
+		_ = json.Unmarshal([]byte(encoded), &res)
+	}
+	return res
+}
+
+func describeAsJSON(o any) {
+	j, _ := json.MarshalIndent(o, "", "  ")
+	fmt.Println(string(j))
+}
+
+func describeAsYAML(o any) {
+	y, _ := yaml.Marshal(o)
+	fmt.Println(string(y))
+}
+
+func describeChAsJSON[T any](ch <-chan T) {
+	for t := range ch {
+		describeAsJSON(t)
+	}
+}
+
+func describeChAsYAML[T any](ch <-chan T) {
+	for t := range ch {
+		describeAsYAML(t)
+	}
 }

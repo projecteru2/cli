@@ -1,21 +1,24 @@
 package image
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 const (
 	specFileURI = "<spec file uri>"
+
+	flagNode = "node"
+	flagPod  = "pod"
 )
 
-// Command exports image subcommands
+// Command returns the image command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "image",
 		Usage: "image commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:      "build",
 				Usage:     "build image",
@@ -67,17 +70,12 @@ func Command() *cli.Command {
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "nodename if you just want to cache on one node",
 					},
 					&cli.StringFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "name of pod, if you want to cache on all nodes in one pod",
-					},
-					&cli.IntFlag{
-						Name:  "concurrent",
-						Usage: "how many workers to pull images",
-						Value: 10,
 					},
 				},
 				Action: utils.ExitCoder(cmdImageCache),
@@ -88,17 +86,12 @@ func Command() *cli.Command {
 				ArgsUsage: "name of images",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "nodename if you just want to clean on one node",
 					},
 					&cli.StringFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "name of pod, if you want to clean on all nodes in one pod",
-					},
-					&cli.IntFlag{
-						Name:  "concurrent",
-						Usage: "how many workers to pull images",
-						Value: 10,
 					},
 					&cli.BoolFlag{
 						Name:  "prune",
@@ -106,20 +99,19 @@ func Command() *cli.Command {
 						Value: false,
 					},
 				},
-				Action: utils.ExitCoder(cmdImageClean),
+				Action: utils.ExitCoder(cmdImageRemove),
 			},
 			{
-				Name:      "list",
-				Aliases:   []string{"ls"},
-				Usage:     "list image(s) by podname or nodename(s)",
-				ArgsUsage: "[podname/nodenames]",
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "list image(s) by podname or nodename(s)",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "nodename if you just want to list on specific nodes",
 					},
 					&cli.StringFlag{
-						Name:  "pod",
+						Name:  flagPod,
 						Usage: "name of pod, if you want to list on all nodes in one pod",
 					},
 					&cli.StringFlag{

@@ -2,20 +2,17 @@ package workload
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
-
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/types"
+	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type deployWorkloadsOptions struct {
@@ -26,14 +23,15 @@ type deployWorkloadsOptions struct {
 }
 
 func (o *deployWorkloadsOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("workload.deployWorkloadsOptions.run")
 	if o.dryRun {
 		r, err := o.client.CalculateCapacity(ctx, o.opts)
 		if err != nil {
-			return fmt.Errorf("[Deploy] Calculate capacity failed %v", err)
+			return fmt.Errorf("calculate capacity: %w", err)
 		}
-		logrus.Infof("[Deploy] Capacity total %v", r.Total)
+		logger.Infof(ctx, "capacity total %v", r.Total)
 		for nodename, capacity := range r.NodeCapacities {
-			logrus.Infof("[Deploy] Node %v capacity %v", nodename, capacity)
+			logger.Infof(ctx, "node %v capacity %v", nodename, capacity)
 		}
 		return nil
 	}
@@ -45,42 +43,43 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	lsOpts := &corepb.ListWorkloadsOptions{
 		Appname:    o.opts.Name,
 		Entrypoint: o.opts.Entrypoint.Name,
-		Labels:     nil,
-		Limit:      1, // 至少有一个可以被替换的
+		Limit:      1,
 	}
-	resp, err := o.client.ListWorkloads(ctx, lsOpts)
+	probeCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	resp, err := o.client.ListWorkloads(probeCtx, lsOpts)
 	if err != nil {
-		return fmt.Errorf("[Deploy] check workload failed %v", err)
+		return fmt.Errorf("check workload: %w", err)
 	}
 	_, err = resp.Recv()
-	if err == io.EOF {
-		logrus.Warn("[Deploy] there is no Workloads for replace")
+	cancel()
+	if errors.Is(err, io.EOF) {
+		logger.Warn(ctx, "there is no workload to replace")
 		return doCreateWorkload(ctx, o.client, o.opts)
 	}
 	if err != nil {
 		return err
 	}
-	// 强制继承网络
 	networkInherit := len(o.opts.Networks) == 0
 	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
 }
 
-func cmdWorkloadDeploy(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	for _, key := range []string{"pod", "entry", "image"} {
-		if c.String(key) == "" {
-			return fmt.Errorf("[Deploy] no %s given", key)
+	for _, key := range []string{flagPod, flagEntry, flagImage} {
+		if cmd.String(key) == "" {
+			return fmt.Errorf("no %s given", key)
 		}
 	}
-	if strings.Contains(c.String("entry"), "_") {
-		return fmt.Errorf("[Deploy] entry can not contain _")
+	if strings.Contains(cmd.String(flagEntry), "_") {
+		return errors.New("entry can not contain _")
 	}
 
-	opts, err := generateDeployOptions(c)
+	opts, err := generateDeployOptions(ctx, cmd)
 	if err != nil {
 		return err
 	}
@@ -88,20 +87,21 @@ func cmdWorkloadDeploy(c *cli.Context) error {
 	o := &deployWorkloadsOptions{
 		client:      client,
 		opts:        opts,
-		dryRun:      c.Bool("dry-run"),
-		autoReplace: c.Bool("auto-replace"),
+		dryRun:      cmd.Bool("dry-run"),
+		autoReplace: cmd.Bool("auto-replace"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
 func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions) error {
+	logger := log.WithFunc("workload.doCreateWorkload")
 	resp, err := client.CreateWorkload(ctx, deployOpts)
 	if err != nil {
 		return err
 	}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -109,174 +109,102 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 		}
 
 		if msg.Success {
-			logrus.Infof("[Deploy] Success %s %s %s %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
+			logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
 			if len(msg.Hook) > 0 {
-				logrus.Infof("[Deploy] Hook output \n%s", msg.Hook)
+				logger.Infof(ctx, "hook output \n%s", msg.Hook)
 			}
 			for name, publish := range msg.Publish {
-				logrus.Infof("[Deploy] Bound %s ip %s", name, publish)
+				logger.Infof(ctx, "bound %s ip %s", name, publish)
 			}
 		} else {
-			logrus.Errorf("[Deploy] Failed %v", msg.Error)
+			logger.Error(ctx, errors.New(msg.Error), "create workload failed")
 		}
 	}
 	return nil
 }
 
-func generateDeployOptions(c *cli.Context) (*corepb.DeployOptions, error) {
-	specURI := c.Args().First()
-	if specURI == "" {
-		return nil, fmt.Errorf("a specs must be given")
-	}
-	logrus.Debugf("[Deploy] Deploy %s", specURI)
-
-	var (
-		data []byte
-		err  error
-	)
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(specURI)
-	} else {
-		data, err = ioutil.ReadFile(specURI)
-	}
+func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
+	specs, err := loadSpecs(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(c)
+	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
 	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse memory failed %v", err)
+		return nil, err
 	}
 
-	storageRequest, storageLimit, err := storageOption(c)
+	memoryRequest, memoryLimit, err := memoryOption(cmd)
 	if err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] parse storage failed %v", err)
+		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
-	cpuRequest, cpuLimit := cpuOption(c)
-
-	specs := &types.Specs{}
-	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateDeployOptions] get specs failed %v", err)
+	storageRequest, storageLimit, err := storageOption(cmd)
+	if err != nil {
+		return nil, fmt.Errorf("parse storage: %w", err)
 	}
 
-	entry := c.String("entry")
-
-	network := c.String("network")
-	networks := utils.GetNetworks(network)
-	entrypoint, ok := specs.Entrypoints[entry]
-	if !ok {
-		return nil, fmt.Errorf("[generateDeployOptions] get entry failed")
-	}
-
-	var hook *corepb.HookOptions
-	if entrypoint.Hook != nil {
-		hook = &corepb.HookOptions{
-			AfterStart: entrypoint.Hook.AfterStart,
-			BeforeStop: entrypoint.Hook.BeforeStop,
-			Force:      entrypoint.Hook.Force,
-		}
-	}
-
-	var healthCheck *corepb.HealthCheckOptions
-	if entrypoint.HealthCheck != nil {
-		healthCheck = &corepb.HealthCheckOptions{
-			TcpPorts: entrypoint.HealthCheck.TCPPorts,
-			HttpPort: entrypoint.HealthCheck.HTTPPort,
-			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode),
-		}
-	}
-
-	var logConfig *corepb.LogOptions
-	if entrypoint.Log != nil {
-		logConfig = &corepb.LogOptions{
-			Type:   entrypoint.Log.Type,
-			Config: entrypoint.Log.Config,
-		}
-	}
-
-	rawArgs := c.String("raw-args")
-	rawArgsByte := []byte{}
-	if rawArgs != "" {
-		rawArgsByte = []byte(rawArgs)
-	}
-
-	content, modes, owners := utils.GenerateFileOptions(c)
+	cpuRequest, cpuLimit := cpuOption(cmd)
 
 	cpumem := resourcetypes.RawParams{
-		"cpu-request":    cpuRequest,
-		"cpu-limit":      cpuLimit,
-		"memory-request": memoryRequest,
-		"memory-limit":   memoryLimit,
+		flagCPURequest:    cpuRequest,
+		flagCPULimit:      cpuLimit,
+		flagMemoryRequest: memoryRequest,
+		flagMemoryLimit:   memoryLimit,
 	}
-	storage := resourcetypes.RawParams{
-		"storage-request": storageRequest,
-		"storage-limit":   storageLimit,
-		"volumes-request": specs.VolumesRequest,
-		"volumes-limit":   specs.Volumes,
-	}
-
-	if c.Bool("cpu-bind") {
+	if cmd.Bool("cpu-bind") {
 		cpumem["cpu-bind"] = true
 	}
-
-	cb, _ := json.Marshal(cpumem)
-	sb, _ := json.Marshal(storage)
-
-	resources := map[string][]byte{
-		"cpumem":  cb,
-		"storage": sb,
+	storage := resourcetypes.RawParams{
+		flagStorageRequest: storageRequest,
+		flagStorageLimit:   storageLimit,
+		flagVolumesRequest: specs.VolumesRequest,
+		flagVolumesLimit:   specs.Volumes,
 	}
 
-	if extraResourcesMap, err := utils.ParseExtraResources(c); err == nil {
-		for k, v := range extraResourcesMap {
-			if _, ok := resources[k]; ok {
-				continue
-			}
-			eb, _ := json.Marshal(v)
-			resources[k] = eb
-		}
-	} else {
-		return nil, fmt.Errorf("[generateDeployOptions] get extra resources failed %v", err)
+	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
+		resourceCPUMem:  cpumem,
+		resourceStorage: storage,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	deployStrategy, err := utils.ParseDeployStrategy(cmd.String("deploy-strategy"))
+	if err != nil {
+		return nil, err
 	}
 
 	return &corepb.DeployOptions{
-		Name: specs.Appname,
-		Entrypoint: &corepb.EntrypointOptions{
-			Name:        entry,
-			Commands:    entrypoint.GetCommands(),
-			Privileged:  entrypoint.Privileged,
-			Dir:         entrypoint.Dir,
-			Log:         logConfig,
-			Publish:     entrypoint.Publish,
-			Healthcheck: healthCheck,
-			Hook:        hook,
-			Restart:     entrypoint.Restart,
-			Sysctls:     entrypoint.Sysctls,
-		},
-		Resources: resources,
-		Podname:   c.String("pod"),
+		Name:       specs.Appname,
+		Entrypoint: entrypoint,
+		Resources:  resources,
+		Podname:    cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
-			Includes: c.StringSlice("node"),
-			Labels:   utils.SplitEquality(c.StringSlice("nodelabel")),
+			Includes: cmd.StringSlice(flagNode),
+			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
 		},
-		Image:          c.String("image"),
-		Count:          int32(c.Int("count")),
-		Env:            c.StringSlice("env"),
-		Networks:       networks,
+		Image:          cmd.String(flagImage),
+		Count:          int32(cmd.Int("count")), //nolint:gosec
+		Env:            cmd.StringSlice(flagEnv),
+		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[strings.ToUpper(c.String("deploy-strategy"))]),
-		Data:           content,
-		Modes:          modes,
-		Owners:         owners,
-		User:           c.String("user"),
-		Debug:          c.Bool("debug"),
-		NodesLimit:     int32(c.Int("nodes-limit")),
-		IgnoreHook:     c.Bool("ignore-hook"),
-		AfterCreate:    c.StringSlice("after-create"),
-		RawArgs:        rawArgsByte,
+		DeployStrategy: deployStrategy,
+		Data:           files.Data,
+		Modes:          files.Modes,
+		Owners:         files.Owners,
+		User:           cmd.String("user"),
+		Debug:          cmd.Bool("debug"),
+		NodesLimit:     int32(cmd.Int("nodes-limit")), //nolint:gosec
+		IgnoreHook:     cmd.Bool("ignore-hook"),
+		AfterCreate:    cmd.StringSlice("after-create"),
+		RawArgs:        []byte(cmd.String("raw-args")),
 	}, nil
 }

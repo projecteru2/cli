@@ -1,28 +1,27 @@
 package describe
 
 import (
+	"cmp"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 	"strconv"
 
-	corepb "github.com/projecteru2/core/rpc/gen"
-
 	"github.com/jedib0t/go-pretty/v6/table"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 type capacityOfNode struct {
 	Name     string `json:"name" yaml:"name"`
-	Capacity int    `json:"capacity" yaml:"capacity"`
+	Capacity int64  `json:"capacity" yaml:"capacity"`
 }
 
 type capacityOfPod struct {
-	Total int               `json:"total" yaml:"total"`
+	Total int64             `json:"total" yaml:"total"`
 	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
-// Pods describes a list of Pod
-// output format can be json or yaml or table
+// Pods describes pods as json, yaml or a table.
 func Pods(pods ...*corepb.Pod) {
 	switch {
 	case isJSON():
@@ -34,24 +33,20 @@ func Pods(pods ...*corepb.Pod) {
 	}
 }
 
-// PodCapacity describes the capacity remained based on a given specification.
-// output format can be json or yaml or table
+// PodCapacity describes the capacity left for a given specification.
 func PodCapacity(total int64, capacityMap map[string]int64) {
-	capPod := &capacityOfPod{
-		Total: int(total),
-	}
+	capPod := &capacityOfPod{Total: total}
 
 	capPod.Nodes = make([]*capacityOfNode, 0, len(capacityMap))
 	for name, capacity := range capacityMap {
 		capPod.Nodes = append(capPod.Nodes, &capacityOfNode{
 			Name:     name,
-			Capacity: int(capacity),
+			Capacity: capacity,
 		})
 	}
 
-	// sort by remained capacity in descending order
-	sort.Slice(capPod.Nodes, func(i, j int) bool {
-		return capPod.Nodes[i].Capacity >= capPod.Nodes[j].Capacity
+	slices.SortFunc(capPod.Nodes, func(a, b *capacityOfNode) int {
+		return cmp.Or(cmp.Compare(b.Capacity, a.Capacity), cmp.Compare(a.Name, b.Name))
 	})
 
 	switch {
@@ -75,7 +70,7 @@ func describePodCapacities(capacity *capacityOfPod) {
 	descRow := []string{}
 	for _, node := range capacity.Nodes {
 		nameRow = append(nameRow, node.Name)
-		descRow = append(descRow, strconv.FormatInt(int64(node.Capacity), 10))
+		descRow = append(descRow, strconv.FormatInt(node.Capacity, 10))
 	}
 	rows := [][]string{nameRow, descRow}
 
@@ -88,14 +83,13 @@ func describePodCapacities(capacity *capacityOfPod) {
 func describePods(pods []*corepb.Pod) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Description"})
+	t.AppendHeader(table.Row{headerName, "Description"})
 
 	nameRow := []string{}
 	descRow := []string{}
 	for _, pod := range pods {
 		nameRow = append(nameRow, pod.Name)
 		descRow = append(descRow, pod.Desc)
-
 	}
 	rows := [][]string{nameRow, descRow}
 	t.AppendRows(toTableRows(rows))

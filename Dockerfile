@@ -1,12 +1,14 @@
-FROM golang:alpine AS BUILD
+FROM golang:1.27-alpine AS build
 
-# make binary
-RUN apk add --no-cache git ca-certificates curl make gcc libc-dev
-COPY . /go/src/github.com/projecteru2/cli
-WORKDIR /go/src/github.com/projecteru2/cli
+RUN apk add --no-cache git make
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+ARG KEEP_SYMBOL
 RUN make build && ./eru-cli --version
 
-FROM alpine:latest
+FROM alpine:3.22
 
-COPY --from=BUILD /etc/ssl/certs /etc/ssl/certs
-COPY --from=BUILD /go/src/github.com/projecteru2/cli/eru-cli /usr/bin/eru-cli
+LABEL ERU=1
+COPY --from=build /src/eru-cli /usr/bin/eru-cli

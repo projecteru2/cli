@@ -2,13 +2,14 @@ package node
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type setNodeStatusOptions struct {
@@ -23,16 +24,16 @@ func (o *setNodeStatusOptions) run(ctx context.Context) error {
 		return o.heartbeat(ctx)
 	}
 
-	timer := time.NewTicker(time.Duration(o.interval) * time.Second)
-	defer timer.Stop()
+	logger := log.WithFunc("node.setNodeStatusOptions.run")
+	ticker := time.NewTicker(time.Duration(o.interval) * time.Second)
+	defer ticker.Stop()
 
-	var err error
 	for {
 		select {
 		case <-ctx.Done():
-			return err
-		case <-timer.C:
-			err = o.heartbeat(ctx)
+			return ctx.Err()
+		case <-ticker.C:
+			logger.Error(ctx, o.heartbeat(ctx), "heartbeat")
 		}
 	}
 }
@@ -45,22 +46,22 @@ func (o *setNodeStatusOptions) heartbeat(ctx context.Context) error {
 	return err
 }
 
-func cmdNodeSetStatus(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSetStatus(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &setNodeStatusOptions{
 		client:   client,
 		name:     name,
-		ttl:      c.Int("ttl"),
-		interval: c.Int("interval"),
+		ttl:      cmd.Int("ttl"),
+		interval: cmd.Int("interval"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

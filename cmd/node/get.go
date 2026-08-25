@@ -2,13 +2,13 @@ package node
 
 import (
 	"context"
+	"errors"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
 type getNodeOptions struct {
@@ -24,24 +24,24 @@ func (o *getNodeOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.NodesWithInfo(describe.ToNodeChan(node), false)
+	describe.NodesWithInfo(describe.ToChan(node), false)
 	return nil
 }
 
-func cmdNodeGet(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeGet(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &getNodeOptions{
 		client: client,
 		name:   name,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

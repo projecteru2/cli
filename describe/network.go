@@ -4,13 +4,11 @@ import (
 	"os"
 	"strings"
 
-	corepb "github.com/projecteru2/core/rpc/gen"
-
 	"github.com/jedib0t/go-pretty/v6/table"
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Networks describes a list of Network
-// output format can be json or yaml or table
+// Networks describes networks as json, yaml or a table.
 func Networks(networks ...*corepb.Network) {
 	switch {
 	case isJSON():
@@ -25,7 +23,7 @@ func Networks(networks ...*corepb.Network) {
 func describeNetworks(networks []*corepb.Network) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Network"})
+	t.AppendHeader(table.Row{headerName, "Network"})
 
 	nameRow := []string{}
 	networkRow := []string{}

@@ -1,0 +1,7 @@
+.git
+bin
+dist
+docs
+eru-cli
+*.test
+coverage.out

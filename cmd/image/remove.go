@@ -2,29 +2,28 @@ package image
 
 import (
 	"context"
+	"errors"
 	"io"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-type cleanImageOptions struct {
+type removeImageOptions struct {
 	client    corepb.CoreRPCClient
 	images    []string
-	step      int32
 	podname   string
 	nodenames []string
 	prune     bool
 }
 
-func (o *cleanImageOptions) run(ctx context.Context) error {
+func (o *removeImageOptions) run(ctx context.Context) error {
+	logger := log.WithFunc("image.removeImageOptions.run")
 	opts := &corepb.RemoveImageOptions{
-		Images: o.images,
-		// Step:      o.step,
+		Images:    o.images,
 		Podname:   o.podname,
 		Nodenames: o.nodenames,
 		Prune:     o.prune,
@@ -36,43 +35,42 @@ func (o *cleanImageOptions) run(ctx context.Context) error {
 
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		} else if err != nil {
 			return err
 		}
 
 		if msg.Success {
-			logrus.Infof("[CleanImage] Success remove %s", msg.Image)
+			logger.Infof(ctx, "remove %s success", msg.Image)
 		} else {
-			logrus.Errorf("[Cleanimage] Failed remove %s", msg.Image)
+			logger.Warnf(ctx, "remove %s failed", msg.Image)
 		}
 		for _, m := range msg.Messages {
-			logrus.Infof(m)
+			logger.Info(ctx, m)
 		}
 	}
 
 	return nil
 }
 
-func cmdImageClean(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdImageRemove(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	images := c.Args().Slice()
+	images := cmd.Args().Slice()
 	if len(images) == 0 {
-		return errors.New("Images must be specified")
+		return errors.New("images must be specified")
 	}
 
-	o := &cleanImageOptions{
+	o := &removeImageOptions{
 		client:    client,
 		images:    images,
-		step:      int32(c.Int("concurrent")),
-		podname:   c.String("pod"),
-		nodenames: c.StringSlice("node"),
-		prune:     c.Bool("prune"),
+		podname:   cmd.String(flagPod),
+		nodenames: cmd.StringSlice(flagNode),
+		prune:     cmd.Bool("prune"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

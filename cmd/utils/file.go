@@ -1,80 +1,87 @@
 package utils
 
 import (
-	"io/ioutil"
+	"context"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/projecteru2/core/types"
-
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
-// ReadAllFiles open each pair in files
-// and returns a map with key as dstfile, value as linux file
-// files: list of srcfile:dstfile:mode:uid:gid
-func ReadAllFiles(files []string) map[string]*types.LinuxFile {
+// FileOptions carries the --file pairs in the shape the core rpc expects.
+type FileOptions struct {
+	Data   map[string][]byte
+	Modes  map[string]*corepb.FileMode
+	Owners map[string]*corepb.FileOwner
+}
+
+// GenerateFileOptions reads the --file pairs into data, mode and owner maps.
+func GenerateFileOptions(cmd *cli.Command) (*FileOptions, error) {
+	files, err := ReadAllFiles(cmd.StringSlice("file"))
+	if err != nil {
+		return nil, err
+	}
+
+	o := &FileOptions{
+		Data:   map[string][]byte{},
+		Modes:  map[string]*corepb.FileMode{},
+		Owners: map[string]*corepb.FileOwner{},
+	}
+	for dst, file := range files {
+		o.Data[dst] = file.Content
+		o.Modes[dst] = &corepb.FileMode{Mode: file.Mode}
+		o.Owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)} //nolint:gosec
+	}
+	return o, nil
+}
+
+// ReadAllFiles reads srcfile:dstfile[:mode[:uid:gid]] pairs into a dstfile keyed map.
+func ReadAllFiles(files []string) (map[string]*types.LinuxFile, error) {
 	m := map[string]*types.LinuxFile{}
 	for _, file := range files {
 		ps := strings.Split(file, ":")
-		f := &types.LinuxFile{}
-		var err error
+		if len(ps) != 2 && len(ps) != 3 && len(ps) != 5 {
+			return nil, fmt.Errorf("invalid file %q, want src:dst[:mode[:uid:gid]]", file)
+		}
 
-		switch {
-		case len(ps) >= 5:
-			// srcfile:dstfile:mode:uid:gid
-			var uid, gid int64
-			uid, err = strconv.ParseInt(ps[3], 10, 0)
+		f := &types.LinuxFile{}
+		if len(ps) == 5 {
+			uid, err := strconv.ParseInt(ps[3], 10, 0)
 			if err != nil {
-				break
+				return nil, fmt.Errorf("parse uid of %q: %w", file, err)
 			}
-			gid, err = strconv.ParseInt(ps[3], 10, 0)
+			gid, err := strconv.ParseInt(ps[4], 10, 0)
 			if err != nil {
-				break
+				return nil, fmt.Errorf("parse gid of %q: %w", file, err)
 			}
 			f.UID = int(uid)
 			f.GID = int(gid)
-			fallthrough
-		case len(ps) >= 3:
-			// srcfile:dstfile:mode
-			f.Mode, err = strconv.ParseInt(ps[2], 8, 0)
-			if err != nil {
-				break
-			}
-			fallthrough
-		case len(ps) >= 2:
-			// srcfile:dstfile
-			f.Content, err = ioutil.ReadFile(ps[0])
-			if err != nil {
-				break
-			}
-			m[ps[1]] = f
 		}
+		if len(ps) >= 3 {
+			mode, err := strconv.ParseInt(ps[2], 8, 0)
+			if err != nil {
+				return nil, fmt.Errorf("parse mode of %q: %w", file, err)
+			}
+			f.Mode = mode
+		}
+
+		content, err := os.ReadFile(ps[0]) //nolint:gosec
+		if err != nil {
+			return nil, fmt.Errorf("read %q: %w", ps[0], err)
+		}
+		f.Content = content
+		m[ps[1]] = f
 	}
-	return m
+	return m, nil
 }
 
-// GenerateFileOptions returns file options
-func GenerateFileOptions(c *cli.Context) (map[string][]byte, map[string]*corepb.FileMode, map[string]*corepb.FileOwner) {
-	data := map[string][]byte{}
-	modes := map[string]*corepb.FileMode{}
-	owners := map[string]*corepb.FileOwner{}
-
-	m := ReadAllFiles(c.StringSlice("file"))
-	for dst, file := range m {
-		data[dst] = file.Content
-		modes[dst] = &corepb.FileMode{Mode: file.Mode}
-		owners[dst] = &corepb.FileOwner{Uid: int32(file.UID), Gid: int32(file.GID)}
-	}
-
-	return data, modes, owners
-}
-
-// SplitFiles transfers a list of
-// src:dst to
-// {src: dst}
+// SplitFiles turns a list of src:dst strings into a map.
 func SplitFiles(files []string) map[string]string {
 	ret := map[string]string{}
 	for _, f := range files {
@@ -87,12 +94,16 @@ func SplitFiles(files []string) map[string]string {
 	return ret
 }
 
-// GetSpecFromRemote gets specs from a remote position
-func GetSpecFromRemote(uri string) ([]byte, error) {
-	resp, err := http.Get(uri) //nolint
+// GetSpecFromRemote fetches a spec over HTTP.
+func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
-	return ioutil.ReadAll(resp.Body)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func() { _ = resp.Body.Close() }()
+	return io.ReadAll(resp.Body)
 }

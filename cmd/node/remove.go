@@ -2,13 +2,13 @@ package node
 
 import (
 	"context"
+	"errors"
+
+	"github.com/projecteru2/core/log"
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
 )
 
 type removeNodeOptions struct {
@@ -23,24 +23,24 @@ func (o *removeNodeOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	logrus.Infof("[RemoveNode] success")
+	log.WithFunc("node.removeNodeOptions.run").Infof(ctx, "remove node %s success", o.name)
 	return nil
 }
 
-func cmdNodeRemove(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeRemove(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &removeNodeOptions{
 		client: client,
 		name:   name,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

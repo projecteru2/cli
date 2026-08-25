@@ -1,17 +1,26 @@
 package lambda
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/core/strategy"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// Command exports lambda subommands
+const (
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
+)
+
+var stopOnFirstArg = 1
+
+// Command returns the lambda command tree.
 func Command() *cli.Command {
 	return &cli.Command{
-		Name:  "lambda",
-		Usage: "run commands in a workload like local",
+		Name:         "lambda",
+		Usage:        "run commands in a workload like local",
+		ArgsUsage:    "-- cmd1 cmd2 cmd3",
+		StopOnNthArg: &stopOnFirstArg,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:  "name",
@@ -35,7 +44,7 @@ func Command() *cli.Command {
 			},
 			&cli.StringSliceFlag{
 				Name:  "volume",
-				Usage: "set volume limitcan use multiple times",
+				Usage: "set volume limit, can use multiple times",
 			},
 			&cli.StringFlag{
 				Name:    "working-dir",
@@ -90,8 +99,12 @@ func Command() *cli.Command {
 				Value:   false,
 			},
 			&cli.StringFlag{
+				Name:  "extra-resources",
+				Usage: "extra resources, e.g., {\"gpu\":{\"count\":1}}",
+			},
+			&cli.StringFlag{
 				Name:  "deploy-strategy",
-				Usage: "deploy method auto/fill/each",
+				Usage: "deploy method auto/fill/each/global/drained/dummy",
 				Value: strategy.Auto,
 			},
 			&cli.StringFlag{

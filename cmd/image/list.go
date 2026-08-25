@@ -3,14 +3,13 @@ package image
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	"github.com/urfave/cli/v2"
-
-	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
 type listImageOptions struct {
@@ -27,16 +26,14 @@ func (o *listImageOptions) run(ctx context.Context) error {
 	msgs := []*corepb.ListImageMessage{}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
-			fmt.Printf("Build failed: %s\n", err.Error())
 			return err
 		}
 
-		if len(msg.Err) > 1 {
-			fmt.Printf("Build failed: %s\n", msg.Err)
+		if msg.Err != "" {
 			return cli.Exit(msg.Err, -1)
 		}
 
@@ -47,13 +44,13 @@ func (o *listImageOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdImageList(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdImageList(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	opts, err := generateListOptions(c)
+	opts, err := generateListOptions(cmd)
 	if err != nil {
 		return err
 	}
@@ -62,15 +59,15 @@ func cmdImageList(c *cli.Context) error {
 		client: client,
 		opts:   opts,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func generateListOptions(c *cli.Context) (*corepb.ListImageOptions, error) {
-	filter := c.String("filter")
-	podname := c.String("pod")
-	nodename := c.StringSlice("node")
-	if len(nodename) < 1 && len(podname) < 1 {
-		return nil, errors.New("[List] podname or nodenames should be given")
+func generateListOptions(cmd *cli.Command) (*corepb.ListImageOptions, error) {
+	filter := cmd.String("filter")
+	podname := cmd.String(flagPod)
+	nodename := cmd.StringSlice(flagNode)
+	if len(nodename) == 0 && podname == "" {
+		return nil, errors.New("podname or nodenames should be given")
 	}
 
 	return &corepb.ListImageOptions{

@@ -1,0 +1,3 @@
+title: eru-cli
+description: Eru command-line client — pods, nodes, workloads, images, networks and lambdas over gRPC.
+theme: jekyll-theme-primer

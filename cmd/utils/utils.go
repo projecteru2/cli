@@ -2,13 +2,18 @@ package utils
 
 import (
 	"bytes"
-	"encoding/json"
+	"context"
+	"errors"
+	"fmt"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 	"text/template"
 
 	"github.com/docker/go-units"
-	"github.com/urfave/cli/v2"
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 )
 
 // GetNetworks returns a networkmode -> ip map
@@ -26,27 +31,33 @@ func GetNetworks(network string) map[string]string {
 	return networks
 }
 
-// ParseRAMInHuman returns int value in bytes of a human readable string
-// e.g. 100KB -> 102400
+// ParseRAMInHuman converts a human readable size such as 100KB into bytes.
 func ParseRAMInHuman(ram string) (int64, error) {
 	if ram == "" {
 		return 0, nil
 	}
-	flag := int64(1)
-	if strings.HasPrefix(ram, "-") {
-		flag = int64(-1)
-		ram = strings.TrimLeft(ram, "-")
+	sign := int64(1)
+	if trimmed, ok := strings.CutPrefix(ram, "-"); ok {
+		sign = int64(-1)
+		ram = trimmed
 	}
 	ramInBytes, err := units.RAMInBytes(ram)
 	if err != nil {
 		return 0, err
 	}
-	return ramInBytes * flag, nil
+	return ramInBytes * sign, nil
 }
 
-// SplitEquality transfers a list of
-// aaa=bbb, xxx=yyy into
-// {aaa:bbb, xxx:yyy}
+// ParseDeployStrategy maps a --deploy-strategy value onto the core enum.
+func ParseDeployStrategy(name string) (corepb.DeployOptions_Strategy, error) {
+	value, ok := corepb.DeployOptions_Strategy_value[strings.ToUpper(name)]
+	if !ok {
+		return 0, fmt.Errorf("invalid deploy strategy %q, want one of %s", name, strings.Join(slices.Sorted(maps.Keys(corepb.DeployOptions_Strategy_value)), "/"))
+	}
+	return corepb.DeployOptions_Strategy(value), nil
+}
+
+// SplitEquality turns a list of key=value strings into a map.
 func SplitEquality(elements []string) map[string]string {
 	r := map[string]string{}
 	for _, e := range elements {
@@ -59,7 +70,7 @@ func SplitEquality(elements []string) map[string]string {
 	return r
 }
 
-// EnvParser .
+// EnvParser expands Go template references to environment variables in b.
 func EnvParser(b []byte) ([]byte, error) {
 	tmpl, err := template.New("tmpl").Option("missingkey=default").Parse(string(b))
 	if err != nil {
@@ -70,12 +81,11 @@ func EnvParser(b []byte) ([]byte, error) {
 	return out.Bytes(), err
 }
 
-// ExitCoder wraps a cli Action function into
-// a function with ExitCoder interface
-func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
-	return func(c *cli.Context) error {
-		if err := f(c); err != nil {
-			if exitErr, ok := err.(cli.ExitCoder); ok {
+// ExitCoder turns an action error into a cli.ExitCoder.
+func ExitCoder(f cli.ActionFunc) cli.ActionFunc {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		if err := f(ctx, cmd); err != nil {
+			if exitErr, ok := errors.AsType[cli.ExitCoder](err); ok {
 				return cli.Exit(exitErr, exitErr.ExitCode())
 			}
 			return cli.Exit(err, -1)
@@ -84,19 +94,8 @@ func ExitCoder(f func(*cli.Context) error) func(*cli.Context) error {
 	}
 }
 
-// GetHostname .
+// GetHostname returns the local hostname, empty when it cannot be read.
 func GetHostname() string {
 	hostname, _ := os.Hostname()
 	return hostname
-}
-
-// ParseExtraResources .
-func ParseExtraResources(c *cli.Context) (map[string]any, error) {
-	var err error
-	extraResourcesMap := make(map[string]any)
-	extraResources := c.String("extra-resources")
-	if extraResources != "" {
-		err = json.Unmarshal([]byte(extraResources), &extraResourcesMap)
-	}
-	return extraResourcesMap, err
 }

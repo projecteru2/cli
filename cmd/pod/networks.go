@@ -2,13 +2,13 @@ package pod
 
 import (
 	"context"
+	"errors"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/juju/errors"
-	"github.com/urfave/cli/v2"
 )
 
 type listPodNetworksOptions struct {
@@ -30,21 +30,21 @@ func (o *listPodNetworksOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdPodListNetworks(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdPodListNetworks(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Pod name must be given")
+		return errors.New("pod name must be given")
 	}
 
 	o := &listPodNetworksOptions{
 		client: client,
 		name:   name,
-		driver: c.String("driver"),
+		driver: cmd.String("driver"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

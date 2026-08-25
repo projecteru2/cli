@@ -1,25 +1,30 @@
 package node
 
 import (
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/urfave/cli/v3"
 
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 const (
 	nodeArgsUsage = "node name"
+
+	flagLabel   = "label"
+	flagStorage = "storage"
+
+	resourceCPUMem  = "cpumem"
+	resourceStorage = "storage"
 )
 
-// Command exports node subommands
+// Command returns the node command tree.
 func Command() *cli.Command {
 	return &cli.Command{
 		Name:  "node",
 		Usage: "node commands",
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:      "get",
 				Usage:     "get a node",
-				Flags:     []cli.Flag{},
 				ArgsUsage: nodeArgsUsage,
 				Action:    utils.ExitCoder(cmdNodeGet),
 			},
@@ -34,7 +39,7 @@ func Command() *cli.Command {
 				Usage: "list node workloads",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "labels to filter, e.g, a=1, b=2",
 					},
 				},
@@ -118,7 +123,7 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name: "memory",
 						Usage: `memory, unit can be K/M/G/T, 
-                          when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                          when using --delta flag, this can be a negative number indicating how much to add to the current value, 
                           e.g. --memory -10G --delta, means memory will be the current value - 10`,
 					},
 					&cli.StringSliceFlag{
@@ -129,15 +134,15 @@ func Command() *cli.Command {
 					&cli.StringSliceFlag{
 						Name: "numa-memory",
 						Usage: `numa memory values, unit can be K/M/G/T, 
-                        when using --delta flag, this can be a negtive number indicating how much to add to the current value, 
+                        when using --delta flag, this can be a negative number indicating how much to add to the current value, 
                         e.g. --numa-memory -10G --delta, means the value will be current value - 10
                         this value can be set multiple times, the index will be the numa node ID,
                         e.g. --numa-memory 10G --numa-memory 15G, means node ID 0 will be 10GB, node ID 1 will be 15GB`,
 					},
 					&cli.StringFlag{
-						Name: "storage",
+						Name: flagStorage,
 						Usage: `storage, unit can be K/M/G/T,
-					            when using --delta flag, this can be a negtive number indicating how much to add to the current value,
+					            when using --delta flag, this can be a negative number indicating how much to add to the current value,
 					            e.g. --storage -10G --delta, means storage will be the current value - 10`,
 					},
 					&cli.StringSliceFlag{
@@ -158,7 +163,7 @@ func Command() *cli.Command {
 								rm-disk is not supported in delta mode`,
 					},
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "label for the node, can set multiple times, e.g. --label a=1 --label b=2",
 					},
 					&cli.BoolFlag{
@@ -200,7 +205,7 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:    "nodename",
 						Usage:   "name of this node, use `hostname` as default",
-						EnvVars: []string{"HOSTNAME"},
+						Sources: cli.EnvVars("HOSTNAME"),
 						Value:   utils.GetHostname(),
 					},
 					&cli.StringFlag{
@@ -238,11 +243,11 @@ func Command() *cli.Command {
 						Usage: "memory like -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringFlag{
-						Name:  "storage",
+						Name:  flagStorage,
 						Usage: "storage -1M or 1G, support K, M, G, T",
 					},
 					&cli.StringSliceFlag{
-						Name:  "label",
+						Name:  flagLabel,
 						Usage: "add label for node, like a=1 b=2, can set multiple times",
 					},
 					&cli.StringSliceFlag{

@@ -2,14 +2,14 @@ package node
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/projecteru2/cli/cmd/utils"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
-	"github.com/juju/errors"
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type setNodeDownOptions struct {
@@ -20,49 +20,46 @@ type setNodeDownOptions struct {
 }
 
 func (o *setNodeDownOptions) run(ctx context.Context) error {
-	do := true
+	logger := log.WithFunc("node.setNodeDownOptions.run")
 	if o.check {
-		timeout, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
+		checkCtx, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
 		defer cancel()
-		if _, err := o.client.GetNodeResource(timeout, &corepb.GetNodeResourceOptions{
+		if _, err := o.client.GetNodeResource(checkCtx, &corepb.GetNodeResourceOptions{
 			Opts: &corepb.GetNodeOptions{
 				Nodename: o.name,
 			},
 		}); err == nil {
-			logrus.Warn("[SetNode] node is not down")
-			do = false
+			logger.Warn(ctx, "node is not down")
+			return nil
 		}
 	}
 
-	if do {
-		_, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
-			Nodename: o.name,
-			Bypass:   corepb.TriOpt_TRUE,
-		})
-		if err != nil {
-			return err
-		}
-		logrus.Infof("[SetNode] node %s down", o.name)
+	if _, err := o.client.SetNode(ctx, &corepb.SetNodeOptions{
+		Nodename: o.name,
+		Bypass:   corepb.TriOpt_TRUE,
+	}); err != nil {
+		return err
 	}
+	logger.Infof(ctx, "node %s down", o.name)
 	return nil
 }
 
-func cmdNodeSetDown(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdNodeSetDown(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	name := c.Args().First()
+	name := cmd.Args().First()
 	if name == "" {
-		return errors.New("Node name must be given")
+		return errors.New("node name must be given")
 	}
 
 	o := &setNodeDownOptions{
 		client:       client,
 		name:         name,
-		check:        c.Bool("check"),
-		checkTimeout: c.Int("check-timeout"),
+		check:        cmd.Bool("check"),
+		checkTimeout: cmd.Int("check-timeout"),
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

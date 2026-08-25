@@ -3,11 +3,11 @@ package core
 import (
 	"context"
 
+	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
+
 	"github.com/projecteru2/cli/cmd/utils"
 	"github.com/projecteru2/cli/describe"
-	corepb "github.com/projecteru2/core/rpc/gen"
-
-	"github.com/urfave/cli/v2"
 )
 
 type coreInfoOptions struct {
@@ -24,8 +24,8 @@ func (o *coreInfoOptions) run(ctx context.Context) error {
 	return nil
 }
 
-func cmdCoreInfo(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdCoreInfo(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
@@ -33,5 +33,5 @@ func cmdCoreInfo(c *cli.Context) error {
 	o := &coreInfoOptions{
 		client: client,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }

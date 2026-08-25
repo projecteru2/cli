@@ -2,73 +2,72 @@ package workload
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 
-	"github.com/projecteru2/cli/cmd/utils"
-	"github.com/projecteru2/cli/types"
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 
-	"github.com/sirupsen/logrus"
-	"github.com/urfave/cli/v2"
-	"gopkg.in/yaml.v2"
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type replaceWorkloadsOptions struct {
 	client         corepb.CoreRPCClient
 	opts           *corepb.DeployOptions
 	labels         map[string]string
-	copys          map[string]string
+	copies         map[string]string
 	networkInherit bool
 }
 
 func (o *replaceWorkloadsOptions) run(ctx context.Context) error {
-	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copys)
+	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, o.labels, o.copies)
 }
 
-func cmdWorkloadReplace(c *cli.Context) error {
-	client, err := utils.NewCoreRPCClient(c)
+func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	for _, key := range []string{"entry", "image"} {
-		if c.String(key) == "" {
-			return fmt.Errorf("[Replace] no %s given", key)
+	for _, key := range []string{flagEntry, flagImage} {
+		if cmd.String(key) == "" {
+			return fmt.Errorf("no %s given", key)
 		}
 	}
-	if strings.Contains(c.String("entry"), "_") {
-		return fmt.Errorf("[Replace] entry can not contain _")
+	if strings.Contains(cmd.String(flagEntry), "_") {
+		return errors.New("entry can not contain _")
 	}
 
-	opts, err := generateReplaceOptions(c)
+	opts, err := generateReplaceOptions(ctx, cmd)
 	if err != nil {
 		return err
 	}
 
-	networkInherit := c.Bool("network-inherit")
+	networkInherit := cmd.Bool("network-inherit")
 	if len(opts.Networks) > 0 {
-		logrus.Warnf("[Replace] Network is not empty, so network-inherit will set to false")
+		log.WithFunc("workload.cmdWorkloadReplace").Warn(ctx, "network is not empty, so network-inherit is set to false")
 		networkInherit = false
 	}
 	o := &replaceWorkloadsOptions{
 		client:         client,
 		opts:           opts,
-		copys:          utils.SplitFiles(c.StringSlice("copy")),
-		labels:         utils.SplitEquality(c.StringSlice("label")),
+		copies:         utils.SplitFiles(cmd.StringSlice("copy")),
+		labels:         utils.SplitEquality(cmd.StringSlice("label")),
 		networkInherit: networkInherit,
 	}
-	return o.run(c.Context)
+	return o.run(ctx)
 }
 
-func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels map[string]string, copys map[string]string) error {
+func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOpts *corepb.DeployOptions, networkInherit bool, labels, copies map[string]string) error {
+	logger := log.WithFunc("workload.doReplaceWorkload")
 	opts := &corepb.ReplaceOptions{
 		DeployOpt:      deployOpts,
 		Networkinherit: networkInherit,
 		FilterLabels:   labels,
-		Copy:           copys,
+		Copy:           copies,
 	}
 	resp, err := client.ReplaceWorkload(ctx, opts)
 	if err != nil {
@@ -76,140 +75,74 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 	}
 	for {
 		msg, err := resp.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
 			return err
 		}
 
-		logrus.Infof("[Replace] Replace %s", msg.Remove.Id)
+		logger.Infof(ctx, "replace %s", msg.Remove.Id)
 		if msg.Error != "" {
-			logrus.Errorf("[Replace] Replace %s failed %s, hook %s", msg.Remove.Id, msg.Error, msg.Remove.Hook)
+			logger.Errorf(ctx, errors.New(msg.Error), "replace %s failed, hook %s", msg.Remove.Id, msg.Remove.Hook)
 			if msg.Create != nil && msg.Create.Success {
-				logrus.Errorf("[Replace] But create done id %s name %s", msg.Create.Id, msg.Create.Name)
+				logger.Infof(ctx, "but create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
 			continue
-		} else if msg.Remove.Hook != "" {
-			logrus.Infof("[Replace] Hook output \n%s", msg.Remove.Hook)
+		}
+		if msg.Remove.Hook != "" {
+			logger.Infof(ctx, "hook output \n%s", msg.Remove.Hook)
 		}
 
-		// 一定会保证有 removeMsg 返回，success 一定为真
-		removeMsg := msg.Remove
-		logrus.Infof("[Replace] Hook workload %s removed", removeMsg.Id)
-
-		// 到这里 create 肯定是成功了，否则错误会上浮到 err 中
-		createMsg := msg.Create
-		logrus.Infof("[Replace] New workload %s, resource: %s", createMsg.Name, createMsg.Resources)
-		if len(createMsg.Hook) > 0 {
-			logrus.Infof("[Replace] Other output \n%s", createMsg.Hook)
+		logger.Infof(ctx, "workload %s removed", msg.Remove.Id)
+		logger.Infof(ctx, "new workload %s, resource: %s", msg.Create.Name, msg.Create.Resources)
+		if len(msg.Create.Hook) > 0 {
+			logger.Infof(ctx, "other output \n%s", msg.Create.Hook)
 		}
-		for name, publish := range createMsg.Publish {
-			logrus.Infof("[Replace] Bound %s ip %s", name, publish)
+		for name, publish := range msg.Create.Publish {
+			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
 	}
 	return nil
 }
 
-func generateReplaceOptions(c *cli.Context) (*corepb.DeployOptions, error) {
-	specURI := c.Args().First()
-	if specURI == "" {
-		return nil, fmt.Errorf("a specs must be given")
-	}
-	logrus.Debugf("[Replace] Replace with %s", specURI)
-
-	var (
-		data []byte
-		err  error
-	)
-	if strings.HasPrefix(specURI, "http") {
-		data, err = utils.GetSpecFromRemote(specURI)
-	} else {
-		data, err = ioutil.ReadFile(specURI)
-	}
+func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
+	specs, err := loadSpecs(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
 
-	specs := &types.Specs{}
-	if err := yaml.Unmarshal(data, specs); err != nil {
-		return nil, fmt.Errorf("[generateReplaceOptions] get specs failed %v", err)
+	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
+	if err != nil {
+		return nil, err
 	}
 
-	entry := c.String("entry")
-
-	network := c.String("network")
-	networks := utils.GetNetworks(network)
-	entrypoint, ok := specs.Entrypoints[entry]
-	if !ok {
-		return nil, fmt.Errorf("[generateReplaceOptions] get entry failed")
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return nil, err
 	}
-
-	var hook *corepb.HookOptions
-	if entrypoint.Hook != nil {
-		hook = &corepb.HookOptions{
-			AfterStart: entrypoint.Hook.AfterStart,
-			BeforeStop: entrypoint.Hook.BeforeStop,
-			Force:      entrypoint.Hook.Force,
-		}
-	}
-
-	var healthCheck *corepb.HealthCheckOptions
-	if entrypoint.HealthCheck != nil {
-		healthCheck = &corepb.HealthCheckOptions{
-			TcpPorts: entrypoint.HealthCheck.TCPPorts,
-			HttpPort: entrypoint.HealthCheck.HTTPPort,
-			Url:      entrypoint.HealthCheck.HTTPURL,
-			Code:     int32(entrypoint.HealthCheck.HTTPCode),
-		}
-	}
-
-	var logConfig *corepb.LogOptions
-	if entrypoint.Log != nil {
-		logConfig = &corepb.LogOptions{
-			Type:   entrypoint.Log.Type,
-			Config: entrypoint.Log.Config,
-		}
-	}
-
-	content, modes, owners := utils.GenerateFileOptions(c)
 
 	return &corepb.DeployOptions{
-		Name: specs.Appname,
-		Entrypoint: &corepb.EntrypointOptions{
-			Name:        entry,
-			Commands:    entrypoint.GetCommands(),
-			Privileged:  entrypoint.Privileged,
-			Dir:         entrypoint.Dir,
-			Log:         logConfig,
-			Publish:     entrypoint.Publish,
-			Healthcheck: healthCheck,
-			Hook:        hook,
-			Restart:     entrypoint.Restart,
-			Sysctls:     entrypoint.Sysctls,
-		},
-		Resources: nil,
-		Podname:   c.String("pod"),
+		Name:       specs.Appname,
+		Entrypoint: entrypoint,
+		Podname:    cmd.String(flagPod),
 		NodeFilter: &corepb.NodeFilter{
-			Includes: c.StringSlice("node"),
-			Labels:   nil,
+			Includes: cmd.StringSlice(flagNode),
 		},
-		Image:          c.String("image"),
-		Count:          int32(c.Int("count")),
-		Env:            c.StringSlice("env"),
-		Networks:       networks,
+		Image:          cmd.String(flagImage),
+		Count:          int32(cmd.Int("count")), //nolint:gosec
+		Env:            cmd.StringSlice(flagEnv),
+		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
 		Labels:         specs.Labels,
 		Dns:            specs.DNS,
 		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: corepb.DeployOptions_Strategy(corepb.DeployOptions_Strategy_value[""]),
-		Data:           content,
-		Modes:          modes,
-		Owners:         owners,
-		User:           c.String("user"),
-		Debug:          c.Bool("debug"),
-		NodesLimit:     0,
-		IgnoreHook:     c.Bool("ignore-hook"),
-		AfterCreate:    c.StringSlice("after-create"),
-		RawArgs:        []byte{},
+		DeployStrategy: corepb.DeployOptions_AUTO,
+		Data:           files.Data,
+		Modes:          files.Modes,
+		Owners:         files.Owners,
+		User:           cmd.String("user"),
+		Debug:          cmd.Bool("debug"),
+		IgnoreHook:     cmd.Bool("ignore-hook"),
+		AfterCreate:    cmd.StringSlice("after-create"),
 	}, nil
 }
