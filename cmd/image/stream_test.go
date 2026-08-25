@@ -81,6 +81,34 @@ func TestBuildImageEndsEveryProgressLine(t *testing.T) {
 	}
 }
 
+func TestBuildImageKeepsOperatorStatusOutOfStdout(t *testing.T) {
+	o := &buildImageOptions{
+		client: &fakeImageClient{build: &fakeStream[corepb.BuildImageMessage]{msgs: []*corepb.BuildImageMessage{
+			{Stream: "Step 1/2 : FROM alpine\n"},
+		}}},
+		opts: &corepb.BuildImageOptions{Name: "app"},
+	}
+
+	var stdout string
+	logged := captureLog(t, func() {
+		stdout = captureStdout(t, func() {
+			if err := o.run(t.Context()); err != nil {
+				t.Fatalf("run: %v", err)
+			}
+		})
+	})
+
+	if strings.Contains(stdout, "complete") {
+		t.Errorf("stdout carried operator status: %q", stdout)
+	}
+	if stdout != "Step 1/2 : FROM alpine\n" {
+		t.Errorf("stdout: got %q, want only the remote stream", stdout)
+	}
+	if !strings.Contains(logged, "build image app complete") {
+		t.Errorf("log: got %q, want the completion line", logged)
+	}
+}
+
 func TestCacheImageReportsFailureReason(t *testing.T) {
 	o := &cacheImageOptions{
 		client: &fakeImageClient{cache: &fakeStream[corepb.CacheImageMessage]{msgs: []*corepb.CacheImageMessage{
