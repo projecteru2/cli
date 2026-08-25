@@ -151,10 +151,8 @@ github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/projecteru2/core v0.0.0-20260824231617-78144ce3a911 h1:WgKqmaC5nngJkHhi2qaySx4dM6itupFj8ZvDJenBR1E=
-github.com/projecteru2/core v0.0.0-20260824231617-78144ce3a911/go.mod h1:QUErIAwj8RpDX8vYG6TnVsjShlbu2wDnQIZjR9XgyQI=
-github.com/prometheus-community/pro-bing v0.9.1 h1:kpuAr6AU2oRtzGihJSUcetHtjc7ku7h6PxeuW9RVrQw=
-github.com/prometheus-community/pro-bing v0.9.1/go.mod h1:z79wYTxAOf6FpTng0QdIhZ3j/Nd5l3+gnFSCIT+SiSQ=
+github.com/projecteru2/core v0.0.0-20260825005017-ee20dafdc9ea h1:zxXkREzYXDI43JgaTumnqmdLYlwjd4BK3mdLvdWxBF0=
+github.com/projecteru2/core v0.0.0-20260825005017-ee20dafdc9ea/go.mod h1:KN5dGHDKlGvwL8HOR/J4Z59MWSkUSlVV/LQX8DlI0vo=
 github.com/prometheus/client_golang v0.9.1/go.mod h1:7SWBe2y4D6OKWSNQJUaRYU/AaXPKyh/dDVn+NZz0KFw=
 github.com/prometheus/client_golang v1.0.0/go.mod h1:db9x61etRT2tGnBNRi70OPL5FsnadC4Ky3P0J6CfImo=
 github.com/prometheus/client_golang v1.1.0/go.mod h1:I1FGZT9+L76gKKOs5djB6ezCbFQP1xR9D75/vuwEF3g=
