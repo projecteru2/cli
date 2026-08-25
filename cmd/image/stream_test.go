@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"strings"
 	"testing"
 
@@ -60,6 +61,26 @@ func TestBuildImageReportsFailure(t *testing.T) {
 	}
 }
 
+func TestBuildImageEndsEveryProgressLine(t *testing.T) {
+	o := &buildImageOptions{
+		client: &fakeImageClient{build: &fakeStream[corepb.BuildImageMessage]{msgs: []*corepb.BuildImageMessage{
+			{Id: "layer1", Status: "downloading", Progress: "1/2"},
+			{Id: "layer1", Status: "downloading", Progress: "2/2"},
+			{Id: "layer2", Status: "extracting", Progress: "1/1"},
+		}}},
+		opts: &corepb.BuildImageOptions{},
+	}
+
+	got := captureStdout(t, func() {
+		if err := o.run(t.Context()); err != nil {
+			t.Fatalf("run: %v", err)
+		}
+	})
+	if lines := strings.Count(got, "\n"); lines != 3 {
+		t.Errorf("got %d lines in %q, want 3", lines, got)
+	}
+}
+
 func TestCacheImageReportsFailureReason(t *testing.T) {
 	o := &cacheImageOptions{
 		client: &fakeImageClient{cache: &fakeStream[corepb.CacheImageMessage]{msgs: []*corepb.CacheImageMessage{
@@ -76,6 +97,30 @@ func TestCacheImageReportsFailureReason(t *testing.T) {
 	if !strings.Contains(got, "no such image") {
 		t.Errorf("got %q, want it to carry the failure reason", got)
 	}
+}
+
+func captureStdout(t *testing.T, f func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	orig := os.Stdout
+	os.Stdout = w
+	defer func() { os.Stdout = orig }()
+
+	out := make(chan string, 1)
+	go func() {
+		b, _ := io.ReadAll(r)
+		out <- string(b)
+	}()
+
+	f()
+
+	if err := w.Close(); err != nil {
+		t.Fatalf("close: %v", err)
+	}
+	return <-out
 }
 
 func captureLog(t *testing.T, f func()) string {

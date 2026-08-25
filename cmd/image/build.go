@@ -65,7 +65,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 				} else if term.IsTerminal(int(os.Stdout.Fd())) {
 					fmt.Printf(progressRewrite, p-pos, data)
 				} else {
-					fmt.Print(data)
+					fmt.Println(data)
 				}
 			}
 		}

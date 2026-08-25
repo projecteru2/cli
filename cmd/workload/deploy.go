@@ -45,11 +45,14 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 		Entrypoint: o.opts.Entrypoint.Name,
 		Limit:      1,
 	}
-	resp, err := o.client.ListWorkloads(ctx, lsOpts)
+	probeCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	resp, err := o.client.ListWorkloads(probeCtx, lsOpts)
 	if err != nil {
 		return fmt.Errorf("check workload: %w", err)
 	}
 	_, err = resp.Recv()
+	cancel()
 	if errors.Is(err, io.EOF) {
 		logger.Warn(ctx, "there is no workload to replace")
 		return doCreateWorkload(ctx, o.client, o.opts)
