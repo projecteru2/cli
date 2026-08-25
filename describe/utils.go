@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
+	"os"
 	"slices"
 	"strings"
 
@@ -18,7 +19,6 @@ const headerName = "Name"
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-// ToChan streams items over a channel.
 func ToChan[T any](items ...T) chan T {
 	ch := make(chan T)
 	go func() {
@@ -163,14 +163,43 @@ func describeAsYAML(o any) {
 	fmt.Println(string(y))
 }
 
-func describeChAsJSON[T any](ch <-chan T) {
-	for t := range ch {
-		describeAsJSON(t)
+func describeOr[T any](v T, fallback func(T)) {
+	switch {
+	case isJSON():
+		describeAsJSON(v)
+	case isYAML():
+		describeAsYAML(v)
+	default:
+		fallback(v)
 	}
 }
 
-func describeChAsYAML[T any](ch <-chan T) {
-	for t := range ch {
-		describeAsYAML(t)
+func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
+	switch {
+	case isJSON():
+		for t := range ch {
+			describeAsJSON(t)
+		}
+	case isYAML():
+		for t := range ch {
+			describeAsYAML(t)
+		}
+	default:
+		fallback(ch)
 	}
+}
+
+func renderTable(header []string, rows ...[]string) {
+	h := make(table.Row, len(header))
+	for i, name := range header {
+		h[i] = name
+	}
+
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(h)
+	t.AppendRows(toTableRows(rows))
+	t.AppendSeparator()
+	t.SetStyle(table.StyleLight)
+	t.Render()
 }

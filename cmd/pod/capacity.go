@@ -74,8 +74,8 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: resourcetypes.RawParams{flagStorage: storage},
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: resourcetypes.RawParams{flagStorage: storage},
 	})
 	if err != nil {
 		return err

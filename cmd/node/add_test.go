@@ -9,6 +9,8 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 func TestGenerateAddNodeOptions(t *testing.T) {
@@ -43,7 +45,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 				t.Errorf("podname: got %q, want %q", opts.Podname, "dev")
 			}
 
-			cpumem := decodeParams(t, opts.Resources[resourceCPUMem])
+			cpumem := decodeParams(t, opts.Resources[utils.ResourceCPUMem])
 			if got := cpumem.Int64("cpu"); got != tt.wantCPU {
 				t.Errorf("cpu: got %d, want %d", got, tt.wantCPU)
 			}
@@ -54,7 +56,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 				t.Errorf("memory: got %q, want %q", got, tt.wantMemory)
 			}
 
-			storage := decodeParams(t, opts.Resources[resourceStorage])
+			storage := decodeParams(t, opts.Resources[utils.ResourceStorage])
 			if got := storage.String(flagStorage); got != tt.wantStorage {
 				t.Errorf("storage: got %q, want %q", got, tt.wantStorage)
 			}

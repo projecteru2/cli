@@ -100,6 +100,9 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	dst := slices.Collect(maps.Keys(files.Data))[0]
+	if len(files.Data[dst]) == 0 {
+		return fmt.Errorf("%s is empty, nothing to send", dst)
+	}
 	o := &sendLargeWorkloadsOptions{
 		client:  client,
 		ids:     ids,

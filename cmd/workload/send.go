@@ -3,7 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
-	"io"
+	"fmt"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -33,22 +33,13 @@ func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.SendMessage) error {
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "send %s to %s failed", msg.Path, msg.Id)
-		} else {
-			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
+			return fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error)
 		}
-	}
-	return nil
+		logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
+		return nil
+	})
 }
 
 func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {

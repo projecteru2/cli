@@ -8,16 +8,8 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Images describes images as json, yaml or a table.
 func Images(msgs ...*corepb.ListImageMessage) {
-	switch {
-	case isJSON():
-		describeAsJSON(msgs)
-	case isYAML():
-		describeAsYAML(msgs)
-	default:
-		describeImages(msgs)
-	}
+	describeOr(msgs, describeImages)
 }
 
 func describeImages(msgs []*corepb.ListImageMessage) {

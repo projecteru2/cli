@@ -117,13 +117,23 @@ func TestCacheImageReportsFailureReason(t *testing.T) {
 		images: []string{"app:v1"},
 	}
 
-	got := captureLog(t, func() {
-		if err := o.run(t.Context()); err != nil {
-			t.Fatalf("run: %v", err)
-		}
-	})
-	if !strings.Contains(got, "no such image") {
-		t.Errorf("got %q, want it to carry the failure reason", got)
+	err := o.run(t.Context())
+	if err == nil || !strings.Contains(err.Error(), "no such image") {
+		t.Errorf("got %v, want it to carry the failure reason", err)
+	}
+}
+
+func TestRemoveImageReportsFailure(t *testing.T) {
+	o := &removeImageOptions{
+		client: &fakeImageClient{remove: &fakeStream[corepb.RemoveImageMessage]{msgs: []*corepb.RemoveImageMessage{
+			{Image: "app:v1", Success: false},
+		}}},
+		images: []string{"app:v1"},
+	}
+
+	err := o.run(t.Context())
+	if err == nil || !strings.Contains(err.Error(), "remove app:v1 failed") {
+		t.Errorf("got %v, want it to report the failed image", err)
 	}
 }
 
@@ -165,8 +175,9 @@ func captureLog(t *testing.T, f func()) string {
 
 type fakeImageClient struct {
 	corepb.CoreRPCClient
-	build *fakeStream[corepb.BuildImageMessage]
-	cache *fakeStream[corepb.CacheImageMessage]
+	build  *fakeStream[corepb.BuildImageMessage]
+	cache  *fakeStream[corepb.CacheImageMessage]
+	remove *fakeStream[corepb.RemoveImageMessage]
 }
 
 func (f *fakeImageClient) BuildImage(context.Context, *corepb.BuildImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.BuildImageMessage], error) {
@@ -175,6 +186,10 @@ func (f *fakeImageClient) BuildImage(context.Context, *corepb.BuildImageOptions,
 
 func (f *fakeImageClient) CacheImage(context.Context, *corepb.CacheImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CacheImageMessage], error) {
 	return f.cache, nil
+}
+
+func (f *fakeImageClient) RemoveImage(context.Context, *corepb.RemoveImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.RemoveImageMessage], error) {
+	return f.remove, nil
 }
 
 type fakeStream[T any] struct {

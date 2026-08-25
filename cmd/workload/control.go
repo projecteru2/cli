@@ -3,9 +3,8 @@ package workload
 import (
 	"context"
 	"errors"
-	"io"
+	"fmt"
 
-	corecluster "github.com/projecteru2/core/cluster"
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
@@ -32,65 +31,36 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		logger.Infof(ctx, "%s %s", o.action, coreutils.ShortID(msg.Id))
+	return utils.EachMessage(resp.Recv, func(msg *corepb.ControlWorkloadMessage) error {
 		if msg.Hook != nil {
 			logger.Infof(ctx, "hook output %s", string(msg.Hook))
 		}
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "%s %s failed", o.action, coreutils.ShortID(msg.Id))
+			return fmt.Errorf("%s %s: %s", o.action, coreutils.ShortID(msg.Id), msg.Error)
 		}
-	}
-	return nil
+		logger.Infof(ctx, "%s %s", o.action, coreutils.ShortID(msg.Id))
+		return nil
+	})
 }
 
-func newControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action string) (*controlWorkloadsOptions, error) {
-	client, err := utils.NewCoreRPCClient(ctx, cmd)
-	if err != nil {
-		return nil, err
-	}
+func cmdWorkloadControl(action string) cli.ActionFunc {
+	return func(ctx context.Context, cmd *cli.Command) error {
+		client, err := utils.NewCoreRPCClient(ctx, cmd)
+		if err != nil {
+			return err
+		}
 
-	ids := cmd.Args().Slice()
-	if len(ids) == 0 {
-		return nil, errors.New("workload id(s) should not be empty")
-	}
+		ids := cmd.Args().Slice()
+		if len(ids) == 0 {
+			return errors.New("workload id(s) should not be empty")
+		}
 
-	return &controlWorkloadsOptions{
-		client: client,
-		ids:    ids,
-		action: action,
-		force:  cmd.Bool(flagForce),
-	}, nil
-}
-
-func cmdWorkloadStart(ctx context.Context, cmd *cli.Command) error {
-	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStart)
-	if err != nil {
-		return err
+		o := &controlWorkloadsOptions{
+			client: client,
+			ids:    ids,
+			action: action,
+			force:  cmd.Bool(flagForce),
+		}
+		return o.run(ctx)
 	}
-	return o.run(ctx)
-}
-
-func cmdWorkloadStop(ctx context.Context, cmd *cli.Command) error {
-	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadStop)
-	if err != nil {
-		return err
-	}
-	return o.run(ctx)
-}
-
-func cmdWorkloadRestart(ctx context.Context, cmd *cli.Command) error {
-	o, err := newControlWorkloadsOptions(ctx, cmd, corecluster.WorkloadRestart)
-	if err != nil {
-		return err
-	}
-	return o.run(ctx)
 }

@@ -3,7 +3,6 @@ package status
 import (
 	"context"
 	"errors"
-	"io"
 	"os/signal"
 	"syscall"
 
@@ -38,26 +37,19 @@ func (o *statusOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.WorkloadStatusStreamMessage) error {
 		if msg.Error != "" {
 			if msg.Delete {
 				logger.Warnf(ctx, "%s deleted", coreutils.ShortID(msg.Id))
 			} else {
 				logger.Errorf(ctx, errors.New(msg.Error), "[%s] status changed with error", coreutils.ShortID(msg.Id))
 			}
-			continue
+			return nil
 		}
 
 		if msg.Delete {
 			logger.Warnf(ctx, "[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Workload.Name)
+			return nil
 		}
 
 		switch {
@@ -71,8 +63,8 @@ func (o *statusOptions) run(ctx context.Context) error {
 				logger.Infof(ctx, "[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}
 		}
-	}
-	return nil
+		return nil
+	})
 }
 
 func cmdStatus(ctx context.Context, cmd *cli.Command) error {

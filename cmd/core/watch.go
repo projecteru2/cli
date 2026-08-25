@@ -2,9 +2,7 @@ package core
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -24,16 +22,10 @@ func cmdWatchServiceStatus(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 	log.WithFunc("core.cmdWatchServiceStatus").Info(ctx, "watch start")
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			return nil
-		}
-		if err != nil {
-			return err
-		}
+	return utils.EachMessage(resp.Recv, func(msg *corepb.ServiceStatus) error {
 		for id, addr := range msg.Addresses {
 			fmt.Printf("%v: %v\n", id, addr)
 		}
-	}
+		return nil
+	})
 }

@@ -15,52 +15,17 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Nodes describes nodes as json, yaml or a table.
-func Nodes(nodes <-chan *corepb.Node, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(nodes)
-	case isYAML():
-		describeChAsYAML(nodes)
-	default:
-		describeNodes(nodes, false, stream)
-	}
+func Nodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
+	describeChOr(nodes, func(ch <-chan *corepb.Node) { describeNodes(ch, showInfo, stream) })
 }
 
-// NodesWithInfo describes nodes together with their engine info.
-func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(nodes)
-	case isYAML():
-		describeChAsYAML(nodes)
-	default:
-		describeNodes(nodes, true, stream)
-	}
-}
-
-// NodeResources describes node resource usage as json, yaml or a table.
-func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(resources)
-	case isYAML():
-		describeChAsYAML(resources)
-	default:
-		describeNodeResources(ctx, resources, stream)
-	}
+func NodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
+	describeChOr(resources, func(ch <-chan *corepb.NodeResource) { describeNodeResources(ctx, ch, stream) })
 }
 
 // NodeStatusMessage describes node status messages as json, yaml or log lines.
 func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
-	switch {
-	case isJSON():
-		describeAsJSON(ms)
-	case isYAML():
-		describeAsYAML(ms)
-	default:
-		describeNodeStatusMessage(ctx, ms)
-	}
+	describeOr(ms, func(m []*corepb.NodeStatusStreamMessage) { describeNodeStatusMessage(ctx, m) })
 }
 
 func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
@@ -142,7 +107,7 @@ func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
 	return append(rows, parseAll(usage)...)
 }
 
-func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
+func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
 	logger := log.WithFunc("describe.describeNodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
@@ -151,7 +116,7 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 	for resource := range resources {
 		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
-			logger.Error(ctx, err)
+			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
 			continue
 		}
 		rows := [][]string{

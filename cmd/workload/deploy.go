@@ -16,10 +16,11 @@ import (
 )
 
 type deployWorkloadsOptions struct {
-	client      corepb.CoreRPCClient
-	opts        *corepb.DeployOptions
-	dryRun      bool
-	autoReplace bool
+	client         corepb.CoreRPCClient
+	opts           *corepb.DeployOptions
+	dryRun         bool
+	autoReplace    bool
+	networkInherit bool
 }
 
 func (o *deployWorkloadsOptions) run(ctx context.Context) error {
@@ -60,8 +61,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	networkInherit := len(o.opts.Networks) == 0
-	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
+	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, nil, nil)
 }
 
 func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
@@ -85,10 +85,11 @@ func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	o := &deployWorkloadsOptions{
-		client:      client,
-		opts:        opts,
-		dryRun:      cmd.Bool("dry-run"),
-		autoReplace: cmd.Bool("auto-replace"),
+		client:         client,
+		opts:           opts,
+		dryRun:         cmd.Bool("dry-run"),
+		autoReplace:    cmd.Bool("auto-replace"),
+		networkInherit: !cmd.IsSet(flagNetwork),
 	}
 	return o.run(ctx)
 }
@@ -99,28 +100,20 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 	if err != nil {
 		return err
 	}
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
+	return utils.EachMessage(resp.Recv, func(msg *corepb.CreateWorkloadMessage) error {
+		if !msg.Success {
+			return fmt.Errorf("create workload on %s: %s", msg.Nodename, msg.Error)
 		}
 
-		if msg.Success {
-			logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
-			if len(msg.Hook) > 0 {
-				logger.Infof(ctx, "hook output \n%s", msg.Hook)
-			}
-			for name, publish := range msg.Publish {
-				logger.Infof(ctx, "bound %s ip %s", name, publish)
-			}
-		} else {
-			logger.Error(ctx, errors.New(msg.Error), "create workload failed")
+		logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
+		if len(msg.Hook) > 0 {
+			logger.Infof(ctx, "hook output \n%s", msg.Hook)
 		}
-	}
-	return nil
+		for name, publish := range msg.Publish {
+			logger.Infof(ctx, "bound %s ip %s", name, publish)
+		}
+		return nil
+	})
 }
 
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
@@ -134,12 +127,12 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, err
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(cmd)
+	memoryRequest, memoryLimit, err := ramOption(cmd, flagMemoryRequest, flagMemoryLimit, "memory")
 	if err != nil {
 		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
-	storageRequest, storageLimit, err := storageOption(cmd)
+	storageRequest, storageLimit, err := ramOption(cmd, flagStorageRequest, flagStorageLimit, flagStorage)
 	if err != nil {
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}
@@ -163,8 +156,8 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: storage,
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: storage,
 	})
 	if err != nil {
 		return nil, err

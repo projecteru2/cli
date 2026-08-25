@@ -21,16 +21,8 @@ type workloadStatistics struct {
 	Storage int64   `json:"storage" yaml:"storage"`
 }
 
-// Workloads describes workloads as json, yaml or a table.
 func Workloads(workloads ...*corepb.Workload) {
-	switch {
-	case isJSON():
-		describeAsJSON(workloads)
-	case isYAML():
-		describeAsYAML(workloads)
-	default:
-		describeWorkloads(workloads)
-	}
+	describeOr(workloads, describeWorkloads)
 }
 
 // WorkloadsStatistics describes the aggregated resource use of workloads.
@@ -46,43 +38,19 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		stat.Storage += int64(coreutils.Round(res["storage"].Float64("storage_request")))
 	}
 
-	switch {
-	case isJSON():
-		describeAsJSON(stat)
-	case isYAML():
-		describeAsYAML(stat)
-	default:
-		describeStatistics(stat.CPUs, stat.Memory, stat.Storage)
-	}
+	describeOr(stat, describeStatistics)
 }
 
-// WorkloadStatuses describes workload statuses as json, yaml or a table.
 func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
-	switch {
-	case isJSON():
-		describeAsJSON(workloadStatuses)
-	case isYAML():
-		describeAsYAML(workloadStatuses)
-	default:
-		describeWorkloadStatuses(workloadStatuses)
-	}
+	describeOr(workloadStatuses, describeWorkloadStatuses)
 }
 
-func describeStatistics(cpus float64, memory, storage int64) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"CPUs", "Memory", "Storage"})
-
-	rows := [][]string{
-		{fmt.Sprintf("%f", cpus)},
-		{strconv.FormatInt(memory, 10)},
-		{strconv.FormatInt(storage, 10)},
-	}
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-
-	t.SetStyle(table.StyleLight)
-	t.Render()
+func describeStatistics(stat workloadStatistics) {
+	renderTable([]string{"CPUs", "Memory", "Storage"},
+		[]string{fmt.Sprintf("%f", stat.CPUs)},
+		[]string{strconv.FormatInt(stat.Memory, 10)},
+		[]string{strconv.FormatInt(stat.Storage, 10)},
+	)
 }
 
 func describeWorkloads(workloads []*corepb.Workload) {

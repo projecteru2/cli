@@ -10,6 +10,8 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 func TestGenerateLambdaOptions(t *testing.T) {
@@ -52,7 +54,7 @@ func TestGenerateLambdaOptions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			opts := runLambdaCommand(t, tt.args)
 
-			storage := decodeParams(t, opts.DeployOptions.Resources[resourceStorage])
+			storage := decodeParams(t, opts.DeployOptions.Resources[utils.ResourceStorage])
 			if got := storage.Int64("storage-request"); got != tt.wantStorageReq {
 				t.Errorf("storage-request: got %d, want %d", got, tt.wantStorageReq)
 			}
@@ -66,7 +68,7 @@ func TestGenerateLambdaOptions(t *testing.T) {
 				t.Errorf("volumes-limit: got %v, want %v", got, tt.wantVolumesLim)
 			}
 
-			cpumem := decodeParams(t, opts.DeployOptions.Resources[resourceCPUMem])
+			cpumem := decodeParams(t, opts.DeployOptions.Resources[utils.ResourceCPUMem])
 			if got := cpumem.Int64("memory-limit"); got != tt.wantMemoryLimit {
 				t.Errorf("memory-limit: got %d, want %d", got, tt.wantMemoryLimit)
 			}

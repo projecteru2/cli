@@ -27,7 +27,7 @@ func (o *addNodeOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.Nodes(describe.ToChan(node), false)
+	describe.Nodes(describe.ToChan(node), false, false)
 	return nil
 }
 
@@ -62,52 +62,30 @@ func getLocalIP() string {
 	return ""
 }
 
-func readTLSConfigs(cmd *cli.Command) (caContent, certContent, keyContent string, err error) {
-	ca := cmd.String("ca")
-	if ca == "" {
-		defaultPath := "/etc/docker/tls/ca.crt"
-		if _, err := os.Stat(defaultPath); err == nil {
-			ca = defaultPath
+func readTLSConfigs(cmd *cli.Command) (ca, cert, key string, err error) {
+	for _, tls := range []struct {
+		flag        string
+		defaultPath string
+		content     *string
+	}{
+		{flagCA, "/etc/docker/tls/ca.crt", &ca},
+		{flagCert, "/etc/docker/tls/client.crt", &cert},
+		{flagKey, "/etc/docker/tls/client.key", &key},
+	} {
+		path := cmd.String(tls.flag)
+		if path == "" {
+			if _, statErr := os.Stat(tls.defaultPath); statErr != nil {
+				continue
+			}
+			path = tls.defaultPath
 		}
-	}
-	if ca != "" {
-		f, err := os.ReadFile(ca) //nolint:gosec
-		if err != nil {
-			return "", "", "", fmt.Errorf("read %s: %w", ca, err)
+		data, readErr := os.ReadFile(path) //nolint:gosec
+		if readErr != nil {
+			return "", "", "", fmt.Errorf("read %s: %w", path, readErr)
 		}
-		caContent = string(f)
+		*tls.content = string(data)
 	}
-
-	cert := cmd.String("cert")
-	if cert == "" {
-		defaultPath := "/etc/docker/tls/client.crt"
-		if _, err := os.Stat(defaultPath); err == nil {
-			cert = defaultPath
-		}
-	}
-	if cert != "" {
-		f, err := os.ReadFile(cert) //nolint:gosec
-		if err != nil {
-			return "", "", "", fmt.Errorf("read %s: %w", cert, err)
-		}
-		certContent = string(f)
-	}
-
-	key := cmd.String("key")
-	if key == "" {
-		defaultPath := "/etc/docker/tls/client.key"
-		if _, err := os.Stat(defaultPath); err == nil {
-			key = defaultPath
-		}
-	}
-	if key != "" {
-		f, err := os.ReadFile(key) //nolint:gosec
-		if err != nil {
-			return "", "", "", fmt.Errorf("read %s: %w", key, err)
-		}
-		keyContent = string(f)
-	}
-	return caContent, certContent, keyContent, nil
+	return ca, cert, key, nil
 }
 
 func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
@@ -165,8 +143,8 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: storage,
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: storage,
 	})
 	if err != nil {
 		return nil, err

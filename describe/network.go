@@ -1,40 +1,21 @@
 package describe
 
 import (
-	"os"
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Networks describes networks as json, yaml or a table.
 func Networks(networks ...*corepb.Network) {
-	switch {
-	case isJSON():
-		describeAsJSON(networks)
-	case isYAML():
-		describeAsYAML(networks)
-	default:
-		describeNetworks(networks)
-	}
+	describeOr(networks, describeNetworks)
 }
 
 func describeNetworks(networks []*corepb.Network) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{headerName, "Network"})
-
 	nameRow := []string{}
 	networkRow := []string{}
 	for _, network := range networks {
 		nameRow = append(nameRow, network.Name)
-		networkRow = append(networkRow, strings.Join(network.GetSubnets(), ","))
+		networkRow = append(networkRow, strings.Join(network.Subnets, ","))
 	}
-	rows := [][]string{nameRow, networkRow}
-
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable([]string{headerName, "Network"}, nameRow, networkRow)
 }

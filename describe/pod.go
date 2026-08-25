@@ -3,11 +3,9 @@ package describe
 import (
 	"cmp"
 	"fmt"
-	"os"
 	"slices"
 	"strconv"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
@@ -21,16 +19,8 @@ type capacityOfPod struct {
 	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
-// Pods describes pods as json, yaml or a table.
 func Pods(pods ...*corepb.Pod) {
-	switch {
-	case isJSON():
-		describeAsJSON(pods)
-	case isYAML():
-		describeAsYAML(pods)
-	default:
-		describePods(pods)
-	}
+	describeOr(pods, describePods)
 }
 
 // PodCapacity describes the capacity left for a given specification.
@@ -49,22 +39,21 @@ func PodCapacity(total int64, capacityMap map[string]int64) {
 		return cmp.Or(cmp.Compare(b.Capacity, a.Capacity), cmp.Compare(a.Name, b.Name))
 	})
 
-	switch {
-	case isJSON():
-		describeAsJSON(capPod)
-	case isYAML():
-		describeAsYAML(capPod)
-	default:
-		describePodCapacities(capPod)
+	describeOr(capPod, describePodCapacities)
+}
+
+func describePods(pods []*corepb.Pod) {
+	nameRow := []string{}
+	descRow := []string{}
+	for _, pod := range pods {
+		nameRow = append(nameRow, pod.Name)
+		descRow = append(descRow, pod.Desc)
 	}
+	renderTable([]string{headerName, "Description"}, nameRow, descRow)
 }
 
 func describePodCapacities(capacity *capacityOfPod) {
 	fmt.Println("Total:", capacity.Total)
-
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Node", "Capacity"})
 
 	nameRow := []string{}
 	descRow := []string{}
@@ -72,28 +61,5 @@ func describePodCapacities(capacity *capacityOfPod) {
 		nameRow = append(nameRow, node.Name)
 		descRow = append(descRow, strconv.FormatInt(node.Capacity, 10))
 	}
-	rows := [][]string{nameRow, descRow}
-
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-	t.SetStyle(table.StyleLight)
-	t.Render()
-}
-
-func describePods(pods []*corepb.Pod) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{headerName, "Description"})
-
-	nameRow := []string{}
-	descRow := []string{}
-	for _, pod := range pods {
-		nameRow = append(nameRow, pod.Name)
-		descRow = append(descRow, pod.Desc)
-	}
-	rows := [][]string{nameRow, descRow}
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable([]string{"Node", "Capacity"}, nameRow, descRow)
 }

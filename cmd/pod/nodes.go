@@ -3,7 +3,7 @@ package pod
 import (
 	"context"
 	"errors"
-	"io"
+	"slices"
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -58,15 +58,12 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		availableNodes[node.Name] = node
 	}
 
-	unavailNodes := []*corepb.Node{}
-	for _, node := range allNodes {
-		if _, ok := availableNodes[node.Name]; ok {
-			continue
-		}
-		unavailNodes = append(unavailNodes, node)
-	}
+	unavailNodes := slices.DeleteFunc(allNodes, func(node *corepb.Node) bool {
+		_, ok := availableNodes[node.Name]
+		return ok
+	})
 
-	o.describeNodes(describe.ToChan(unavailNodes...))
+	describe.Nodes(describe.ToChan(unavailNodes...), o.showInfo, o.stream)
 	return nil
 }
 
@@ -82,7 +79,7 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 		return err
 	}
 
-	o.describeNodes(ch)
+	describe.Nodes(ch, o.showInfo, o.stream)
 
 	return wait()
 }
@@ -105,34 +102,8 @@ func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNode
 	if err != nil {
 		return nil, nil, err
 	}
-
-	var recvErr error
-	ch := make(chan *corepb.Node)
-	go func() {
-		defer close(ch)
-
-		for {
-			node, err := stream.Recv()
-			if err != nil {
-				if !errors.Is(err, io.EOF) {
-					recvErr = err
-				}
-				return
-			}
-
-			ch <- node
-		}
-	}()
-
-	return ch, func() error { return recvErr }, nil
-}
-
-func (o *listPodNodesOptions) describeNodes(nodes <-chan *corepb.Node) {
-	if o.showInfo {
-		describe.NodesWithInfo(nodes, o.stream)
-	} else {
-		describe.Nodes(nodes, o.stream)
-	}
+	ch, wait := utils.StreamToChan(stream.Recv)
+	return ch, wait, nil
 }
 
 func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {

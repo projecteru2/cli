@@ -23,7 +23,6 @@ type Entrypoint struct {
 	Command          string `yaml:"cmd,omitempty"`
 }
 
-// GetCommands returns commands, falling back to splitting the legacy cmd string.
 func (e Entrypoint) GetCommands() []string {
 	if len(e.Commands) > 0 {
 		return e.Commands

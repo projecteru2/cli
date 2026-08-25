@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -178,13 +179,151 @@ func TestDissociateReadsTheNodeFlag(t *testing.T) {
 	}
 }
 
+func TestFailedItemsReachTheExitCode(t *testing.T) {
+	tests := []struct {
+		name    string
+		run     func(context.Context) error
+		wantErr string
+	}{
+		{
+			name: "create",
+			run: func(ctx context.Context) error {
+				client := &fakeWorkloadClient{create: &fakeStream[corepb.CreateWorkloadMessage]{msgs: []*corepb.CreateWorkloadMessage{
+					{Nodename: "node1", Success: false, Error: "not enough resource"},
+				}}}
+				return doCreateWorkload(ctx, client, &corepb.DeployOptions{})
+			},
+			wantErr: "not enough resource",
+		},
+		{
+			name: "replace",
+			run: func(ctx context.Context) error {
+				client := &fakeWorkloadClient{replace: &fakeStream[corepb.ReplaceWorkloadMessage]{msgs: []*corepb.ReplaceWorkloadMessage{
+					{Error: "image not found", Remove: &corepb.RemoveWorkloadMessage{Id: "cid1"}},
+				}}}
+				return doReplaceWorkload(ctx, client, &corepb.DeployOptions{}, false, nil, nil)
+			},
+			wantErr: "image not found",
+		},
+		{
+			name: "send",
+			run: func(ctx context.Context) error {
+				o := &sendWorkloadsOptions{client: &fakeWorkloadClient{sendFiles: &fakeStream[corepb.SendMessage]{msgs: []*corepb.SendMessage{
+					{Id: "cid1", Path: "/etc/app", Error: "read only file system"},
+				}}}}
+				return o.run(ctx)
+			},
+			wantErr: "read only file system",
+		},
+		{
+			name: "control",
+			run: func(ctx context.Context) error {
+				o := &controlWorkloadsOptions{
+					client: &fakeWorkloadClient{control: &fakeStream[corepb.ControlWorkloadMessage]{msgs: []*corepb.ControlWorkloadMessage{
+						{Id: "cid1", Error: "hook refused"},
+					}}},
+					action: "stop",
+				}
+				return o.run(ctx)
+			},
+			wantErr: "hook refused",
+		},
+		{
+			name: "remove",
+			run: func(ctx context.Context) error {
+				o := &removeWorkloadsOptions{client: &fakeWorkloadClient{remove: &fakeStream[corepb.RemoveWorkloadMessage]{msgs: []*corepb.RemoveWorkloadMessage{
+					{Id: "cid1", Success: false},
+				}}}}
+				return o.run(ctx)
+			},
+			wantErr: "remove cid1 failed",
+		},
+		{
+			name: "dissociate",
+			run: func(ctx context.Context) error {
+				o := &dissociateWorkloadsOptions{
+					client: &fakeWorkloadClient{dissociate: &fakeStream[corepb.DissociateWorkloadMessage]{msgs: []*corepb.DissociateWorkloadMessage{
+						{Id: "cid1", Error: "still running"},
+					}}},
+					ids: []string{"cid1"},
+				}
+				return o.run(ctx)
+			},
+			wantErr: "still running",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := tt.run(t.Context())
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("got %v, want it to mention %q", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestSendLargeRejectsAnEmptyFile(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "empty")
+	if err := os.WriteFile(path, nil, 0o600); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+
+	err := runCommand(t, "sendlarge", "--file", path+":/etc/app", "cid1")
+	if err == nil || !strings.Contains(err.Error(), "nothing to send") {
+		t.Errorf("got %v, want it to refuse the empty file", err)
+	}
+}
+
+func TestCopyRejectsAMalformedSource(t *testing.T) {
+	err := runCommand(t, "copy", "cid1")
+	if err == nil || !strings.Contains(err.Error(), "invalid source") {
+		t.Errorf("got %v, want it to name the malformed source", err)
+	}
+}
+
+func runCommand(t *testing.T, args ...string) error {
+	t.Helper()
+	exiter, writer := cli.OsExiter, cli.ErrWriter
+	cli.OsExiter = func(int) {}
+	cli.ErrWriter = io.Discard
+	t.Cleanup(func() { cli.OsExiter, cli.ErrWriter = exiter, writer })
+	return Command().Run(t.Context(), append([]string{"workload"}, args...))
+}
+
 type fakeWorkloadClient struct {
 	corepb.CoreRPCClient
 	copy          *fakeStream[corepb.CopyMessage]
 	send          *fakeSendStream
+	sendFiles     *fakeStream[corepb.SendMessage]
+	create        *fakeStream[corepb.CreateWorkloadMessage]
+	replace       *fakeStream[corepb.ReplaceWorkloadMessage]
+	control       *fakeStream[corepb.ControlWorkloadMessage]
+	remove        *fakeStream[corepb.RemoveWorkloadMessage]
 	dissociate    *fakeStream[corepb.DissociateWorkloadMessage]
 	nodeWorkloads map[string][]string
 	dissociated   []string
+}
+
+func (f *fakeWorkloadClient) CreateWorkload(context.Context, *corepb.DeployOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CreateWorkloadMessage], error) {
+	return f.create, nil
+}
+
+func (f *fakeWorkloadClient) ReplaceWorkload(context.Context, *corepb.ReplaceOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ReplaceWorkloadMessage], error) {
+	return f.replace, nil
+}
+
+func (f *fakeWorkloadClient) Send(context.Context, *corepb.SendOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.SendMessage], error) {
+	return f.sendFiles, nil
+}
+
+func (f *fakeWorkloadClient) ControlWorkload(context.Context, *corepb.ControlWorkloadOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ControlWorkloadMessage], error) {
+	return f.control, nil
+}
+
+func (f *fakeWorkloadClient) RemoveWorkload(context.Context, *corepb.RemoveWorkloadOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.RemoveWorkloadMessage], error) {
+	return f.remove, nil
 }
 
 func (f *fakeWorkloadClient) Copy(context.Context, *corepb.CopyOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CopyMessage], error) {

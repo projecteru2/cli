@@ -8,13 +8,22 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const (
+	ResourceCPUMem  = "cpumem"
+	ResourceStorage = "storage"
+
+	FlagExtraResources = "extra-resources"
+)
+
 // EncodeResources encodes plugin params for the core rpc; --extra-resources fills only the plugins not already present.
 func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[string][]byte, error) {
 	encoded := make(map[string][]byte, len(resources))
 	for plugin, params := range resources {
-		if err := encodeResource(encoded, plugin, params); err != nil {
+		b, err := encodeResource(plugin, params)
+		if err != nil {
 			return nil, err
 		}
+		encoded[plugin] = b
 	}
 
 	extra, err := parseExtraResources(cmd)
@@ -25,24 +34,25 @@ func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[s
 		if _, ok := encoded[plugin]; ok {
 			continue
 		}
-		if err := encodeResource(encoded, plugin, params); err != nil {
+		b, err := encodeResource(plugin, params)
+		if err != nil {
 			return nil, err
 		}
+		encoded[plugin] = b
 	}
 	return encoded, nil
 }
 
-func encodeResource(encoded map[string][]byte, plugin string, params any) error {
+func encodeResource(plugin string, params any) ([]byte, error) {
 	b, err := json.Marshal(params)
 	if err != nil {
-		return fmt.Errorf("encode %s resource: %w", plugin, err)
+		return nil, fmt.Errorf("encode %s resource: %w", plugin, err)
 	}
-	encoded[plugin] = b
-	return nil
+	return b, nil
 }
 
 func parseExtraResources(cmd *cli.Command) (map[string]any, error) {
-	extraResources := cmd.String("extra-resources")
+	extraResources := cmd.String(FlagExtraResources)
 	if extraResources == "" {
 		return nil, nil
 	}
