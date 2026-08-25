@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/docker/go-units v0.5.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
-	github.com/projecteru2/core v0.0.0-20260825005017-ee20dafdc9ea
+	github.com/projecteru2/core v0.0.0-20260825060526-92ab9f486c50
 	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/term v0.45.0
 	google.golang.org/grpc v1.83.1
@@ -15,9 +15,7 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
-	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/alphadose/haxmap v1.4.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -36,10 +34,8 @@ require (
 	github.com/getsentry/sentry-go v0.48.0 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
-	github.com/jinzhu/configor v1.2.2 // indirect
 	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
@@ -71,7 +67,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.45.0 // indirect
 	go.opentelemetry.io/otel/trace v1.45.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
