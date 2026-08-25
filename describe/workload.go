@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -68,7 +69,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	}
 	names := slices.Sorted(maps.Keys(plugins))
 
-	header := []any{"Name/ID/Pod/Node/Privileged", "Networks"}
+	header := []any{"Name/ID/Pod/Node/Privileged/CreateTime", "Networks"}
 	for _, name := range names {
 		header = append(header, name)
 	}
@@ -79,7 +80,7 @@ func describeWorkloads(workloads []*corepb.Workload) {
 
 	for i, c := range workloads {
 		rows := [][]string{
-			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Privileged: %v", c.Privileged)},
+			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Privileged: %v", c.Privileged), time.Unix(c.CreateTime, 0).UTC().Format(time.RFC3339)},
 			workloadNetworks(c),
 		}
 		for _, name := range names {
