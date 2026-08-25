@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	corecluster "github.com/projecteru2/core/cluster"
@@ -32,6 +33,7 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -41,15 +43,16 @@ func (o *controlWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 
-		logger.Infof(ctx, "%s %s", o.action, coreutils.ShortID(msg.Id))
 		if msg.Hook != nil {
 			logger.Infof(ctx, "hook output %s", string(msg.Hook))
 		}
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "%s %s failed", o.action, coreutils.ShortID(msg.Id))
+			errs = errors.Join(errs, fmt.Errorf("%s %s: %s", o.action, coreutils.ShortID(msg.Id), msg.Error))
+			continue
 		}
+		logger.Infof(ctx, "%s %s", o.action, coreutils.ShortID(msg.Id))
 	}
-	return nil
+	return errs
 }
 
 func newControlWorkloadsOptions(ctx context.Context, cmd *cli.Command, action string) (*controlWorkloadsOptions, error) {

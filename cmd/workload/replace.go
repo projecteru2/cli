@@ -73,6 +73,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 	if err != nil {
 		return err
 	}
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -82,9 +83,8 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 			return err
 		}
 
-		logger.Infof(ctx, "replace %s", msg.Remove.Id)
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "replace %s failed, hook %s", msg.Remove.Id, msg.Remove.Hook)
+			errs = errors.Join(errs, fmt.Errorf("replace %s: %s, hook %s", msg.Remove.Id, msg.Error, msg.Remove.Hook))
 			if msg.Create != nil && msg.Create.Success {
 				logger.Infof(ctx, "but create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
@@ -103,7 +103,7 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
 	}
-	return nil
+	return errs
 }
 
 func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {

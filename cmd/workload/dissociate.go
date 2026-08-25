@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -39,6 +40,7 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -48,13 +50,13 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 			return err
 		}
 
-		if msg.Error == "" {
-			logger.Infof(ctx, "dissociate workload %s from eru success", msg.Id)
-		} else {
-			logger.Errorf(ctx, errors.New(msg.Error), "dissociate workload %s from eru failed", msg.Id)
+		if msg.Error != "" {
+			errs = errors.Join(errs, fmt.Errorf("dissociate workload %s: %s", msg.Id, msg.Error))
+			continue
 		}
+		logger.Infof(ctx, "dissociate workload %s from eru success", msg.Id)
 	}
-	return nil
+	return errs
 }
 
 func cmdWorkloadDissociate(ctx context.Context, cmd *cli.Command) error {

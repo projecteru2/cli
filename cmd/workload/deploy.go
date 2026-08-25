@@ -16,10 +16,11 @@ import (
 )
 
 type deployWorkloadsOptions struct {
-	client      corepb.CoreRPCClient
-	opts        *corepb.DeployOptions
-	dryRun      bool
-	autoReplace bool
+	client         corepb.CoreRPCClient
+	opts           *corepb.DeployOptions
+	dryRun         bool
+	autoReplace    bool
+	networkInherit bool
 }
 
 func (o *deployWorkloadsOptions) run(ctx context.Context) error {
@@ -60,8 +61,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	networkInherit := len(o.opts.Networks) == 0
-	return doReplaceWorkload(ctx, o.client, o.opts, networkInherit, nil, nil)
+	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, nil, nil)
 }
 
 func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
@@ -85,10 +85,11 @@ func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	o := &deployWorkloadsOptions{
-		client:      client,
-		opts:        opts,
-		dryRun:      cmd.Bool("dry-run"),
-		autoReplace: cmd.Bool("auto-replace"),
+		client:         client,
+		opts:           opts,
+		dryRun:         cmd.Bool("dry-run"),
+		autoReplace:    cmd.Bool("auto-replace"),
+		networkInherit: !cmd.IsSet(flagNetwork),
 	}
 	return o.run(ctx)
 }
@@ -99,6 +100,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 	if err != nil {
 		return err
 	}
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -108,19 +110,20 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 			return err
 		}
 
-		if msg.Success {
-			logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
-			if len(msg.Hook) > 0 {
-				logger.Infof(ctx, "hook output \n%s", msg.Hook)
-			}
-			for name, publish := range msg.Publish {
-				logger.Infof(ctx, "bound %s ip %s", name, publish)
-			}
-		} else {
-			logger.Error(ctx, errors.New(msg.Error), "create workload failed")
+		if !msg.Success {
+			errs = errors.Join(errs, fmt.Errorf("create workload on %s: %s", msg.Nodename, msg.Error))
+			continue
+		}
+
+		logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
+		if len(msg.Hook) > 0 {
+			logger.Infof(ctx, "hook output \n%s", msg.Hook)
+		}
+		for name, publish := range msg.Publish {
+			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
 	}
-	return nil
+	return errs
 }
 
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {

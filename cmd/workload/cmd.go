@@ -11,7 +11,6 @@ const (
 	workloadArgsUsage = "workloadID(s)"
 	specFileURI       = "<spec file uri>"
 	copyArgsUsage     = "workloadID:path1,path2,...,pathn"
-	sendArgsUsage     = "path1,path2,...pathn"
 
 	flagEntry   = "entry"
 	flagNode    = "node"
@@ -225,7 +224,7 @@ func Command() *cli.Command {
 			{
 				Name:      "send",
 				Usage:     "send file(s) to workload(s)",
-				ArgsUsage: sendArgsUsage,
+				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadSend),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
@@ -237,7 +236,7 @@ func Command() *cli.Command {
 			{
 				Name:      "sendlarge",
 				Usage:     "send single large file to workload(s)",
-				ArgsUsage: sendArgsUsage,
+				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadSendLarge),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{

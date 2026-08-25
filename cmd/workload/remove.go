@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -29,6 +30,7 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -41,13 +43,13 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "remove %s success", msg.Id)
 		} else {
-			logger.Warnf(ctx, "remove %s failed", msg.Id)
+			errs = errors.Join(errs, fmt.Errorf("remove %s failed", msg.Id))
 		}
 		if msg.Hook != "" {
 			logger.Info(ctx, msg.Hook)
 		}
 	}
-	return nil
+	return errs
 }
 
 func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {

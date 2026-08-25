@@ -3,6 +3,7 @@ package image
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -31,6 +32,7 @@ func (o *cacheImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -42,10 +44,10 @@ func (o *cacheImageOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "cache image %s on %s success", msg.Image, msg.Nodename)
 		} else {
-			logger.Errorf(ctx, errors.New(msg.Message), "cache image %s on %s failed", msg.Image, msg.Nodename)
+			errs = errors.Join(errs, fmt.Errorf("cache image %s on %s: %s", msg.Image, msg.Nodename, msg.Message))
 		}
 	}
-	return nil
+	return errs
 }
 
 func cmdImageCache(ctx context.Context, cmd *cli.Command) error {

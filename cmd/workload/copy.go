@@ -81,12 +81,12 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 
 	sources := map[string][]string{}
 	for _, source := range cmd.Args().Slice() {
-		ps := strings.Split(source, ":")
-		if len(ps) != 2 {
-			continue
+		id, paths, ok := strings.Cut(source, ":")
+		if !ok || id == "" || paths == "" {
+			return fmt.Errorf("invalid source %q, want %s", source, copyArgsUsage)
 		}
 
-		sources[ps[0]] = strings.Split(ps[1], ",")
+		sources[id] = strings.Split(paths, ",")
 	}
 
 	if len(sources) == 0 {

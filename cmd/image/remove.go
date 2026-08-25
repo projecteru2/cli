@@ -3,6 +3,7 @@ package image
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -33,6 +34,7 @@ func (o *removeImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -44,14 +46,14 @@ func (o *removeImageOptions) run(ctx context.Context) error {
 		if msg.Success {
 			logger.Infof(ctx, "remove %s success", msg.Image)
 		} else {
-			logger.Warnf(ctx, "remove %s failed", msg.Image)
+			errs = errors.Join(errs, fmt.Errorf("remove %s failed", msg.Image))
 		}
 		for _, m := range msg.Messages {
 			logger.Info(ctx, m)
 		}
 	}
 
-	return nil
+	return errs
 }
 
 func cmdImageRemove(ctx context.Context, cmd *cli.Command) error {

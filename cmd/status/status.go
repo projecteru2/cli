@@ -58,6 +58,7 @@ func (o *statusOptions) run(ctx context.Context) error {
 
 		if msg.Delete {
 			logger.Warnf(ctx, "[%s] %s status expired", coreutils.ShortID(msg.Id), msg.Workload.Name)
+			continue
 		}
 
 		switch {

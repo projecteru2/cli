@@ -105,5 +105,8 @@ func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 		return nil, err
 	}
 	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("fetch %s: %s", uri, resp.Status)
+	}
 	return io.ReadAll(resp.Body)
 }

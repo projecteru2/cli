@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -33,6 +34,7 @@ func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	var errs error
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -43,12 +45,12 @@ func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "send %s to %s failed", msg.Path, msg.Id)
-		} else {
-			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
+			errs = errors.Join(errs, fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error))
+			continue
 		}
+		logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
 	}
-	return nil
+	return errs
 }
 
 func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
