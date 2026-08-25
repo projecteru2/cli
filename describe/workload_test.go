@@ -12,15 +12,16 @@ func TestWorkloads(t *testing.T) {
 		format string
 		want   string
 	}{
-		{name: "table", format: "", want: `┌─────────────────────────────┬────────────────────┬──────────────────────┐
-│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS           │ CPUMEM               │
-├─────────────────────────────┼────────────────────┼──────────────────────┤
-│ app_web_1                   │ bridge: 172.17.0.2 │ cpu_request: 1.5     │
-│ cid1                        │ host: 10.0.0.1:80  │ memory_request: 1024 │
-│ dev                         │      10.0.0.1:443  │                      │
-│ node1                       │                    │                      │
-│ Privileged: true            │                    │                      │
-└─────────────────────────────┴────────────────────┴──────────────────────┘
+		{name: "table", format: "", want: `┌────────────────────────────────────────┬────────────────────┬──────────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED/CREATETIME │ NETWORKS           │ CPUMEM               │
+├────────────────────────────────────────┼────────────────────┼──────────────────────┤
+│ app_web_1                              │ bridge: 172.17.0.2 │ cpu_request: 1.5     │
+│ cid1                                   │ host: 10.0.0.1:80  │ memory_request: 1024 │
+│ dev                                    │      10.0.0.1:443  │                      │
+│ node1                                  │                    │                      │
+│ Privileged: true                       │                    │                      │
+│ 2025-01-01T12:00:00Z                   │                    │                      │
+└────────────────────────────────────────┴────────────────────┴──────────────────────┘
 `},
 		{name: "json", format: "json", want: `[
   {
@@ -38,11 +39,13 @@ func TestWorkloads(t *testing.T) {
         "host": "10.0.0.1"
       }
     },
+    "create_time": 1735732800,
     "resources": "{\"cpumem\":{\"cpu_request\":1.5,\"memory_request\":1024}}"
   }
 ]
 `},
-		{name: "yaml", format: "yaml", want: `- id: cid1
+		{name: "yaml", format: "yaml", want: `- create_time: 1735732800
+  id: cid1
   name: app_web_1
   nodename: node1
   podname: dev
@@ -193,21 +196,23 @@ func TestWorkloadsPluginColumns(t *testing.T) {
 		{Name: "w1", Id: "c1", Resources: `{"cpumem":{"cpu_request":1}}`},
 		{Name: "w2", Id: "c2", Resources: `{"cpumem":{"cpu_request":2},"storage":{"storage_request":10}}`},
 	}
-	want := `┌─────────────────────────────┬──────────┬────────────────┬─────────────────────┐
-│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS │ CPUMEM         │ STORAGE             │
-├─────────────────────────────┼──────────┼────────────────┼─────────────────────┤
-│ w1                          │          │ cpu_request: 1 │                     │
-│ c1                          │          │                │                     │
-│                             │          │                │                     │
-│                             │          │                │                     │
-│ Privileged: false           │          │                │                     │
-├─────────────────────────────┼──────────┼────────────────┼─────────────────────┤
-│ w2                          │          │ cpu_request: 2 │ storage_request: 10 │
-│ c2                          │          │                │                     │
-│                             │          │                │                     │
-│                             │          │                │                     │
-│ Privileged: false           │          │                │                     │
-└─────────────────────────────┴──────────┴────────────────┴─────────────────────┘
+	want := `┌────────────────────────────────────────┬──────────┬────────────────┬─────────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED/CREATETIME │ NETWORKS │ CPUMEM         │ STORAGE             │
+├────────────────────────────────────────┼──────────┼────────────────┼─────────────────────┤
+│ w1                                     │          │ cpu_request: 1 │                     │
+│ c1                                     │          │                │                     │
+│                                        │          │                │                     │
+│                                        │          │                │                     │
+│ Privileged: false                      │          │                │                     │
+│ 1970-01-01T00:00:00Z                   │          │                │                     │
+├────────────────────────────────────────┼──────────┼────────────────┼─────────────────────┤
+│ w2                                     │          │ cpu_request: 2 │ storage_request: 10 │
+│ c2                                     │          │                │                     │
+│                                        │          │                │                     │
+│                                        │          │                │                     │
+│ Privileged: false                      │          │                │                     │
+│ 1970-01-01T00:00:00Z                   │          │                │                     │
+└────────────────────────────────────────┴──────────┴────────────────┴─────────────────────┘
 `
 
 	if got := captureStdout(t, func() { Workloads(workloads...) }); got != want {
@@ -228,15 +233,16 @@ func TestWorkloadsNetworks(t *testing.T) {
 				Publish: map[string]string{"host": "10.0.0.1:80"},
 				Status:  &corepb.WorkloadStatus{Networks: map[string]string{"bridge": "172.17.0.2"}},
 			},
-			want: `┌─────────────────────────────┬────────────────────┐
-│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS           │
-├─────────────────────────────┼────────────────────┤
-│ w1                          │ bridge: 172.17.0.2 │
-│ c1                          │ host: 10.0.0.1:80  │
-│                             │                    │
-│                             │                    │
-│ Privileged: false           │                    │
-└─────────────────────────────┴────────────────────┘
+			want: `┌────────────────────────────────────────┬────────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED/CREATETIME │ NETWORKS           │
+├────────────────────────────────────────┼────────────────────┤
+│ w1                                     │ bridge: 172.17.0.2 │
+│ c1                                     │ host: 10.0.0.1:80  │
+│                                        │                    │
+│                                        │                    │
+│ Privileged: false                      │                    │
+│ 1970-01-01T00:00:00Z                   │                    │
+└────────────────────────────────────────┴────────────────────┘
 `,
 		},
 		{
@@ -245,15 +251,16 @@ func TestWorkloadsNetworks(t *testing.T) {
 				Name: "w1", Id: "c1",
 				Publish: map[string]string{"host": "10.0.0.1:80"},
 			},
-			want: `┌─────────────────────────────┬───────────────────┐
-│ NAME/ID/POD/NODE/PRIVILEGED │ NETWORKS          │
-├─────────────────────────────┼───────────────────┤
-│ w1                          │ host: 10.0.0.1:80 │
-│ c1                          │                   │
-│                             │                   │
-│                             │                   │
-│ Privileged: false           │                   │
-└─────────────────────────────┴───────────────────┘
+			want: `┌────────────────────────────────────────┬───────────────────┐
+│ NAME/ID/POD/NODE/PRIVILEGED/CREATETIME │ NETWORKS          │
+├────────────────────────────────────────┼───────────────────┤
+│ w1                                     │ host: 10.0.0.1:80 │
+│ c1                                     │                   │
+│                                        │                   │
+│                                        │                   │
+│ Privileged: false                      │                   │
+│ 1970-01-01T00:00:00Z                   │                   │
+└────────────────────────────────────────┴───────────────────┘
 `,
 		},
 	}
@@ -275,6 +282,7 @@ func testWorkloads() []*corepb.Workload {
 			Podname:    "dev",
 			Nodename:   "node1",
 			Privileged: true,
+			CreateTime: 1735732800,
 			Publish:    map[string]string{"host": "10.0.0.1:80,10.0.0.1:443"},
 			Status: &corepb.WorkloadStatus{
 				Networks: map[string]string{"host": "10.0.0.1", "bridge": "172.17.0.2"},
