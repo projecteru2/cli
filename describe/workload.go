@@ -15,6 +15,12 @@ import (
 	coreutils "github.com/projecteru2/core/utils"
 )
 
+type workloadStatistics struct {
+	CPUs    float64 `json:"cpus" yaml:"cpus"`
+	Memory  int64   `json:"memory" yaml:"memory"`
+	Storage int64   `json:"storage" yaml:"storage"`
+}
+
 // Workloads describes workloads as json, yaml or a table.
 func Workloads(workloads ...*corepb.Workload) {
 	switch {
@@ -29,11 +35,7 @@ func Workloads(workloads ...*corepb.Workload) {
 
 // WorkloadsStatistics describes the aggregated resource use of workloads.
 func WorkloadsStatistics(workloads ...*corepb.Workload) {
-	stat := struct {
-		CPUs    float64
-		Memory  int64
-		Storage int64
-	}{}
+	stat := workloadStatistics{}
 	for _, w := range workloads {
 		res := resourcetypes.Resources{}
 		if err := json.Unmarshal([]byte(w.Resources), &res); err != nil {

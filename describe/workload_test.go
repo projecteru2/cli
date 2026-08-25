@@ -85,9 +85,9 @@ func TestWorkloadsStatistics(t *testing.T) {
 				{Resources: `{"cpumem":{"cpu_request":0.5,"memory_request":512},"storage":{"storage_request":512}}`},
 			},
 			want: `{
-  "CPUs": 2,
-  "Memory": 1536,
-  "Storage": 2560
+  "cpus": 2,
+  "memory": 1536,
+  "storage": 2560
 }
 `,
 		},
@@ -98,9 +98,9 @@ func TestWorkloadsStatistics(t *testing.T) {
 				{Resources: `{"cpumem":{"cpu_request":1,"memory_request":64}}`},
 			},
 			want: `{
-  "CPUs": 1,
-  "Memory": 64,
-  "Storage": 0
+  "cpus": 1,
+  "memory": 64,
+  "storage": 0
 }
 `,
 		},
@@ -109,9 +109,9 @@ func TestWorkloadsStatistics(t *testing.T) {
 			format:    "json",
 			workloads: []*corepb.Workload{{Resources: `{}`}},
 			want: `{
-  "CPUs": 0,
-  "Memory": 0,
-  "Storage": 0
+  "cpus": 0,
+  "memory": 0,
+  "storage": 0
 }
 `,
 		},
@@ -120,10 +120,22 @@ func TestWorkloadsStatistics(t *testing.T) {
 			format:    "json",
 			workloads: []*corepb.Workload{{Resources: `{`}},
 			want: `{
-  "CPUs": 0,
-  "Memory": 0,
-  "Storage": 0
+  "cpus": 0,
+  "memory": 0,
+  "storage": 0
 }
+`,
+		},
+		{
+			name:   "yaml",
+			format: "yaml",
+			workloads: []*corepb.Workload{
+				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"storage":{"storage_request":2048}}`},
+			},
+			want: `cpus: 1.5
+memory: 1024
+storage: 2048
+
 `,
 		},
 		{
