@@ -16,9 +16,6 @@ const (
 	flagCPU     = "cpu"
 	flagMemory  = "memory"
 	flagStorage = "storage"
-
-	resourceCPUMem  = "cpumem"
-	resourceStorage = "storage"
 )
 
 // Command returns the pod command tree.

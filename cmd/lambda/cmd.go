@@ -7,11 +7,6 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-const (
-	resourceCPUMem  = "cpumem"
-	resourceStorage = "storage"
-)
-
 var stopOnFirstArg = 1
 
 // Command returns the lambda command tree.

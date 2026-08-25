@@ -1,6 +1,7 @@
 package workload
 
 import (
+	corecluster "github.com/projecteru2/core/cluster"
 	"github.com/projecteru2/core/strategy"
 	"github.com/urfave/cli/v3"
 
@@ -30,9 +31,6 @@ const (
 	flagStorageLimit   = "storage-limit"
 	flagVolumesRequest = "volumes-request"
 	flagVolumesLimit   = "volumes-limit"
-
-	resourceCPUMem  = "cpumem"
-	resourceStorage = "storage"
 )
 
 var stopOnFirstArg = 1
@@ -155,7 +153,7 @@ func Command() *cli.Command {
 				Name:      "stop",
 				Usage:     "stop workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    utils.ExitCoder(cmdWorkloadStop),
+				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStop)),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    flagForce,
@@ -169,7 +167,7 @@ func Command() *cli.Command {
 				Name:      "start",
 				Usage:     "start workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    utils.ExitCoder(cmdWorkloadStart),
+				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStart)),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    flagForce,
@@ -183,7 +181,7 @@ func Command() *cli.Command {
 				Name:      "restart",
 				Usage:     "restart workload(s)",
 				ArgsUsage: workloadArgsUsage,
-				Action:    utils.ExitCoder(cmdWorkloadRestart),
+				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadRestart)),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    flagForce,

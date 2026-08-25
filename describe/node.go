@@ -15,50 +15,17 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-func Nodes(nodes <-chan *corepb.Node, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(nodes)
-	case isYAML():
-		describeChAsYAML(nodes)
-	default:
-		describeNodes(nodes, false, stream)
-	}
+func Nodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
+	describeChOr(nodes, func(ch <-chan *corepb.Node) { describeNodes(ch, showInfo, stream) })
 }
 
-// NodesWithInfo describes nodes together with their engine info.
-func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(nodes)
-	case isYAML():
-		describeChAsYAML(nodes)
-	default:
-		describeNodes(nodes, true, stream)
-	}
-}
-
-func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
-	switch {
-	case isJSON():
-		describeChAsJSON(resources)
-	case isYAML():
-		describeChAsYAML(resources)
-	default:
-		describeNodeResources(ctx, resources, stream)
-	}
+func NodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
+	describeChOr(resources, func(ch <-chan *corepb.NodeResource) { describeNodeResources(ctx, ch, stream) })
 }
 
 // NodeStatusMessage describes node status messages as json, yaml or log lines.
 func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
-	switch {
-	case isJSON():
-		describeAsJSON(ms)
-	case isYAML():
-		describeAsYAML(ms)
-	default:
-		describeNodeStatusMessage(ctx, ms)
-	}
+	describeOr(ms, func(m []*corepb.NodeStatusStreamMessage) { describeNodeStatusMessage(ctx, m) })
 }
 
 func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
@@ -140,7 +107,7 @@ func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
 	return append(rows, parseAll(usage)...)
 }
 
-func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
+func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
 	logger := log.WithFunc("describe.describeNodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)

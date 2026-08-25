@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -34,26 +33,16 @@ func (o *removeImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return err
-		}
-
-		if msg.Success {
-			logger.Infof(ctx, "remove %s success", msg.Image)
-		} else {
-			errs = errors.Join(errs, fmt.Errorf("remove %s failed", msg.Image))
-		}
+	return utils.EachMessage(resp.Recv, func(msg *corepb.RemoveImageMessage) error {
 		for _, m := range msg.Messages {
 			logger.Info(ctx, m)
 		}
-	}
-
-	return errs
+		if !msg.Success {
+			return fmt.Errorf("remove %s failed", msg.Image)
+		}
+		logger.Infof(ctx, "remove %s success", msg.Image)
+		return nil
+	})
 }
 
 func cmdImageRemove(ctx context.Context, cmd *cli.Command) error {

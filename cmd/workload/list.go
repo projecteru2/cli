@@ -2,8 +2,6 @@ package workload
 
 import (
 	"context"
-	"errors"
-	"io"
 	"slices"
 	"strings"
 
@@ -44,15 +42,11 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 	}
 
 	workloads := []*corepb.Workload{}
-	for {
-		w, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
+	if err := utils.EachMessage(resp.Recv, func(w *corepb.Workload) error {
 		workloads = append(workloads, w)
+		return nil
+	}); err != nil {
+		return err
 	}
 
 	f := filter{

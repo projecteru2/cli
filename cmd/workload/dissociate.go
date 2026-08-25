@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -40,23 +39,13 @@ func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.DissociateWorkloadMessage) error {
 		if msg.Error != "" {
-			errs = errors.Join(errs, fmt.Errorf("dissociate workload %s: %s", msg.Id, msg.Error))
-			continue
+			return fmt.Errorf("dissociate workload %s: %s", msg.Id, msg.Error)
 		}
 		logger.Infof(ctx, "dissociate workload %s from eru success", msg.Id)
-	}
-	return errs
+		return nil
+	})
 }
 
 func cmdWorkloadDissociate(ctx context.Context, cmd *cli.Command) error {

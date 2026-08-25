@@ -80,44 +80,20 @@ func entrypointOptions(specs *types.Specs, entry string) (*corepb.EntrypointOpti
 	return opts, nil
 }
 
-func memoryOption(cmd *cli.Command) (int64, int64, error) {
-	memRequest, err := utils.ParseRAMInHuman(cmd.String(flagMemoryRequest))
+func ramOption(cmd *cli.Command, request, limit, shortcut string) (int64, int64, error) {
+	req, err := utils.ParseRAMInHuman(cmd.String(request))
 	if err != nil {
 		return 0, 0, err
 	}
-
-	memLimit, err := utils.ParseRAMInHuman(cmd.String(flagMemoryLimit))
+	lim, err := utils.ParseRAMInHuman(cmd.String(limit))
 	if err != nil {
 		return 0, 0, err
 	}
-	if cmd.IsSet("memory") {
-		memory, err := utils.ParseRAMInHuman(cmd.String("memory"))
-		if err != nil {
-			return 0, 0, err
-		}
-		memRequest, memLimit = memory, memory
+	if cmd.IsSet(shortcut) {
+		both, err := utils.ParseRAMInHuman(cmd.String(shortcut))
+		return both, both, err
 	}
-	return memRequest, memLimit, nil
-}
-
-func storageOption(cmd *cli.Command) (int64, int64, error) {
-	storageRequest, err := utils.ParseRAMInHuman(cmd.String(flagStorageRequest))
-	if err != nil {
-		return 0, 0, err
-	}
-
-	storageLimit, err := utils.ParseRAMInHuman(cmd.String(flagStorageLimit))
-	if err != nil {
-		return 0, 0, err
-	}
-	if cmd.IsSet(flagStorage) {
-		storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
-		if err != nil {
-			return 0, 0, err
-		}
-		storageRequest, storageLimit = storage, storage
-	}
-	return storageRequest, storageLimit, nil
+	return req, lim, nil
 }
 
 func cpuOption(cmd *cli.Command) (float64, float64) {

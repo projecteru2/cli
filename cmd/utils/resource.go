@@ -8,6 +8,13 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
+const (
+	ResourceCPUMem  = "cpumem"
+	ResourceStorage = "storage"
+
+	FlagExtraResources = "extra-resources"
+)
+
 // EncodeResources encodes plugin params for the core rpc; --extra-resources fills only the plugins not already present.
 func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[string][]byte, error) {
 	encoded := make(map[string][]byte, len(resources))
@@ -45,7 +52,7 @@ func encodeResource(plugin string, params any) ([]byte, error) {
 }
 
 func parseExtraResources(cmd *cli.Command) (map[string]any, error) {
-	extraResources := cmd.String("extra-resources")
+	extraResources := cmd.String(FlagExtraResources)
 	if extraResources == "" {
 		return nil, nil
 	}

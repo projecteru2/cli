@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -32,22 +31,13 @@ func (o *cacheImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		} else if err != nil {
-			return err
+	return utils.EachMessage(resp.Recv, func(msg *corepb.CacheImageMessage) error {
+		if !msg.Success {
+			return fmt.Errorf("cache image %s on %s: %s", msg.Image, msg.Nodename, msg.Message)
 		}
-
-		if msg.Success {
-			logger.Infof(ctx, "cache image %s on %s success", msg.Image, msg.Nodename)
-		} else {
-			errs = errors.Join(errs, fmt.Errorf("cache image %s on %s: %s", msg.Image, msg.Nodename, msg.Message))
-		}
-	}
-	return errs
+		logger.Infof(ctx, "cache image %s on %s success", msg.Image, msg.Nodename)
+		return nil
+	})
 }
 
 func cmdImageCache(ctx context.Context, cmd *cli.Command) error {

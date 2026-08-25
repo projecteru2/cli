@@ -11,9 +11,9 @@ const (
 
 	flagLabel   = "label"
 	flagStorage = "storage"
-
-	resourceCPUMem  = "cpumem"
-	resourceStorage = "storage"
+	flagCA      = "ca"
+	flagCert    = "cert"
+	flagKey     = "key"
 )
 
 // Command returns the node command tree.
@@ -175,17 +175,17 @@ func Command() *cli.Command {
 						Usage: "update node endpoint",
 					},
 					&cli.StringFlag{
-						Name:  "ca",
+						Name:  flagCA,
 						Usage: "ca file, like /etc/docker/tls/ca.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "cert",
+						Name:  flagCert,
 						Usage: "cert file, like /etc/docker/tls/client.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "key",
+						Name:  flagKey,
 						Usage: "key file, like /etc/docker/tls/client.key",
 						Value: "",
 					},
@@ -214,17 +214,17 @@ func Command() *cli.Command {
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "ca",
+						Name:  flagCA,
 						Usage: "ca file of docker server, like /etc/docker/tls/ca.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "cert",
+						Name:  flagCert,
 						Usage: "cert file of docker server, like /etc/docker/tls/client.crt",
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "key",
+						Name:  flagKey,
 						Usage: "key file of docker server, like /etc/docker/tls/client.key",
 						Value: "",
 					},

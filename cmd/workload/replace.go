@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"strings"
 
 	"github.com/projecteru2/core/log"
@@ -73,22 +72,12 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 	if err != nil {
 		return err
 	}
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.ReplaceWorkloadMessage) error {
 		if msg.Error != "" {
-			errs = errors.Join(errs, fmt.Errorf("replace %s: %s, hook %s", msg.Remove.Id, msg.Error, msg.Remove.Hook))
 			if msg.Create != nil && msg.Create.Success {
 				logger.Infof(ctx, "but create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
-			continue
+			return fmt.Errorf("replace %s: %s, hook %s", msg.Remove.Id, msg.Error, msg.Remove.Hook)
 		}
 		if msg.Remove.Hook != "" {
 			logger.Infof(ctx, "hook output \n%s", msg.Remove.Hook)
@@ -102,8 +91,8 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 		for name, publish := range msg.Create.Publish {
 			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
-	}
-	return errs
+		return nil
+	})
 }
 
 func generateReplaceOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {

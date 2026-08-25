@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -34,23 +33,13 @@ func (o *sendWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.SendMessage) error {
 		if msg.Error != "" {
-			errs = errors.Join(errs, fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error))
-			continue
+			return fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error)
 		}
 		logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
-	}
-	return errs
+		return nil
+	})
 }
 
 func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {

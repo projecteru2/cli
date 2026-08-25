@@ -122,8 +122,8 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: storage,
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: storage,
 	})
 	if err != nil {
 		return nil, err

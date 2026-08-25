@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -25,7 +24,7 @@ type resourcePodOptions struct {
 	stream bool
 }
 
-func (o *resourcePodOptions) filter(ch chan *corepb.NodeResource) (chan *corepb.NodeResource, error) {
+func (o *resourcePodOptions) filter(ch <-chan *corepb.NodeResource) (<-chan *corepb.NodeResource, error) {
 	if o.expr == "" {
 		return ch, nil
 	}
@@ -74,29 +73,14 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var recvErr error
-	ch := make(chan *corepb.NodeResource)
-	go func() {
-		defer close(ch)
-		for {
-			resource, streamErr := resp.Recv()
-			if streamErr != nil {
-				if !errors.Is(streamErr, io.EOF) {
-					recvErr = streamErr
-				}
-				return
-			}
-			ch <- resource
-		}
-	}()
-
+	ch, wait := utils.StreamToChan(resp.Recv)
 	resChan, err := o.filter(ch)
 	if err != nil {
 		return err
 	}
 
 	describe.NodeResources(ctx, resChan, o.stream)
-	return recvErr
+	return wait()
 }
 
 func cmdPodResource(ctx context.Context, cmd *cli.Command) error {

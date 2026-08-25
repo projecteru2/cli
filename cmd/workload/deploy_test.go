@@ -11,6 +11,8 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 const specSample = `
@@ -92,7 +94,7 @@ func TestGenerateDeployOptions(t *testing.T) {
 		t.Errorf("sysctls: got %v", entry.Sysctls)
 	}
 
-	cpumem := decodeParams(t, opts.Resources[resourceCPUMem])
+	cpumem := decodeParams(t, opts.Resources[utils.ResourceCPUMem])
 	if got := cpumem.Float64(flagCPURequest); got != 2 {
 		t.Errorf("cpu-request: got %v, want 2", got)
 	}
@@ -100,7 +102,7 @@ func TestGenerateDeployOptions(t *testing.T) {
 		t.Errorf("memory-limit: got %d, want %d", got, 1<<30)
 	}
 
-	storage := decodeParams(t, opts.Resources[resourceStorage])
+	storage := decodeParams(t, opts.Resources[utils.ResourceStorage])
 	if got := storage.Int64(flagStorageLimit); got != 10<<30 {
 		t.Errorf("storage-limit: got %d, want %d", got, 10<<30)
 	}

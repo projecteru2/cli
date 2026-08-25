@@ -2,8 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
-	"io"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -22,18 +20,10 @@ func (o *watchNodeStatusOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	for {
-		m, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(m *corepb.NodeStatusStreamMessage) error {
 		describe.NodeStatusMessage(ctx, m)
-	}
-	return nil
+		return nil
+	})
 }
 
 func cmdNodeWatchStatus(ctx context.Context, cmd *cli.Command) error {

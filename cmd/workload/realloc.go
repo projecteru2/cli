@@ -57,7 +57,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 		return nil, errors.New("workload id must be given")
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(cmd)
+	memoryRequest, memoryLimit, err := ramOption(cmd, flagMemoryRequest, flagMemoryLimit, "memory")
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	if bindCPU && unbindCPU {
 		return nil, errors.New("cpu-bind and cpu-unbind can not both be set")
 	}
-	storageRequest, storageLimit, err := storageOption(cmd)
+	storageRequest, storageLimit, err := ramOption(cmd, flagStorageRequest, flagStorageLimit, flagStorage)
 	if err != nil {
 		return nil, err
 	}
@@ -103,8 +103,8 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: storage,
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: storage,
 	})
 	if err != nil {
 		return nil, err

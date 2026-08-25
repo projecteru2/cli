@@ -100,19 +100,9 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 	if err != nil {
 		return err
 	}
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	return utils.EachMessage(resp.Recv, func(msg *corepb.CreateWorkloadMessage) error {
 		if !msg.Success {
-			errs = errors.Join(errs, fmt.Errorf("create workload on %s: %s", msg.Nodename, msg.Error))
-			continue
+			return fmt.Errorf("create workload on %s: %s", msg.Nodename, msg.Error)
 		}
 
 		logger.Infof(ctx, "create %s %s on %s success, resource: %s", msg.Id, msg.Name, msg.Nodename, msg.Resources)
@@ -122,8 +112,8 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 		for name, publish := range msg.Publish {
 			logger.Infof(ctx, "bound %s ip %s", name, publish)
 		}
-	}
-	return errs
+		return nil
+	})
 }
 
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
@@ -137,12 +127,12 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, err
 	}
 
-	memoryRequest, memoryLimit, err := memoryOption(cmd)
+	memoryRequest, memoryLimit, err := ramOption(cmd, flagMemoryRequest, flagMemoryLimit, "memory")
 	if err != nil {
 		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
-	storageRequest, storageLimit, err := storageOption(cmd)
+	storageRequest, storageLimit, err := ramOption(cmd, flagStorageRequest, flagStorageLimit, flagStorage)
 	if err != nil {
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}
@@ -166,8 +156,8 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		resourceCPUMem:  cpumem,
-		resourceStorage: storage,
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: storage,
 	})
 	if err != nil {
 		return nil, err

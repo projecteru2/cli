@@ -9,14 +9,7 @@ import (
 )
 
 func Images(msgs ...*corepb.ListImageMessage) {
-	switch {
-	case isJSON():
-		describeAsJSON(msgs)
-	case isYAML():
-		describeAsYAML(msgs)
-	default:
-		describeImages(msgs)
-	}
+	describeOr(msgs, describeImages)
 }
 
 func describeImages(msgs []*corepb.ListImageMessage) {

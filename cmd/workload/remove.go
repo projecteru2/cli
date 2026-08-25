@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -30,26 +29,16 @@ func (o *removeWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	var errs error
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
-		if msg.Success {
-			logger.Infof(ctx, "remove %s success", msg.Id)
-		} else {
-			errs = errors.Join(errs, fmt.Errorf("remove %s failed", msg.Id))
-		}
+	return utils.EachMessage(resp.Recv, func(msg *corepb.RemoveWorkloadMessage) error {
 		if msg.Hook != "" {
 			logger.Info(ctx, msg.Hook)
 		}
-	}
-	return errs
+		if !msg.Success {
+			return fmt.Errorf("remove %s failed", msg.Id)
+		}
+		logger.Infof(ctx, "remove %s success", msg.Id)
+		return nil
+	})
 }
 
 func cmdWorkloadRemove(ctx context.Context, cmd *cli.Command) error {
