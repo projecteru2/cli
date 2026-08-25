@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/docker/go-units v0.5.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
-	github.com/projecteru2/core v0.0.0-20260825060526-92ab9f486c50
+	github.com/projecteru2/core v0.0.0-20260825064033-3609293686bd
 	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/term v0.45.0
 	google.golang.org/grpc v1.83.1
