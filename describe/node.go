@@ -2,7 +2,6 @@ package describe
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -143,44 +142,6 @@ func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
 	return append(rows, parseAll(usage)...)
 }
 
-func toJSON(v any) string {
-	b, _ := json.Marshal(v)
-	return string(b)
-}
-
-func parse(key, value any) []string {
-	res := []string{}
-	switch v := value.(type) {
-	case map[string]any:
-		for _, k := range slices.Sorted(maps.Keys(v)) {
-			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v[k])))
-		}
-	case []any:
-		for i, item := range v {
-			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(item)))
-		}
-	default:
-		res = append(res, fmt.Sprintf("%s: %v", key, toJSON(value)))
-	}
-	return res
-}
-
-func parseAll(params resourcetypes.RawParams) []string {
-	rows := []string{}
-	for _, key := range slices.Sorted(maps.Keys(params)) {
-		rows = append(rows, parse(key, params[key])...)
-	}
-	return rows
-}
-
-func unmarshalResources(encoded string) resourcetypes.Resources {
-	res := resourcetypes.Resources{}
-	if len(encoded) > 0 {
-		_ = json.Unmarshal([]byte(encoded), &res)
-	}
-	return res
-}
-
 func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	logger := log.WithFunc("describe.describeNodeResources")
 	t := table.NewWriter()
@@ -188,7 +149,7 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 	t.AppendHeader(table.Row{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"})
 
 	for resource := range resources {
-		cr, sr, err := ToResourcePrecent(resource)
+		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
 			logger.Error(ctx, err)
 			continue

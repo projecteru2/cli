@@ -102,10 +102,9 @@ func Command() *cli.Command {
 				Action: utils.ExitCoder(cmdImageRemove),
 			},
 			{
-				Name:      "list",
-				Aliases:   []string{"ls"},
-				Usage:     "list image(s) by podname or nodename(s)",
-				ArgsUsage: "[podname/nodenames]",
+				Name:    "list",
+				Aliases: []string{"ls"},
+				Usage:   "list image(s) by podname or nodename(s)",
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
 						Name:  flagNode,

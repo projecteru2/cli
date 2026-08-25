@@ -67,7 +67,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 
 func TestGenerateAddNodeOptionsWithoutPod(t *testing.T) {
 	c := Command()
-	c.Commands[len(c.Commands)-1].Action = func(_ context.Context, cmd *cli.Command) error {
+	lookupSubcommand(t, c, "add").Action = func(_ context.Context, cmd *cli.Command) error {
 		if _, err := generateAddNodeOptions(cmd); err == nil {
 			t.Error("got nil, want an error for node add without a pod")
 		}

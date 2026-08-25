@@ -47,7 +47,7 @@ func compare(operator string, left, right float64) bool {
 }
 
 func attr(nr *corepb.NodeResource, name string) float64 {
-	cr, sr, err := describe.ToResourcePrecent(nr)
+	cr, sr, err := describe.ToResourcePercent(nr)
 	if err != nil {
 		return 0.0
 	}

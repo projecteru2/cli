@@ -3,6 +3,8 @@ package describe
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
+	"slices"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -28,8 +30,8 @@ func ToChan[T any](items ...T) chan T {
 	return ch
 }
 
-// ToResourcePrecent reports node usage as a fraction of capacity, per resource.
-func ToResourcePrecent(resource *corepb.NodeResource) (map[string]float64, map[string]float64, error) {
+// ToResourcePercent reports node usage as a fraction of capacity, per resource.
+func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[string]float64, err error) {
 	var resUsage resourcetypes.Resources
 	var resCap resourcetypes.Resources
 	if err := json.Unmarshal([]byte(resource.ResourceUsage), &resUsage); err != nil {
@@ -111,6 +113,44 @@ func toTableRows(rows [][]string) []table.Row {
 		rs = append(rs, table.Row(lines))
 	}
 	return rs
+}
+
+func toJSON(v any) string {
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+func parse(key, value any) []string {
+	res := []string{}
+	switch v := value.(type) {
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(v)) {
+			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v[k])))
+		}
+	case []any:
+		for i, item := range v {
+			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(item)))
+		}
+	default:
+		res = append(res, fmt.Sprintf("%s: %v", key, toJSON(value)))
+	}
+	return res
+}
+
+func parseAll(params resourcetypes.RawParams) []string {
+	rows := []string{}
+	for _, key := range slices.Sorted(maps.Keys(params)) {
+		rows = append(rows, parse(key, params[key])...)
+	}
+	return rows
+}
+
+func unmarshalResources(encoded string) resourcetypes.Resources {
+	res := resourcetypes.Resources{}
+	if len(encoded) > 0 {
+		_ = json.Unmarshal([]byte(encoded), &res)
+	}
+	return res
 }
 
 func describeAsJSON(o any) {

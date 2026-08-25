@@ -9,7 +9,7 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-func TestToResourcePrecent(t *testing.T) {
+func TestToResourcePercent(t *testing.T) {
 	tests := []struct {
 		name     string
 		usage    string
@@ -49,12 +49,12 @@ func TestToResourcePrecent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			cr, sr, err := ToResourcePrecent(&corepb.NodeResource{
+			cr, sr, err := ToResourcePercent(&corepb.NodeResource{
 				ResourceUsage:    tt.usage,
 				ResourceCapacity: tt.capacity,
 			})
 			if err != nil {
-				t.Fatalf("ToResourcePrecent: %v", err)
+				t.Fatalf("ToResourcePercent: %v", err)
 			}
 			assertPercents(t, "cpumem", cr, tt.wantCPU)
 			assertPercents(t, "storage", sr, tt.wantSt)
@@ -62,8 +62,8 @@ func TestToResourcePrecent(t *testing.T) {
 	}
 }
 
-func TestToResourcePrecentInvalidJSON(t *testing.T) {
-	if _, _, err := ToResourcePrecent(&corepb.NodeResource{ResourceUsage: "{"}); err == nil {
+func TestToResourcePercentInvalidJSON(t *testing.T) {
+	if _, _, err := ToResourcePercent(&corepb.NodeResource{ResourceUsage: "{"}); err == nil {
 		t.Fatal("got nil, want a json error")
 	}
 }

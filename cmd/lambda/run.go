@@ -24,11 +24,32 @@ type runLambdaOptions struct {
 }
 
 func (o *runLambdaOptions) run(ctx context.Context) error {
-	code, err := lambda(ctx, o.client, o.opts, o.stdin, o.count, o.printWorkloadID)
+	code, err := o.lambda(ctx)
 	if err == nil {
 		return cli.Exit("", code)
 	}
 	return err
+}
+
+func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
+	resp, err := o.client.RunAndWait(ctx)
+	if err != nil {
+		return -1, err
+	}
+
+	if err := resp.Send(o.opts); err != nil {
+		return -1, err
+	}
+
+	iStream := interactive.NewStream(func(data []byte) error {
+		return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
+	}, resp.Recv)
+
+	go func() {
+		_ = iStream.Send(newline)
+	}()
+
+	return interactive.HandleStream(ctx, o.stdin, iStream, o.count, o.printWorkloadID)
 }
 
 func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
@@ -50,27 +71,6 @@ func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
 		printWorkloadID: cmd.Bool("workload-id"),
 	}
 	return o.run(ctx)
-}
-
-func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAndWaitOptions, stdin bool, count int, printWorkloadID bool) (code int, err error) {
-	resp, err := client.RunAndWait(ctx)
-	if err != nil {
-		return -1, err
-	}
-
-	if err := resp.Send(opts); err != nil {
-		return -1, err
-	}
-
-	iStream := interactive.NewStream(func(data []byte) error {
-		return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
-	}, resp.Recv)
-
-	go func() {
-		_ = iStream.Send(newline)
-	}()
-
-	return interactive.HandleStream(ctx, stdin, iStream, count, printWorkloadID)
 }
 
 func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) {

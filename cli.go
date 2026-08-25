@@ -28,7 +28,7 @@ func main() {
 
 	ctx := context.Background()
 	if err := newApp().Run(ctx, os.Args); err != nil {
-		log.WithFunc("main").Fatalf(ctx, err, "run eru-cli")
+		log.WithFunc("main.main").Fatalf(ctx, err, "run eru-cli")
 	}
 }
 
