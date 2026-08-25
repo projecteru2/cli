@@ -39,7 +39,7 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 
 	iStream := interactive.NewStream(func(data []byte) error {
 		return resp.Send(&corepb.ExecuteWorkloadOptions{ReplCmd: data})
-	}, resp.Recv)
+	}, resp.Recv, resp.CloseSend)
 
 	code, err := interactive.HandleStream(ctx, opts.OpenStdin, iStream, 1, false)
 
