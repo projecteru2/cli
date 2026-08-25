@@ -63,7 +63,7 @@ func cmdWorkloadDissociate(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	nodes := cmd.StringSlice("node")
+	nodes := cmd.StringSlice(flagNode)
 	ids := cmd.Args().Slice()
 	if len(ids) == 0 && len(nodes) == 0 {
 		return errors.New("workload id(s) or node(s) should not be empty")

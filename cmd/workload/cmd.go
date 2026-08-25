@@ -253,7 +253,7 @@ func Command() *cli.Command {
 				Action:    utils.ExitCoder(cmdWorkloadDissociate),
 				Flags: []cli.Flag{
 					&cli.StringSliceFlag{
-						Name:  "node",
+						Name:  flagNode,
 						Usage: "dissociate all workload(s) on node(s)",
 					},
 				},
