@@ -27,6 +27,15 @@ Global options come before the command name and apply to all of it.
 The table format prints a readable summary; `json` and `yaml` print the full message as core
 returned it and are the right choice for scripting.
 
+## Exit status
+
+`0` means every item succeeded. Commands that act on several workloads, images or nodes in one call
+— `deploy`, `replace`, `send`, `sendlarge`, `copy`, `start`, `stop`, `restart`, `remove`,
+`dissociate`, `image cache`, `image remove`, `network connect`, `network disconnect` — report each
+failure and exit non-zero if any of them failed, so a script does not need to parse the log. Any
+failing command exits `255`, except `workload exec` and `lambda`, which exit with the remote
+command's own code.
+
 ## core
 
 Inspect the core instance itself.
@@ -70,7 +79,7 @@ eru-cli pod capacity --cpu 2 --memory 1G --storage 10G <pod>
 | `node remove` | `<node name>` | |
 | `node set`, `node update` | `<node name>` | `--cpu`, `--memory`, `--storage`, `--volume`, `--disk`, `--rm-disk`, `--numa-cpu`, `--numa-memory`, `--label`, `--delta`, `--endpoint`, `--ca`/`--cert`/`--key`, `--mark-workloads-down`, `--extra-resources` |
 | `node up` | `<node name>` | |
-| `node down` | `<node name>` | `--check`, `--check-timeout` |
+| `node down` | `<node name>` | `--check`, `--check-timeout` (default `20`) |
 | `node workloads`, `node containers` | `<node name>` | `--label` |
 | `node resource` | `<node name>` | `--fix` |
 | `node set-status` | `<node name>` | `--ttl 180`, `--interval` |
@@ -112,7 +121,8 @@ same value; give `--cpu-request`/`--cpu-limit` explicitly when they must differ.
 
 `--dry-run` on `deploy` prints the capacity core calculated and deploys nothing.
 `--auto-replace` deploys when no workload of that application and entrypoint exists yet, and
-replaces otherwise.
+replaces otherwise; the replacement keeps the old workload's network unless `--network` is given.
+`deploy` defaults `--network` to `host`.
 
 Everything after the workload id in `workload exec` is the remote command, so flags of the remote
 program are passed through untouched:
@@ -122,7 +132,9 @@ eru-cli workload exec -i <workload id> -- ls -al /tmp
 ```
 
 `workload copy` writes one tar per workload into `--dir`, named
-`<short id>-<workload name>-<timestamp>.tar`; an existing file of that name is left alone.
+`<short id>-<workload name>-<timestamp>.tar`; an existing file of that name is left alone. Each
+argument must read `<workload id>:<path>[,<path>...]` — anything else is rejected rather than
+skipped. `workload sendlarge` rejects an empty source file.
 
 ## image
 
@@ -181,7 +193,7 @@ command's exit code. Everything after the first positional argument is the remot
 | `--privileged`, `-p` | off | Extended privileges. |
 | `--stdin`, `-s` | off | Attach stdin and put the terminal in raw mode. |
 | `--async`, `--async-timeout` | off, `30` | Return immediately and let core reap the workload. |
-| `--deploy-strategy` | `auto` | `auto`, `fill` or `each`. |
+| `--deploy-strategy` | `auto` | `auto`, `fill`, `each`, `global`, `drained` or `dummy`. |
 | `--workload-id` | off | Prefix every output line with the workload id. |
 
 ```shell

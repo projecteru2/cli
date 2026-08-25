@@ -13,6 +13,8 @@ pods, nodes, workloads, images, networks and one-shot lambdas.
 - Table, JSON or YAML output for every read command, selected once with `--output`.
 - Interactive streams: `workload exec` and `lambda` attach a raw terminal, forward `SIGWINCH`
   and return the remote exit code as their own.
+- Script-friendly exit status: a batch command that acts on many workloads exits non-zero when any
+  one of them fails, instead of hiding the failure in its log.
 - Deploy and build from a YAML spec that lives next to the application, read from a path or an
   HTTP URL, with `${ENV}` template expansion.
 
