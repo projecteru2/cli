@@ -85,6 +85,23 @@ eru-cli pod capacity --cpu 2 --memory 1G --storage 10G <pod>
 | `node set-status` | `<node name>` | `--ttl 180`, `--interval` |
 | `node watch-status` | | |
 
+The scheme of `--endpoint` picks the engine core drives the node with:
+
+| Endpoint | Engine | What the node needs |
+|---|---|---|
+| `tcp://<host>:<port>` | docker | A docker daemon listening on that address, with the TLS material given by `--ca`/`--cert`/`--key` when it requires TLS. |
+| `unix://<path>` | docker | A docker daemon on that local socket; TLS flags are ignored. |
+| `process://[user@]host[:port]` | process | `sshd`, systemd on cgroup v2 and `oras`; workloads are transient systemd units. |
+| `containerd://[user@]host[:port]` | containerd | `sshd` and a running containerd. |
+| `cocoon://[user@]host[:port]` | cocoon | `sshd` and the cocoon runtime. |
+| `mock://` | fake | Nothing — it answers every operation itself, for tests and dry runs. |
+
+`process://`, `containerd://` and `cocoon://` reach the node over SSH with the key pair in core's
+`ssh` configuration, so that public key has to be authorized for the endpoint's user — which
+defaults to core's configured one when the endpoint omits it. Image builds run on docker nodes,
+picked by core's `build.node_filter`. The engines themselves are documented in core's
+[engine reference](https://projecteru2.github.io/core/engines).
+
 When `--endpoint` is omitted, `node add` derives `tcp://<local ipv4>:2376` — or port `2375` when no
 CA certificate is found — and looks for TLS material under `/etc/docker/tls/`.
 
