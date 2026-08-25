@@ -71,12 +71,6 @@ func entrypointOptions(specs *types.Specs, entry string) (*corepb.EntrypointOpti
 			Code:     int32(entrypoint.HealthCheck.HTTPCode), //nolint:gosec
 		}
 	}
-	if entrypoint.Log != nil {
-		opts.Log = &corepb.LogOptions{
-			Type:   entrypoint.Log.Type,
-			Config: entrypoint.Log.Config,
-		}
-	}
 	return opts, nil
 }
 

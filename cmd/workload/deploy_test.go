@@ -33,10 +33,6 @@ entrypoints:
     privileged: true
     sysctls:
       net.core.somaxconn: "1024"
-    log:
-      type: journald
-      config:
-        tag: elb
     hook:
       after_start:
         - "ls -al /tmp"
@@ -86,9 +82,6 @@ func TestGenerateDeployOptions(t *testing.T) {
 	}
 	if entry.Hook == nil || !entry.Hook.Force || !slices.Equal(entry.Hook.AfterStart, []string{"ls -al /tmp"}) {
 		t.Errorf("hook: got %+v", entry.Hook)
-	}
-	if entry.Log == nil || entry.Log.Type != "journald" || entry.Log.Config["tag"] != "elb" {
-		t.Errorf("log: got %+v", entry.Log)
 	}
 	if entry.Sysctls["net.core.somaxconn"] != "1024" {
 		t.Errorf("sysctls: got %v", entry.Sysctls)
