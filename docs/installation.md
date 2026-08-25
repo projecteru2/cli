@@ -12,7 +12,7 @@ unstripped `linux` debug build:
 ```shell
 VERSION=$(curl -fsSL https://api.github.com/repos/projecteru2/cli/releases/latest | jq -r .tag_name)
 curl -fsSL -o eru-cli.tar.gz \
-  "https://github.com/projecteru2/cli/releases/download/${VERSION}/eru-cli_${VERSION}_Linux_x86_64.tar.gz"
+  "https://github.com/projecteru2/cli/releases/download/${VERSION}/eru-cli_${VERSION#v}_Linux_x86_64.tar.gz"
 tar xzf eru-cli.tar.gz eru-cli
 install -m 0755 eru-cli /usr/local/bin/eru-cli
 eru-cli --version
