@@ -9,7 +9,6 @@ import (
 	"os"
 	"strings"
 
-	dockerengine "github.com/projecteru2/core/engine/docker"
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -147,13 +146,9 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 	default:
 		buildMethod = corepb.BuildImageOptions_RAW
 		path := cmd.Args().First()
-		data, err := dockerengine.CreateTarStream(path)
-		if err != nil {
-			return nil, errors.New("build path must be given")
-		}
-		tar, err = io.ReadAll(data)
-		if err != nil {
-			return nil, errors.New("create tar stream failed")
+		var err error
+		if tar, err = utils.TarDirectory(path); err != nil {
+			return nil, fmt.Errorf("tar build path %s: %w", path, err)
 		}
 	}
 
