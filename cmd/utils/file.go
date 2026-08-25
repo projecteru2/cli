@@ -21,7 +21,6 @@ type FileOptions struct {
 	Owners map[string]*corepb.FileOwner
 }
 
-// GenerateFileOptions reads the --file pairs into data, mode and owner maps.
 func GenerateFileOptions(cmd *cli.Command) (*FileOptions, error) {
 	files, err := ReadAllFiles(cmd.StringSlice("file"))
 	if err != nil {

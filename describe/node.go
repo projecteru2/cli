@@ -15,7 +15,6 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Nodes describes nodes as json, yaml or a table.
 func Nodes(nodes <-chan *corepb.Node, stream bool) {
 	switch {
 	case isJSON():
@@ -39,7 +38,6 @@ func NodesWithInfo(nodes <-chan *corepb.Node, stream bool) {
 	}
 }
 
-// NodeResources describes node resource usage as json, yaml or a table.
 func NodeResources(ctx context.Context, resources chan *corepb.NodeResource, stream bool) {
 	switch {
 	case isJSON():
@@ -151,7 +149,7 @@ func describeNodeResources(ctx context.Context, resources chan *corepb.NodeResou
 	for resource := range resources {
 		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
-			logger.Error(ctx, err)
+			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
 			continue
 		}
 		rows := [][]string{

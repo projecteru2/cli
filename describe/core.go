@@ -7,7 +7,6 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Core describes core info as json, yaml or a table.
 func Core(info *corepb.CoreInfo) {
 	switch {
 	case isJSON():

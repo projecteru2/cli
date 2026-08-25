@@ -16,7 +16,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// GetNetworks returns a networkmode -> ip map
+// GetNetworks returns a networkmode -> ip map.
 func GetNetworks(network string) map[string]string {
 	var ip string
 	networkInfo := strings.Split(network, "=")
@@ -61,11 +61,9 @@ func ParseDeployStrategy(name string) (corepb.DeployOptions_Strategy, error) {
 func SplitEquality(elements []string) map[string]string {
 	r := map[string]string{}
 	for _, e := range elements {
-		p := strings.SplitN(e, "=", 2)
-		if len(p) != 2 {
-			continue
+		if k, v, ok := strings.Cut(e, "="); ok {
+			r[k] = v
 		}
-		r[p[0]] = p[1]
 	}
 	return r
 }

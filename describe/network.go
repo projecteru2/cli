@@ -8,7 +8,6 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-// Networks describes networks as json, yaml or a table.
 func Networks(networks ...*corepb.Network) {
 	switch {
 	case isJSON():
@@ -29,7 +28,7 @@ func describeNetworks(networks []*corepb.Network) {
 	networkRow := []string{}
 	for _, network := range networks {
 		nameRow = append(nameRow, network.Name)
-		networkRow = append(networkRow, strings.Join(network.GetSubnets(), ","))
+		networkRow = append(networkRow, strings.Join(network.Subnets, ","))
 	}
 	rows := [][]string{nameRow, networkRow}
 

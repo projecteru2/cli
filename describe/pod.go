@@ -21,7 +21,6 @@ type capacityOfPod struct {
 	Nodes []*capacityOfNode `json:"nodes" yaml:"nodes"`
 }
 
-// Pods describes pods as json, yaml or a table.
 func Pods(pods ...*corepb.Pod) {
 	switch {
 	case isJSON():
@@ -59,6 +58,24 @@ func PodCapacity(total int64, capacityMap map[string]int64) {
 	}
 }
 
+func describePods(pods []*corepb.Pod) {
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{headerName, "Description"})
+
+	nameRow := []string{}
+	descRow := []string{}
+	for _, pod := range pods {
+		nameRow = append(nameRow, pod.Name)
+		descRow = append(descRow, pod.Desc)
+	}
+	rows := [][]string{nameRow, descRow}
+	t.AppendRows(toTableRows(rows))
+	t.AppendSeparator()
+	t.SetStyle(table.StyleLight)
+	t.Render()
+}
+
 func describePodCapacities(capacity *capacityOfPod) {
 	fmt.Println("Total:", capacity.Total)
 
@@ -74,24 +91,6 @@ func describePodCapacities(capacity *capacityOfPod) {
 	}
 	rows := [][]string{nameRow, descRow}
 
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
-	t.SetStyle(table.StyleLight)
-	t.Render()
-}
-
-func describePods(pods []*corepb.Pod) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{headerName, "Description"})
-
-	nameRow := []string{}
-	descRow := []string{}
-	for _, pod := range pods {
-		nameRow = append(nameRow, pod.Name)
-		descRow = append(descRow, pod.Desc)
-	}
-	rows := [][]string{nameRow, descRow}
 	t.AppendRows(toTableRows(rows))
 	t.AppendSeparator()
 	t.SetStyle(table.StyleLight)

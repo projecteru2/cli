@@ -18,7 +18,6 @@ const headerName = "Name"
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-// ToChan streams items over a channel.
 func ToChan[T any](items ...T) chan T {
 	ch := make(chan T)
 	go func() {

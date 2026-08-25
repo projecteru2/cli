@@ -18,53 +18,6 @@ import (
 
 var filterExpr = regexp.MustCompile(`^\s*(?P<name>cpu|memory|storage|volume)\s*(?P<op>>=|<=|==|>|<)\s*(?P<value>\d+(?:\.\d+)?%?)\s*$`)
 
-func match(s string) map[string]string {
-	rv := make(map[string]string)
-	founds := filterExpr.FindStringSubmatch(s)
-	for i, name := range filterExpr.SubexpNames() {
-		if i > 0 && i < len(founds) {
-			rv[name] = founds[i]
-		}
-	}
-	return rv
-}
-
-func compare(operator string, left, right float64) bool {
-	switch operator {
-	case ">":
-		return left > right
-	case ">=":
-		return left >= right
-	case "<":
-		return left < right
-	case "<=":
-		return left <= right
-	case "==":
-		return left == right
-	default:
-		return false
-	}
-}
-
-func attr(nr *corepb.NodeResource, name string) float64 {
-	cr, sr, err := describe.ToResourcePercent(nr)
-	if err != nil {
-		return 0.0
-	}
-	switch name {
-	case flagCPU:
-		return cr[flagCPU]
-	case flagMemory:
-		return cr[flagMemory]
-	case flagStorage:
-		return sr[flagStorage]
-	case "volume":
-		return sr["volumes"]
-	default:
-		return 0
-	}
-}
-
 type resourcePodOptions struct {
 	client corepb.CoreRPCClient
 	name   string
@@ -164,4 +117,51 @@ func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
 		stream: cmd.Bool("stream"),
 	}
 	return o.run(ctx)
+}
+
+func match(s string) map[string]string {
+	rv := make(map[string]string)
+	founds := filterExpr.FindStringSubmatch(s)
+	for i, name := range filterExpr.SubexpNames() {
+		if i > 0 && i < len(founds) {
+			rv[name] = founds[i]
+		}
+	}
+	return rv
+}
+
+func compare(operator string, left, right float64) bool {
+	switch operator {
+	case ">":
+		return left > right
+	case ">=":
+		return left >= right
+	case "<":
+		return left < right
+	case "<=":
+		return left <= right
+	case "==":
+		return left == right
+	default:
+		return false
+	}
+}
+
+func attr(nr *corepb.NodeResource, name string) float64 {
+	cr, sr, err := describe.ToResourcePercent(nr)
+	if err != nil {
+		return 0.0
+	}
+	switch name {
+	case flagCPU:
+		return cr[flagCPU]
+	case flagMemory:
+		return cr[flagMemory]
+	case flagStorage:
+		return sr[flagStorage]
+	case "volume":
+		return sr["volumes"]
+	default:
+		return 0
+	}
 }

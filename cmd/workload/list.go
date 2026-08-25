@@ -75,6 +75,27 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 	return nil
 }
 
+func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
+	if err != nil {
+		return err
+	}
+
+	o := &listWorkloadsOptions{
+		client:     client,
+		appname:    cmd.Args().First(),
+		entrypoint: cmd.String(flagEntry),
+		nodename:   cmd.String(flagNode),
+		labels:     utils.SplitEquality(cmd.StringSlice("label")),
+		limit:      cmd.Int64("limit"),
+		matchIPs:   cmd.StringSlice("match-ip"),
+		skipIPs:    cmd.StringSlice("skip-ip"),
+		podnames:   cmd.StringSlice(flagPod),
+		statistics: cmd.Bool("statistics"),
+	}
+	return o.run(ctx)
+}
+
 type filter struct {
 	ips       []string
 	skipIPs   []string
@@ -112,25 +133,4 @@ func (f filter) skip(workload *corepb.Workload) bool {
 
 func hasIntersection(a, b []string) bool {
 	return slices.ContainsFunc(b, func(v string) bool { return slices.Contains(a, v) })
-}
-
-func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {
-	client, err := utils.NewCoreRPCClient(ctx, cmd)
-	if err != nil {
-		return err
-	}
-
-	o := &listWorkloadsOptions{
-		client:     client,
-		appname:    cmd.Args().First(),
-		entrypoint: cmd.String(flagEntry),
-		nodename:   cmd.String(flagNode),
-		labels:     utils.SplitEquality(cmd.StringSlice("label")),
-		limit:      cmd.Int64("limit"),
-		matchIPs:   cmd.StringSlice("match-ip"),
-		skipIPs:    cmd.StringSlice("skip-ip"),
-		podnames:   cmd.StringSlice(flagPod),
-		statistics: cmd.Bool("statistics"),
-	}
-	return o.run(ctx)
 }

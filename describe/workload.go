@@ -21,7 +21,6 @@ type workloadStatistics struct {
 	Storage int64   `json:"storage" yaml:"storage"`
 }
 
-// Workloads describes workloads as json, yaml or a table.
 func Workloads(workloads ...*corepb.Workload) {
 	switch {
 	case isJSON():
@@ -56,7 +55,6 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 	}
 }
 
-// WorkloadStatuses describes workload statuses as json, yaml or a table.
 func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
 	switch {
 	case isJSON():

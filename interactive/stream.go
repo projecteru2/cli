@@ -25,6 +25,11 @@ var (
 	winchCommand = []byte{0x80}
 )
 
+type window struct {
+	Row uint16
+	Col uint16
+}
+
 // Stream carries the send and recv half of an attach stream.
 type Stream struct {
 	Send func(cmd []byte) error
@@ -42,11 +47,6 @@ func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadM
 		},
 		Recv: recv,
 	}
-}
-
-type window struct {
-	Row uint16
-	Col uint16
 }
 
 // HandleStream pumps an attach stream, optionally putting the terminal in raw mode.
