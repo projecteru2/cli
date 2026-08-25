@@ -62,12 +62,9 @@ func lambda(ctx context.Context, client corepb.CoreRPCClient, opts *corepb.RunAn
 		return -1, err
 	}
 
-	iStream := interactive.Stream{
-		Recv: resp.Recv,
-		Send: func(data []byte) error {
-			return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
-		},
-	}
+	iStream := interactive.NewStream(func(data []byte) error {
+		return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
+	}, resp.Recv)
 
 	go func() {
 		_ = iStream.Send(newline)

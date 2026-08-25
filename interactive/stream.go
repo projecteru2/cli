@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"slices"
 	"strconv"
+	"sync"
 	"syscall"
 	"text/template"
 
@@ -28,6 +29,19 @@ var (
 type Stream struct {
 	Send func(cmd []byte) error
 	Recv func() (*corepb.AttachWorkloadMessage, error)
+}
+
+// NewStream serializes send, which grpc forbids calling from several goroutines.
+func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadMessage, error)) Stream {
+	var mu sync.Mutex
+	return Stream{
+		Send: func(cmd []byte) error {
+			mu.Lock()
+			defer mu.Unlock()
+			return send(cmd)
+		},
+		Recv: recv,
+	}
 }
 
 type window struct {
@@ -112,7 +126,7 @@ func attachTerminal(ctx context.Context, iStream Stream) func() {
 	return func() {
 		cancel()
 		signal.Stop(sigs)
-		_ = term.Restore(stdinFd, state)
+		log.WithFunc("interactive.attachTerminal").Error(ctx, term.Restore(stdinFd, state), "restore terminal")
 	}
 }
 
@@ -121,6 +135,9 @@ func pumpStdin(ctx context.Context, iStream Stream) {
 	scanner := bufio.NewScanner(os.Stdin)
 	scanner.Split(bufio.ScanRunes)
 	for scanner.Scan() {
+		if ctx.Err() != nil {
+			return
+		}
 		if err := iStream.Send(scanner.Bytes()); err != nil {
 			logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
 		}

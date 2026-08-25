@@ -37,12 +37,9 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	iStream := interactive.Stream{
-		Recv: resp.Recv,
-		Send: func(data []byte) error {
-			return resp.Send(&corepb.ExecuteWorkloadOptions{ReplCmd: data})
-		},
-	}
+	iStream := interactive.NewStream(func(data []byte) error {
+		return resp.Send(&corepb.ExecuteWorkloadOptions{ReplCmd: data})
+	}, resp.Recv)
 
 	code, err := interactive.HandleStream(ctx, opts.OpenStdin, iStream, 1, false)
 
