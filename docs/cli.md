@@ -96,7 +96,7 @@ every `N` seconds; without it the status is set once.
 | `workload start`/`stop`/`restart` | `<workload id>...` | `--force` |
 | `workload remove` | `<workload id>...` | `--force` |
 | `workload realloc` | `<workload id>` | `--cpu*`, `--memory*`, `--storage*`, `--volumes-request`, `--volumes-limit`, `--cpu-bind`, `--cpu-unbind`, `--extra-resources` |
-| `workload dissociate` | `<workload id>...` | Returns the resources to eru without removing the workload. |
+| `workload dissociate` | `<workload id>...` | `--node` to take every workload on a node; returns the resources to eru without removing the workload. |
 | `workload exec` | `<workload id> -- cmd...` | `--interactive`, `--env`, `--workdir` |
 | `workload logs` | `<workload id>` | `--tail`, `--since`, `--until`, `--follow` |
 | `workload get-status` | `<workload id>...` | |
