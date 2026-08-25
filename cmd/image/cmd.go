@@ -9,8 +9,9 @@ import (
 const (
 	specFileURI = "<spec file uri>"
 
-	flagNode = "node"
-	flagPod  = "pod"
+	flagLabel = "label"
+	flagNode  = "node"
+	flagPod   = "pod"
 )
 
 // Command returns the image command tree.
@@ -60,6 +61,18 @@ func Command() *cli.Command {
 						Usage:       "uid of image",
 						Value:       0,
 						DefaultText: "1",
+					},
+					&cli.StringFlag{
+						Name:  flagPod,
+						Usage: "name of pod to build in, must stay within core's build node filter",
+					},
+					&cli.StringSliceFlag{
+						Name:  flagNode,
+						Usage: "nodename to build on, can set multiple times",
+					},
+					&cli.StringSliceFlag{
+						Name:  flagLabel,
+						Usage: "node label to pick the build node, e.g. a=1, can set multiple times",
 					},
 				},
 				Action: utils.ExitCoder(cmdImageBuild),

@@ -140,7 +140,7 @@ skipped. `workload sendlarge` rejects an empty source file.
 
 | Command | Arguments | Notable options |
 |---|---|---|
-| `image build` | `<spec file uri>` | `--name` (required), `--tag`, `--raw`, `--exist`, `--user`, `--uid`, `--stop-signal`, `--platform` |
+| `image build` | `<spec file uri>` | `--name` (required), `--tag`, `--raw`, `--exist`, `--user`, `--uid`, `--stop-signal`, `--platform`, `--pod`, `--node`, `--label` |
 | `image list`, `image ls` | | `--pod` or `--node` (one is required), `--filter` |
 | `image cache` | `<image>...` | `--pod`, `--node` |
 | `image remove` | `<image>...` | `--pod`, `--node`, `--prune` |
@@ -149,6 +149,13 @@ skipped. `workload sendlarge` rejects an empty source file.
 [Spec formats](specs.md)) and core clones the repository itself. With `--raw` the argument is a
 local directory that is streamed to core as a tar. With `--exist` the argument is the id of an
 existing workload that is committed into an image. `--raw` and `--exist` are mutually exclusive.
+
+`--pod`, `--node` (repeatable) and `--label a=1` (repeatable) narrow the nodes core may build on.
+They only ever narrow: core starts from the `build.node_filter` of its own configuration and keeps
+what the request also allows. Requested node names outside the configured list are dropped as long
+as one survives; a request that selects nothing at all is refused — another pod than the configured
+one, only unconfigured node names, or a label value contradicting a configured one. Omitting all
+three builds on core's configured build nodes.
 
 ## network
 
