@@ -2,10 +2,11 @@ package pod
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
+	"strings"
 
-	"github.com/google/uuid"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -25,7 +26,7 @@ func (o *capacityPodOptions) run(ctx context.Context) error {
 	opts := &corepb.DeployOptions{
 		Resources: o.resources,
 		Entrypoint: &corepb.EntrypointOptions{
-			Name: uuid.New().String(),
+			Name: strings.ToLower(rand.Text()),
 		},
 		DeployStrategy: corepb.DeployOptions_DUMMY,
 		Podname:        o.podname,
