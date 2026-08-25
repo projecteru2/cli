@@ -83,13 +83,7 @@ type filter struct {
 }
 
 func (f filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
-	ans := []*corepb.Workload{}
-	for _, workload := range workloads {
-		if !f.skip(workload) {
-			ans = append(ans, workload)
-		}
-	}
-	return ans
+	return slices.DeleteFunc(workloads, f.skip)
 }
 
 func (f filter) skip(workload *corepb.Workload) bool {

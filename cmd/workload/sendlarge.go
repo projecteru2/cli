@@ -56,9 +56,16 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		}
 	})
 
-	for _, chunk := range o.toSendLargeFileChunks() {
-		if err := stream.Send(chunk); err != nil {
-			logger.Errorf(ctx, err, "send %s failed", chunk.Dst)
+	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
+		if err := stream.Send(&corepb.FileOptions{
+			Ids:   o.ids,
+			Dst:   o.dst,
+			Size:  int64(len(o.content)),
+			Mode:  o.modes,
+			Owner: o.owners,
+			Chunk: chunk,
+		}); err != nil {
+			logger.Errorf(ctx, err, "send %s failed", o.dst)
 			return err
 		}
 	}
@@ -68,21 +75,6 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 
 	wg.Wait()
 	return recvErr
-}
-
-func (o *sendLargeWorkloadsOptions) toSendLargeFileChunks() []*corepb.FileOptions {
-	ret := make([]*corepb.FileOptions, 0)
-	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
-		ret = append(ret, &corepb.FileOptions{
-			Ids:   o.ids,
-			Dst:   o.dst,
-			Size:  int64(len(o.content)),
-			Mode:  o.modes,
-			Owner: o.owners,
-			Chunk: chunk,
-		})
-	}
-	return ret
 }
 
 func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {

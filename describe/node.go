@@ -150,15 +150,16 @@ func toJSON(v any) string {
 
 func parse(key, value any) []string {
 	res := []string{}
-	if m, ok := value.(map[string]any); ok {
-		for _, k := range slices.Sorted(maps.Keys(m)) {
-			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(m[k])))
+	switch v := value.(type) {
+	case map[string]any:
+		for _, k := range slices.Sorted(maps.Keys(v)) {
+			res = append(res, fmt.Sprintf("%s[%s]: %v", key, k, toJSON(v[k])))
 		}
-	} else if s, ok := value.([]any); ok {
-		for i, v := range s {
-			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(v)))
+	case []any:
+		for i, item := range v {
+			res = append(res, fmt.Sprintf("%s[%d]: %v", key, i, toJSON(item)))
 		}
-	} else {
+	default:
 		res = append(res, fmt.Sprintf("%s: %v", key, toJSON(value)))
 	}
 	return res

@@ -89,7 +89,8 @@ func doReplaceWorkload(ctx context.Context, client corepb.CoreRPCClient, deployO
 				logger.Infof(ctx, "but create done id %s name %s", msg.Create.Id, msg.Create.Name)
 			}
 			continue
-		} else if msg.Remove.Hook != "" {
+		}
+		if msg.Remove.Hook != "" {
 			logger.Infof(ctx, "hook output \n%s", msg.Remove.Hook)
 		}
 

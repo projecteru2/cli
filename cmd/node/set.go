@@ -50,11 +50,7 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 		return nil, errors.New("node name must be given")
 	}
 
-	var (
-		ca, cert, key string
-		err           error
-	)
-	ca, cert, key, err = readTLSConfigs(cmd)
+	ca, cert, key, err := readTLSConfigs(cmd)
 	if err != nil {
 		return nil, err
 	}

@@ -75,14 +75,6 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	if bindCPU && unbindCPU {
 		return nil, errors.New("cpu-bind and cpu-unbind can not both be set")
 	}
-	bindCPUOpt := corepb.TriOpt_KEEP
-	if bindCPU {
-		bindCPUOpt = corepb.TriOpt_TRUE
-	}
-	if unbindCPU {
-		bindCPUOpt = corepb.TriOpt_FALSE
-	}
-
 	storageRequest, storageLimit, err := storageOption(cmd)
 	if err != nil {
 		return nil, err
@@ -103,11 +95,11 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 		flagVolumesLimit:   volumesLimit,
 	}
 
-	switch bindCPUOpt {
-	case corepb.TriOpt_KEEP:
-		cpumem["keep-cpu-bind"] = true
-	case corepb.TriOpt_TRUE:
+	switch {
+	case bindCPU:
 		cpumem["cpu-bind"] = true
+	case !unbindCPU:
+		cpumem["keep-cpu-bind"] = true
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{

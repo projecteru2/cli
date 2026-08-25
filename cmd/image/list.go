@@ -66,7 +66,7 @@ func generateListOptions(cmd *cli.Command) (*corepb.ListImageOptions, error) {
 	filter := cmd.String("filter")
 	podname := cmd.String(flagPod)
 	nodename := cmd.StringSlice(flagNode)
-	if len(nodename) < 1 && len(podname) < 1 {
+	if len(nodename) == 0 && podname == "" {
 		return nil, errors.New("podname or nodenames should be given")
 	}
 

@@ -37,9 +37,9 @@ func ParseRAMInHuman(ram string) (int64, error) {
 		return 0, nil
 	}
 	sign := int64(1)
-	if strings.HasPrefix(ram, "-") {
+	if trimmed, ok := strings.CutPrefix(ram, "-"); ok {
 		sign = int64(-1)
-		ram = strings.TrimPrefix(ram, "-")
+		ram = trimmed
 	}
 	ramInBytes, err := units.RAMInBytes(ram)
 	if err != nil {
