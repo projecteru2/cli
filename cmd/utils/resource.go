@@ -8,8 +8,7 @@ import (
 	"github.com/urfave/cli/v3"
 )
 
-// EncodeResources encodes resource plugin parameters for the core rpc and adds
-// the --extra-resources object under the plugin names it does not already carry.
+// EncodeResources encodes plugin params for the core rpc; --extra-resources fills only the plugins not already present.
 func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[string][]byte, error) {
 	encoded := make(map[string][]byte, len(resources))
 	for plugin, params := range resources {

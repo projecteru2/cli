@@ -36,7 +36,6 @@ const (
 	resourceStorage = "storage"
 )
 
-// stopOnFirstArg makes everything after the first positional argument the command to run.
 var stopOnFirstArg = 1
 
 // Command returns the workload command tree.

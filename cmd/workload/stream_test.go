@@ -35,9 +35,9 @@ func TestCopyReturnsFailures(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			o := &copyWorkloadsOptions{
-				client:  &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: tt.msgs}},
-				dir:     dir,
-				sources: map[string][]string{"cid1": {"/etc/app"}},
+				client:          &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: tt.msgs}},
+				dir:             dir,
+				pathsByWorkload: map[string][]string{"cid1": {"/etc/app"}},
 			}
 
 			err := o.run(t.Context())

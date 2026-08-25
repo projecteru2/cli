@@ -18,14 +18,14 @@ import (
 )
 
 type copyWorkloadsOptions struct {
-	client  corepb.CoreRPCClient
-	dir     string
-	sources map[string][]string // workload ID -> paths to copy
+	client          corepb.CoreRPCClient
+	dir             string
+	pathsByWorkload map[string][]string
 }
 
 func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 	targets := map[string]*corepb.CopyPaths{}
-	for id, paths := range o.sources {
+	for id, paths := range o.pathsByWorkload {
 		targets[id] = &corepb.CopyPaths{Paths: paths}
 	}
 
@@ -94,9 +94,9 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	o := &copyWorkloadsOptions{
-		client:  client,
-		sources: sources,
-		dir:     cmd.String("dir"),
+		client:          client,
+		pathsByWorkload: sources,
+		dir:             cmd.String("dir"),
 	}
 	return o.run(ctx)
 }

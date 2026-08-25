@@ -43,8 +43,7 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	lsOpts := &corepb.ListWorkloadsOptions{
 		Appname:    o.opts.Name,
 		Entrypoint: o.opts.Entrypoint.Name,
-		Labels:     nil,
-		Limit:      1, // at least one workload must exist to be replaced
+		Limit:      1,
 	}
 	resp, err := o.client.ListWorkloads(ctx, lsOpts)
 	if err != nil {

@@ -19,7 +19,6 @@ import (
 	"github.com/projecteru2/cli/cmd/utils"
 )
 
-// progressRewrite rewrites an already printed layer line in place.
 const progressRewrite = "\x1b7\x1b[%dA\r\x1b[2K%s\x1b8"
 
 type buildImageOptions struct {
