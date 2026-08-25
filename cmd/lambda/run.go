@@ -43,7 +43,7 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 
 	iStream := interactive.NewStream(func(data []byte) error {
 		return resp.Send(&corepb.RunAndWaitOptions{Cmd: data})
-	}, resp.Recv)
+	}, resp.Recv, resp.CloseSend)
 
 	go func() {
 		_ = iStream.Send(newline)

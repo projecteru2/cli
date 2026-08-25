@@ -34,20 +34,31 @@ type window struct {
 
 // Stream carries the send and recv half of an attach stream.
 type Stream struct {
-	Send func(cmd []byte) error
-	Recv func() (*corepb.AttachWorkloadMessage, error)
+	Send      func(cmd []byte) error
+	Recv      func() (*corepb.AttachWorkloadMessage, error)
+	CloseSend func() error
 }
 
-// NewStream serializes send, which grpc forbids calling from several goroutines.
-func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadMessage, error)) Stream {
+// NewStream serializes send and closeSend, which grpc forbids calling from several goroutines.
+func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadMessage, error), closeSend func() error) Stream {
 	var mu sync.Mutex
+	closed := false
 	return Stream{
 		Send: func(cmd []byte) error {
 			mu.Lock()
 			defer mu.Unlock()
+			if closed {
+				return nil
+			}
 			return send(cmd)
 		},
 		Recv: recv,
+		CloseSend: func() error {
+			mu.Lock()
+			defer mu.Unlock()
+			closed = true
+			return closeSend()
+		},
 	}
 }
 
@@ -149,6 +160,7 @@ func pumpStdin(ctx context.Context, iStream Stream) {
 		}
 	}
 	logger.Error(ctx, scanner.Err(), "read stdin")
+	logger.Error(ctx, iStream.CloseSend(), "close the send side")
 }
 
 func watchWindowSize(ctx context.Context, iStream Stream, stdinFd int, sigs <-chan os.Signal) {
