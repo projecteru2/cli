@@ -115,7 +115,7 @@ every `N` seconds; without it the status is set once.
 
 | Command | Arguments | Notable options |
 |---|---|---|
-| `workload deploy` | `<spec file uri>` | `--pod`, `--entry`, `--image` (all required), `--node`, `--count`, `--network`, `--cpu`/`--cpu-request`/`--cpu-limit`, `--memory*`, `--storage*`, `--env`, `--nodelabel`, `--deploy-strategy`, `--user`, `--file`, `--after-create`, `--nodes-limit`, `--auto-replace`, `--cpu-bind`, `--ignore-hook`, `--raw-args`, `--extra-resources`, `--dry-run` |
+| `workload deploy` | `<spec file uri>` | `--pod`, `--entry`, `--image` (all required), `--node`, `--count`, `--network`, `--cpu`/`--cpu-request`/`--cpu-limit`, `--memory*`, `--storage*`, `--env`, `--nodelabel`, `--deploy-strategy`, `--user`, `--file`, `--after-create`, `--nodes-limit`, `--auto-replace`, `--cpu-bind`, `--ignore-hook`, `--debug`, `--raw-args`, `--extra-resources`, `--dry-run` |
 | `workload replace` | `<spec file uri>` | `--entry`, `--image` (required), `--pod`, `--node`, `--count`, `--network`, `--network-inherit`, `--env`, `--user`, `--label`, `--file`, `--copy`, `--after-create`, `--ignore-hook`, `--debug` |
 | `workload get` | `<workload id>...` | |
 | `workload list` | `[appname]` | `--entry`, `--node`, `--pod`, `--label`, `--limit`, `--match-ip`, `--skip-ip`, `--statistics` |
@@ -205,11 +205,13 @@ command's exit code. Everything after the first positional argument is the remot
 | `--pod`, `--node` | | Where to run. |
 | `--image` | `alpine:latest` | Base image. |
 | `--name` | | Entrypoint name of the lambda. |
+| `--network` | | SDN network to join. |
 | `--count` | `1` | How many copies to run; the cli waits for all of them. |
 | `--cpu`, `--cpu-request` | `1`, `0` | CPU limit and request. |
 | `--memory`, `--memory-request` | `512M` | Memory limit and request. |
 | `--storage`, `--storage-request` | | Storage limit and request. |
 | `--volume`, `--volume-request` | | Volume limit and request, repeatable. |
+| `--extra-resources` | | Extra resource plugin parameters as JSON, e.g. `{"gpu":{"count":1}}`. |
 | `--env` | | `KEY=value`, repeatable. |
 | `--file` | | `src:dst`, repeatable. |
 | `--working-dir` | `/` | Working directory. |
