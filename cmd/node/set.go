@@ -63,29 +63,9 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 		}
 	}
 
-	cpumem := resourcetypes.RawParams{}
-	storage := resourcetypes.RawParams{}
-
+	cpumem, storage := collectResourceParams(cmd)
 	if cmd.IsSet("cpu") {
 		cpumem["cpu"] = cmd.String("cpu")
-	}
-	if cmd.IsSet("memory") {
-		cpumem["memory"] = cmd.String("memory")
-	}
-	if cmd.IsSet("numa-cpu") {
-		cpumem["numa-cpu"] = cmd.StringSlice("numa-cpu")
-	}
-	if cmd.IsSet("numa-memory") {
-		cpumem["numa-memory"] = cmd.StringSlice("numa-memory")
-	}
-	if cmd.IsSet("disk") {
-		storage["disks"] = cmd.StringSlice("disk")
-	}
-	if cmd.IsSet(flagStorage) {
-		storage[flagStorage] = cmd.String(flagStorage)
-	}
-	if cmd.IsSet("volume") {
-		storage["volumes"] = cmd.StringSlice("volume")
 	}
 	if cmd.IsSet("rm-disk") {
 		storage["rm-disks"] = cmd.String("rm-disk")

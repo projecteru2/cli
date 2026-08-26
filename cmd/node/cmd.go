@@ -190,7 +190,7 @@ func Command() *cli.Command {
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},
@@ -272,7 +272,7 @@ func Command() *cli.Command {
 						Usage: "mark node for testing, maybe no health check and status report",
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},

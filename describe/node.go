@@ -4,9 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"maps"
 	"os"
-	"slices"
 	"strings"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -50,18 +48,11 @@ func renderNodes(showInfo bool, nodes ...*corepb.Node) {
 
 	capacities := make([]resourcetypes.Resources, len(nodes))
 	usages := make([]resourcetypes.Resources, len(nodes))
-	plugins := map[string]struct{}{}
 	for i, node := range nodes {
 		capacities[i] = unmarshalResources(node.ResourceCapacity)
 		usages[i] = unmarshalResources(node.ResourceUsage)
-		for plugin := range capacities[i] {
-			plugins[plugin] = struct{}{}
-		}
-		for plugin := range usages[i] {
-			plugins[plugin] = struct{}{}
-		}
 	}
-	names := slices.Sorted(maps.Keys(plugins))
+	names := pluginNames(capacities, usages)
 
 	header := []any{headerName, "Endpoint", "Status"}
 	for _, name := range names {

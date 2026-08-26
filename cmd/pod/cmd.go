@@ -101,7 +101,7 @@ func Command() *cli.Command {
 						Required: false,
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},

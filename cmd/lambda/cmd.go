@@ -94,7 +94,7 @@ func Command() *cli.Command {
 				Value:   false,
 			},
 			&cli.StringFlag{
-				Name:  "extra-resources",
+				Name:  utils.FlagExtraResources,
 				Usage: "extra resources, e.g., {\"gpu\":{\"count\":1}}",
 			},
 			&cli.StringFlag{

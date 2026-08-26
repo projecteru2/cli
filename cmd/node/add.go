@@ -114,32 +114,12 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 		endpoint = fmt.Sprintf("tcp://%s:%d", ip, port)
 	}
 
-	cpumem := resourcetypes.RawParams{}
-	storage := resourcetypes.RawParams{}
-
+	cpumem, storage := collectResourceParams(cmd)
 	if cmd.IsSet("cpu") {
 		cpumem["cpu"] = cmd.Int("cpu")
 	}
 	if cmd.IsSet("share") {
 		cpumem["share"] = strconv.Itoa(cmd.Int("share"))
-	}
-	if cmd.IsSet("memory") {
-		cpumem["memory"] = cmd.String("memory")
-	}
-	if cmd.IsSet("numa-cpu") {
-		cpumem["numa-cpu"] = cmd.StringSlice("numa-cpu")
-	}
-	if cmd.IsSet("numa-memory") {
-		cpumem["numa-memory"] = cmd.StringSlice("numa-memory")
-	}
-	if cmd.IsSet("disk") {
-		storage["disks"] = cmd.StringSlice("disk")
-	}
-	if cmd.IsSet(flagStorage) {
-		storage[flagStorage] = cmd.String(flagStorage)
-	}
-	if cmd.IsSet("volume") {
-		storage["volumes"] = cmd.StringSlice("volume")
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{

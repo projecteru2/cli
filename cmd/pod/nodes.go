@@ -42,28 +42,10 @@ func (o *listPodNodesOptions) listDown(ctx context.Context) error {
 		return err
 	}
 
-	availNodes, err := o.list(ctx, &corepb.ListNodesOptions{
-		Podname:         o.name,
-		All:             false,
-		Labels:          o.labels,
-		TimeoutInSecond: o.timeoutInSecond,
-		SkipInfo:        !o.showInfo,
+	downNodes := slices.DeleteFunc(allNodes, func(node *corepb.Node) bool {
+		return node.Available && !node.Bypass
 	})
-	if err != nil {
-		return err
-	}
-
-	availableNodes := map[string]*corepb.Node{}
-	for _, node := range availNodes {
-		availableNodes[node.Name] = node
-	}
-
-	unavailNodes := slices.DeleteFunc(allNodes, func(node *corepb.Node) bool {
-		_, ok := availableNodes[node.Name]
-		return ok
-	})
-
-	describe.Nodes(describe.ToChan(unavailNodes...), o.showInfo, o.stream)
+	describe.Nodes(describe.ToChan(downNodes...), o.showInfo, o.stream)
 	return nil
 }
 
