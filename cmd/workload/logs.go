@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
@@ -48,7 +49,9 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 			return fmt.Errorf("get log of %s: %s", coreutils.ShortID(msg.Id), msg.Error)
 		}
 
-		fmt.Println(string(msg.Data))
+		if _, err := os.Stdout.Write(msg.Data); err != nil {
+			return err
+		}
 	}
 	return nil
 }
