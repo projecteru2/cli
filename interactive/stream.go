@@ -151,16 +151,24 @@ func attachTerminal(ctx context.Context, iStream Stream) func() {
 
 func pumpStdin(ctx context.Context, iStream Stream) {
 	logger := log.WithFunc("interactive.pumpStdin")
+	send := func(data []byte) {
+		if sendErr := iStream.Send(data); sendErr != nil {
+			logger.Errorf(ctx, sendErr, "send %d bytes", len(data))
+		}
+	}
 	buf := make([]byte, 32*1024)
 	for {
 		n, err := os.Stdin.Read(buf)
 		if ctx.Err() != nil {
 			return
 		}
-		if n > 0 {
-			if sendErr := iStream.Send(buf[:n]); sendErr != nil {
-				logger.Errorf(ctx, sendErr, "send %d bytes", n)
-			}
+		data := buf[:n]
+		if len(data) > 0 && data[0] == winchCommand[0] {
+			send(data[:1])
+			data = data[1:]
+		}
+		if len(data) > 0 {
+			send(data)
 		}
 		if err != nil {
 			if !errors.Is(err, io.EOF) {

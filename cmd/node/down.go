@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/projecteru2/core/log"
@@ -24,8 +25,11 @@ func (o *setNodeDownOptions) run(ctx context.Context) error {
 	if o.check {
 		checkCtx, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
 		defer cancel()
-		status, err := o.client.GetNodeStatus(checkCtx, &corepb.GetNodeStatusOptions{Nodename: o.name})
-		if err == nil && status.Alive {
+		node, err := o.client.GetNode(checkCtx, &corepb.GetNodeOptions{Nodename: o.name})
+		if err != nil {
+			return fmt.Errorf("check node liveness: %w", err)
+		}
+		if node.Available {
 			return errors.New("node is still alive, not marking it down")
 		}
 	}

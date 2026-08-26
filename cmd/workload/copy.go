@@ -2,6 +2,8 @@ package workload
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -54,11 +56,11 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			errs = errors.Join(errs, fmt.Errorf("copy from %s: %s", coreutils.ShortID(msg.Id), msg.Error))
+			errs = errors.Join(errs, fmt.Errorf("copy %s from %s: %s", msg.Path, coreutils.ShortID(msg.Id), msg.Error))
 			continue
 		}
 
-		filename := fmt.Sprintf("%s-%s-%s.tar", msg.Id, url.PathEscape(msg.Path), now)
+		filename := fmt.Sprintf("%s-%s-%s.tar", msg.Id, encodeCopyPath(msg.Id, now, msg.Path), now)
 		files[filename] = append(files[filename], msg.Data...)
 	}
 
@@ -116,4 +118,15 @@ func parseCopySources(args []string) (map[string][]string, error) {
 		return nil, errors.New("source files should not be empty")
 	}
 	return sources, nil
+}
+
+func encodeCopyPath(id, stamp, p string) string {
+	encoded := url.PathEscape(p)
+	limit := 255 - len(id) - len(stamp) - len("--.tar")
+	if len(encoded) <= limit {
+		return encoded
+	}
+	sum := sha256.Sum256([]byte(p))
+	digest := hex.EncodeToString(sum[:8])
+	return encoded[:limit-len(digest)-1] + "-" + digest
 }

@@ -126,6 +126,36 @@ func TestCopyKeepsWorkloadsApart(t *testing.T) {
 	}
 }
 
+func TestCopyBoundsTheFilename(t *testing.T) {
+	deep := "/opt/" + strings.Repeat("depth/", 40)
+	id := strings.Repeat("f", 64)
+	dir := t.TempDir()
+	o := &copyWorkloadsOptions{
+		client: &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: []*corepb.CopyMessage{
+			{Id: id, Path: deep + "index.js", Data: []byte("first")},
+			{Id: id, Path: deep + "other.js", Data: []byte("second")},
+		}}},
+		dir:             dir,
+		pathsByWorkload: map[string][]string{id: {deep + "index.js", deep + "other.js"}},
+	}
+
+	if err := o.run(t.Context()); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("read dir: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("got %d files, want distinct files for paths sharing a truncated prefix", len(entries))
+	}
+	for _, entry := range entries {
+		if len(entry.Name()) > 255 {
+			t.Errorf("filename length %d exceeds NAME_MAX", len(entry.Name()))
+		}
+	}
+}
+
 func TestCopyMergesRepeatedIDs(t *testing.T) {
 	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,/etc/hosts"})
 	if err != nil {
@@ -190,6 +220,11 @@ func TestSendLargeReturnsFailures(t *testing.T) {
 			msgs:    []*corepb.SendMessage{{Id: "cid1", Path: "/etc/app", Error: "workload not found"}},
 			sendErr: io.EOF,
 			wantErr: "workload not found",
+		},
+		{
+			name:    "a send abort without a status still fails",
+			sendErr: io.EOF,
+			wantErr: "closed before every chunk landed",
 		},
 		{
 			name: "every chunk lands",

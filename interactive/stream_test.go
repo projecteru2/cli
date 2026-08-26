@@ -1,7 +1,10 @@
 package interactive
 
 import (
+	"bytes"
 	"io"
+	"os"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -73,6 +76,34 @@ func TestNewStreamSerializesSend(t *testing.T) {
 
 	if peak != 1 {
 		t.Errorf("got %d concurrent sends, want 1", peak)
+	}
+}
+
+func TestPumpStdinPeelsALeadingWinchByte(t *testing.T) {
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatalf("pipe: %v", err)
+	}
+	orig := os.Stdin
+	os.Stdin = r
+	t.Cleanup(func() { os.Stdin = orig })
+
+	if _, err := w.Write([]byte{0x80, 'a', 'b'}); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	_ = w.Close()
+
+	sends := [][]byte{}
+	stream := NewStream(func(cmd []byte) error {
+		sends = append(sends, slices.Clone(cmd))
+		return nil
+	}, nil, func() error { return nil })
+
+	pumpStdin(t.Context(), stream)
+
+	want := [][]byte{{0x80}, {'a', 'b'}}
+	if len(sends) != 2 || !bytes.Equal(sends[0], want[0]) || !bytes.Equal(sends[1], want[1]) {
+		t.Errorf("got %v, want %v", sends, want)
 	}
 }
 

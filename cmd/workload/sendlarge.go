@@ -57,8 +57,11 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		}); err != nil {
 			logger.Errorf(ctx, err, "send %s failed", o.dst)
 			wg.Wait()
-			if errors.Is(err, io.EOF) && recvErr != nil {
+			if errors.Is(err, io.EOF) {
 				err = nil
+				if recvErr == nil {
+					recvErr = errors.New("the send stream closed before every chunk landed")
+				}
 			}
 			return errors.Join(recvErr, err)
 		}
