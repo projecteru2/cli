@@ -37,22 +37,13 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	var recvErr error
 	wg := sync.WaitGroup{}
 	wg.Go(func() {
-		for {
-			msg, err := stream.Recv()
-			if errors.Is(err, io.EOF) {
-				return
-			}
-			if err != nil {
-				recvErr = errors.Join(recvErr, err)
-				return
-			}
-
+		recvErr = utils.EachMessage(stream.Recv, func(msg *corepb.SendMessage) error {
 			if msg.Error != "" {
-				recvErr = errors.Join(recvErr, fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error))
-				continue
+				return fmt.Errorf("send %s to %s: %s", msg.Path, msg.Id, msg.Error)
 			}
 			logger.Infof(ctx, "send %s to %s success", msg.Path, msg.Id)
-		}
+			return nil
+		})
 	})
 
 	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
@@ -98,9 +89,9 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("can not send multiple files at the same time")
 	}
 
-	ids := cmd.Args().Slice()
-	if len(ids) == 0 {
-		return errors.New("workload id(s) should not be empty")
+	ids, err := argIDs(cmd)
+	if err != nil {
+		return err
 	}
 
 	dst := slices.Collect(maps.Keys(files.Data))[0]

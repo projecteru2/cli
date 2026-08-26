@@ -32,8 +32,7 @@ func TestLambdaEOFRequiresSynchronousExitCode(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &runLambdaOptions{
 				client: &fakeLambdaClient{stream: &fakeLambdaStream{}},
-				opts:   &corepb.RunAndWaitOptions{Async: tt.async},
-				count:  1,
+				opts:   &corepb.RunAndWaitOptions{Async: tt.async, DeployOptions: &corepb.DeployOptions{Count: 1}},
 			}
 			_, err := o.lambda(t.Context())
 			if (err != nil) != tt.wantErr {
