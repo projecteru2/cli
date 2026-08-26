@@ -1,9 +1,56 @@
 package interactive
 
 import (
+	"io"
+	"strings"
 	"sync"
 	"testing"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
 )
+
+func TestHandleStreamRequiresTerminalStatus(t *testing.T) {
+	tests := []struct {
+		name      string
+		msgs      []*corepb.AttachWorkloadMessage
+		exitCount int
+		wantCode  int
+		wantErr   string
+	}{
+		{name: "synchronous eof", exitCount: 1, wantCode: -1, wantErr: "0 of 1 workloads exited"},
+		{name: "core error", msgs: []*corepb.AttachWorkloadMessage{{StdStreamType: corepb.StdStreamType_ERUERROR, Data: []byte("allocate failed")}}, exitCount: 1, wantCode: -1, wantErr: "allocate failed"},
+		{name: "asynchronous eof", wantCode: 0},
+		{name: "exit code", msgs: []*corepb.AttachWorkloadMessage{{Data: []byte("[exitcode] 0")}}, exitCount: 1, wantCode: 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			next := 0
+			stream := Stream{Recv: func() (*corepb.AttachWorkloadMessage, error) {
+				if next == len(tt.msgs) {
+					return nil, io.EOF
+				}
+				msg := tt.msgs[next]
+				next++
+				return msg, nil
+			}}
+
+			code, err := HandleStream(t.Context(), false, stream, tt.exitCount, false)
+			if code != tt.wantCode {
+				t.Errorf("code: got %d, want %d", code, tt.wantCode)
+			}
+			if tt.wantErr == "" {
+				if err != nil {
+					t.Fatalf("got %v, want nil", err)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
+				t.Errorf("got %v, want it to mention %q", err, tt.wantErr)
+			}
+		})
+	}
+}
 
 func TestNewStreamSerializesSend(t *testing.T) {
 	inFlight, peak := 0, 0

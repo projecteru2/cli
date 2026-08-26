@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/docker/go-units v0.5.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
-	github.com/projecteru2/core v0.1.1-0.20260825144259-fe27649249ed
+	github.com/projecteru2/core v0.1.1-0.20260826042119-da55131cd54f
 	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/term v0.45.0
 	google.golang.org/grpc v1.83.1
@@ -18,7 +18,6 @@ require (
 	github.com/cockroachdb/errors v1.14.0 // indirect
 	github.com/cockroachdb/logtags v0.0.0-20241215232642-bb51bb14a506 // indirect
 	github.com/cockroachdb/redact v1.1.8 // indirect
-	github.com/docker/go-connections v0.8.1 // indirect
 	github.com/getsentry/sentry-go v0.48.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/kr/pretty v0.3.1 // indirect

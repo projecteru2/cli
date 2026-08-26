@@ -75,7 +75,10 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 	for {
 		msg, err := iStream.Recv()
 		if errors.Is(err, io.EOF) {
-			return code, nil
+			if exitCount == 0 {
+				return code, nil
+			}
+			return -1, fmt.Errorf("stream ended after %d of %d workloads exited", exited, exitCount)
 		}
 		if err != nil {
 			return -1, err
@@ -83,8 +86,7 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 
 		switch {
 		case msg.StdStreamType == corepb.StdStreamType_ERUERROR:
-			logger.Error(ctx, errors.New(string(msg.Data)), "error from eru")
-			continue
+			return -1, errors.New(string(msg.Data))
 		case msg.StdStreamType == corepb.StdStreamType_TYPEWORKLOADID:
 			logger.Infof(ctx, "workload id %s", msg.WorkloadId)
 			continue

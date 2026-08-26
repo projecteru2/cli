@@ -58,7 +58,6 @@ func Command() *cli.Command {
 						Name:    "filter",
 						Aliases: []string{"f"},
 						Usage:   "filter resource value, can be cpu/memory/storage/volume </<=/>/>=/== 40% or 0.4",
-						Value:   all,
 					},
 					&cli.BoolFlag{
 						Name:  "stream",

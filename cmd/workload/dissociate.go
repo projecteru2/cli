@@ -20,14 +20,25 @@ type dissociateWorkloadsOptions struct {
 
 func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("workload.dissociateWorkloadsOptions.run")
-	ids := o.ids
+	ids := make([]string, 0, len(o.ids))
+	seen := map[string]struct{}{}
+	appendID := func(id string) {
+		if _, ok := seen[id]; ok {
+			return
+		}
+		seen[id] = struct{}{}
+		ids = append(ids, id)
+	}
+	for _, id := range o.ids {
+		appendID(id)
+	}
 	for _, node := range o.nodes {
 		wrks, err := o.client.ListNodeWorkloads(ctx, &corepb.GetNodeOptions{Nodename: node})
 		if err != nil {
 			return err
 		}
 		for _, wrk := range wrks.Workloads {
-			ids = append(ids, wrk.Id)
+			appendID(wrk.Id)
 		}
 	}
 	if len(ids) == 0 {
