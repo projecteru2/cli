@@ -7,7 +7,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -59,8 +58,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			continue
 		}
 
-		encoded := url.PathEscape(strings.TrimPrefix(msg.Path, "/"))
-		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), encoded, now)
+		filename := fmt.Sprintf("%s-%s-%s.tar", msg.Id, url.PathEscape(msg.Path), now)
 		files[filename] = append(files[filename], msg.Data...)
 	}
 
@@ -105,7 +103,9 @@ func parseCopySources(args []string) (map[string][]string, error) {
 		}
 
 		for p := range strings.SplitSeq(paths, ",") {
-			p = path.Clean("/" + p)
+			if p == "" {
+				return nil, fmt.Errorf("invalid source %q, want %s", source, copyArgsUsage)
+			}
 			if !slices.Contains(sources[id], p) {
 				sources[id] = append(sources[id], p)
 			}

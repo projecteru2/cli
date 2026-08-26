@@ -95,13 +95,62 @@ func TestCopyKeepsPathsApart(t *testing.T) {
 	}
 }
 
+func TestCopyKeepsWorkloadsApart(t *testing.T) {
+	const (
+		firstID  = "1111111111111111111111111abcdef0"
+		secondID = "2222222222222222222222222abcdef0"
+	)
+
+	dir := t.TempDir()
+	o := &copyWorkloadsOptions{
+		client: &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: []*corepb.CopyMessage{
+			{Id: firstID, Path: "/etc/hosts", Data: []byte("first")},
+			{Id: secondID, Path: "/etc/hosts", Data: []byte("second")},
+		}}},
+		dir: dir,
+		pathsByWorkload: map[string][]string{
+			firstID:  {"/etc/hosts"},
+			secondID: {"/etc/hosts"},
+		},
+	}
+
+	if err := o.run(t.Context()); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("read dir: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Errorf("got %d files, want one per workload", len(entries))
+	}
+}
+
 func TestCopyMergesRepeatedIDs(t *testing.T) {
-	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,etc/hosts/"})
+	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,/etc/hosts"})
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
 	if !slices.Equal(sources["cid1"], []string{"/etc/hosts", "/etc/passwd"}) {
-		t.Errorf("got %v, want both canonical paths once", sources["cid1"])
+		t.Errorf("got %v, want both paths once", sources["cid1"])
+	}
+}
+
+func TestCopyPreservesPathSemantics(t *testing.T) {
+	sources, err := parseCopySources([]string{"cid1:etc/hosts,/etc/hosts"})
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !slices.Equal(sources["cid1"], []string{"etc/hosts", "/etc/hosts"}) {
+		t.Errorf("got %v, want relative and absolute paths unchanged", sources["cid1"])
+	}
+}
+
+func TestCopyRejectsAnEmptyPath(t *testing.T) {
+	for _, source := range []string{"cid1:,/etc/hosts", "cid1:/etc/hosts,", "cid1:/etc/hosts,,/etc/passwd"} {
+		if _, err := parseCopySources([]string{source}); err == nil {
+			t.Errorf("got nil for %q, want an invalid source error", source)
+		}
 	}
 }
 
