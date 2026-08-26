@@ -76,10 +76,11 @@ func TestCopyKeepsPathsApart(t *testing.T) {
 	o := &copyWorkloadsOptions{
 		client: &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: []*corepb.CopyMessage{
 			{Id: "cid1", Path: "/etc/hosts", Data: []byte("hosts")},
-			{Id: "cid1", Path: "/etc/passwd", Data: []byte("passwd")},
+			{Id: "cid1", Path: "/a/b", Data: []byte("slash")},
+			{Id: "cid1", Path: "/a_b", Data: []byte("underscore")},
 		}}},
 		dir:             dir,
-		pathsByWorkload: map[string][]string{"cid1": {"/etc/hosts", "/etc/passwd"}},
+		pathsByWorkload: map[string][]string{"cid1": {"/etc/hosts", "/a/b", "/a_b"}},
 	}
 
 	if err := o.run(t.Context()); err != nil {
@@ -89,8 +90,8 @@ func TestCopyKeepsPathsApart(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read dir: %v", err)
 	}
-	if len(entries) != 2 {
-		t.Errorf("got %d files, want one per path", len(entries))
+	if len(entries) != 3 {
+		t.Errorf("got %d files, want one per path even when names collide", len(entries))
 	}
 }
 

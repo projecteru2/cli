@@ -42,6 +42,17 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 
 	var errs error
 	files := make(map[string][]byte)
+	owners := map[string]string{}
+	filenameFor := func(id, path string) string {
+		base := fmt.Sprintf("%s-%s-%s", coreutils.ShortID(id), strings.ReplaceAll(strings.Trim(path, "/"), "/", "_"), now)
+		owner := id + "\x00" + path
+		name := base + ".tar"
+		for i := 1; owners[name] != "" && owners[name] != owner; i++ {
+			name = fmt.Sprintf("%s-%d.tar", base, i)
+		}
+		owners[name] = owner
+		return name
+	}
 
 	for {
 		msg, err := resp.Recv()
@@ -57,8 +68,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			continue
 		}
 
-		path := strings.ReplaceAll(strings.Trim(msg.Path, "/"), "/", "_")
-		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), path, now)
+		filename := filenameFor(msg.Id, msg.Path)
 		files[filename] = append(files[filename], msg.Data...)
 	}
 
