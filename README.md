@@ -16,7 +16,7 @@ pods, nodes, workloads, images, networks and one-shot lambdas.
 - Script-friendly exit status: a batch command that acts on many workloads exits non-zero when any
   one of them fails, instead of hiding the failure in its log.
 - Deploy and build from a YAML spec that lives next to the application, read from a path or an
-  HTTP URL, with `${ENV}` template expansion.
+  HTTP URL; build specs expand `{{.ENV_VAR}}` references from the environment.
 
 ## Quick start
 
@@ -49,7 +49,6 @@ See [docs/cli.md](docs/cli.md) for the full command reference and
 
 - [core](https://github.com/projecteru2/core) — the gRPC scheduler this client drives.
 - [agent](https://github.com/projecteru2/agent) — per-node agent reporting workload health.
-- [yavirt](https://github.com/projecteru2/yavirt) — virtual machine engine for eru.
 - [resource-extend](https://github.com/projecteru2/resource-extend) — out-of-tree GPU and
   storage/volume resource plugins whose parameters this client passes through with
   `--extra-resources`.

@@ -34,4 +34,3 @@ output format come from flags or environment variables on every invocation.
 
 - [core](https://github.com/projecteru2/core) — the scheduler this client drives.
 - [agent](https://github.com/projecteru2/agent) — per-node agent reporting workload health.
-- [yavirt](https://github.com/projecteru2/yavirt) — virtual machine engine for eru.
