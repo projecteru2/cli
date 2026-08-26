@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
 	"github.com/urfave/cli/v3"
@@ -24,7 +23,6 @@ type workloadLogsOptions struct {
 }
 
 func (o *workloadLogsOptions) run(ctx context.Context) error {
-	logger := log.WithFunc("workload.workloadLogsOptions.run")
 	opts := &corepb.LogStreamOptions{
 		Id:     o.id,
 		Tail:   o.tail,
@@ -50,7 +48,7 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 			return fmt.Errorf("get log of %s: %s", coreutils.ShortID(msg.Id), msg.Error)
 		}
 
-		logger.Info(ctx, string(msg.Data))
+		fmt.Println(string(msg.Data))
 	}
 	return nil
 }

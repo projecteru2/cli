@@ -3,6 +3,7 @@ package utils
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -70,6 +71,8 @@ func writeTarEntry(tw *tar.Writer, path, name string, entry fs.DirEntry) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	_, err = io.Copy(tw, f)
-	return err
+	if _, err = io.CopyN(tw, f, info.Size()); err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+	return nil
 }

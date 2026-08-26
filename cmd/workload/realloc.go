@@ -24,12 +24,10 @@ func (o *reallocWorkloadsOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	logger := log.WithFunc("workload.reallocWorkloadsOptions.run")
 	if resp.Error != "" {
-		logger.Error(ctx, errors.New(resp.Error), "realloc failed")
-	} else {
-		logger.Info(ctx, "realloc success")
+		return errors.New(resp.Error)
 	}
+	log.WithFunc("workload.reallocWorkloadsOptions.run").Info(ctx, "realloc success")
 	return nil
 }
 

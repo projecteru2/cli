@@ -21,16 +21,23 @@ func TestCopyReturnsFailures(t *testing.T) {
 	tests := []struct {
 		name    string
 		msgs    []*corepb.CopyMessage
+		recvErr error
 		wantErr string
 	}{
 		{
 			name:    "core reports a failure",
-			msgs:    []*corepb.CopyMessage{{Id: "cid1", Name: "app", Error: "no such path"}},
+			msgs:    []*corepb.CopyMessage{{Id: "cid1", Path: "/etc/app", Error: "no such path"}},
+			wantErr: "no such path",
+		},
+		{
+			name:    "a broken stream keeps the diagnostics",
+			msgs:    []*corepb.CopyMessage{{Id: "cid1", Path: "/etc/app", Error: "no such path"}},
+			recvErr: errStreamBroke,
 			wantErr: "no such path",
 		},
 		{
 			name: "everything is written",
-			msgs: []*corepb.CopyMessage{{Id: "cid1", Name: "app", Data: []byte("payload")}},
+			msgs: []*corepb.CopyMessage{{Id: "cid1", Path: "/etc/app", Data: []byte("payload")}},
 		},
 	}
 
@@ -38,7 +45,7 @@ func TestCopyReturnsFailures(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			o := &copyWorkloadsOptions{
-				client:          &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: tt.msgs}},
+				client:          &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: tt.msgs, err: tt.recvErr}},
 				dir:             dir,
 				pathsByWorkload: map[string][]string{"cid1": {"/etc/app"}},
 			}
@@ -64,11 +71,58 @@ func TestCopyReturnsFailures(t *testing.T) {
 	}
 }
 
+func TestCopyKeepsPathsApart(t *testing.T) {
+	dir := t.TempDir()
+	o := &copyWorkloadsOptions{
+		client: &fakeWorkloadClient{copy: &fakeStream[corepb.CopyMessage]{msgs: []*corepb.CopyMessage{
+			{Id: "cid1", Path: "/etc/hosts", Data: []byte("hosts")},
+			{Id: "cid1", Path: "/etc/passwd", Data: []byte("passwd")},
+		}}},
+		dir:             dir,
+		pathsByWorkload: map[string][]string{"cid1": {"/etc/hosts", "/etc/passwd"}},
+	}
+
+	if err := o.run(t.Context()); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		t.Fatalf("read dir: %v", err)
+	}
+	if len(entries) != 2 {
+		t.Errorf("got %d files, want one per path", len(entries))
+	}
+}
+
+func TestCopyMergesRepeatedIDs(t *testing.T) {
+	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,/etc/hosts"})
+	if err != nil {
+		t.Fatalf("parse: %v", err)
+	}
+	if !slices.Equal(sources["cid1"], []string{"/etc/hosts", "/etc/passwd"}) {
+		t.Errorf("got %v, want both paths once", sources["cid1"])
+	}
+}
+
+func TestExecSurfacesTheStreamStatusOnSendFailure(t *testing.T) {
+	o := &execWorkloadOptions{
+		client:   &fakeWorkloadClient{exec: &fakeExecStream{sendErr: io.EOF, recvErr: errStreamBroke}},
+		id:       "cid1",
+		commands: []string{"date"},
+	}
+
+	err := o.run(t.Context())
+	if err == nil || !strings.Contains(err.Error(), errStreamBroke.Error()) {
+		t.Errorf("got %v, want the stream status", err)
+	}
+}
+
 func TestSendLargeReturnsFailures(t *testing.T) {
 	tests := []struct {
 		name    string
 		msgs    []*corepb.SendMessage
 		recvErr error
+		sendErr error
 		wantErr string
 	}{
 		{
@@ -82,6 +136,12 @@ func TestSendLargeReturnsFailures(t *testing.T) {
 			wantErr: errStreamBroke.Error(),
 		},
 		{
+			name:    "a send abort surfaces the stream status",
+			msgs:    []*corepb.SendMessage{{Id: "cid1", Path: "/etc/app", Error: "workload not found"}},
+			sendErr: io.EOF,
+			wantErr: "workload not found",
+		},
+		{
 			name: "every chunk lands",
 			msgs: []*corepb.SendMessage{{Id: "cid1", Path: "/etc/app"}},
 		},
@@ -91,8 +151,9 @@ func TestSendLargeReturnsFailures(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &sendLargeWorkloadsOptions{
 				client: &fakeWorkloadClient{send: &fakeSendStream{
-					msgs: tt.msgs,
-					err:  tt.recvErr,
+					msgs:    tt.msgs,
+					err:     tt.recvErr,
+					sendErr: tt.sendErr,
 				}},
 				ids:     []string{"cid1"},
 				dst:     "/etc/app",
@@ -301,6 +362,17 @@ func TestFailedItemsReachTheExitCode(t *testing.T) {
 			wantErr: "engine unavailable",
 		},
 		{
+			name: "realloc",
+			run: func(ctx context.Context) error {
+				o := &reallocWorkloadsOptions{
+					client: &fakeWorkloadClient{realloc: &corepb.ReallocResourceMessage{Error: "insufficient cpu"}},
+					opts:   &corepb.ReallocOptions{Id: "cid1"},
+				}
+				return o.run(ctx)
+			},
+			wantErr: "insufficient cpu",
+		},
+		{
 			name: "dissociate",
 			run: func(ctx context.Context) error {
 				o := &dissociateWorkloadsOptions{
@@ -366,6 +438,8 @@ type fakeWorkloadClient struct {
 	dissociate    *fakeStream[corepb.DissociateWorkloadMessage]
 	logs          *fakeStream[corepb.LogStreamMessage]
 	list          *fakeStream[corepb.Workload]
+	exec          *fakeExecStream
+	realloc       *corepb.ReallocResourceMessage
 	nodeWorkloads map[string][]string
 	dissociated   []string
 	listOpts      *corepb.ListWorkloadsOptions
@@ -425,14 +499,47 @@ func (f *fakeWorkloadClient) SendLargeFile(context.Context, ...grpc.CallOption) 
 	return f.send, nil
 }
 
+func (f *fakeWorkloadClient) ExecuteWorkload(context.Context, ...grpc.CallOption) (grpc.BidiStreamingClient[corepb.ExecuteWorkloadOptions, corepb.AttachWorkloadMessage], error) {
+	return f.exec, nil
+}
+
+func (f *fakeWorkloadClient) ReallocResource(context.Context, *corepb.ReallocOptions, ...grpc.CallOption) (*corepb.ReallocResourceMessage, error) {
+	return f.realloc, nil
+}
+
+type fakeExecStream struct {
+	grpc.ClientStream
+	sendErr error
+	recvErr error
+}
+
+func (f *fakeExecStream) Send(*corepb.ExecuteWorkloadOptions) error {
+	return f.sendErr
+}
+
+func (f *fakeExecStream) Recv() (*corepb.AttachWorkloadMessage, error) {
+	if f.recvErr != nil {
+		return nil, f.recvErr
+	}
+	return nil, io.EOF
+}
+
+func (f *fakeExecStream) CloseSend() error {
+	return nil
+}
+
 type fakeStream[T any] struct {
 	grpc.ClientStream
 	msgs []*T
+	err  error
 	next int
 }
 
 func (f *fakeStream[T]) Recv() (*T, error) {
 	if f.next >= len(f.msgs) {
+		if f.err != nil {
+			return nil, f.err
+		}
 		return nil, io.EOF
 	}
 	msg := f.msgs[f.next]
@@ -442,13 +549,14 @@ func (f *fakeStream[T]) Recv() (*T, error) {
 
 type fakeSendStream struct {
 	grpc.ClientStream
-	msgs []*corepb.SendMessage
-	err  error
-	next int
+	msgs    []*corepb.SendMessage
+	err     error
+	sendErr error
+	next    int
 }
 
 func (f *fakeSendStream) Send(*corepb.FileOptions) error {
-	return nil
+	return f.sendErr
 }
 
 func (f *fakeSendStream) Recv() (*corepb.SendMessage, error) {

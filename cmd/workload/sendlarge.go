@@ -36,7 +36,6 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 
 	var recvErr error
 	wg := sync.WaitGroup{}
-	defer wg.Wait()
 	wg.Go(func() {
 		for {
 			msg, err := stream.Recv()
@@ -66,11 +65,16 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			Chunk: chunk,
 		}); err != nil {
 			logger.Errorf(ctx, err, "send %s failed", o.dst)
-			return err
+			wg.Wait()
+			if errors.Is(err, io.EOF) && recvErr != nil {
+				err = nil
+			}
+			return errors.Join(recvErr, err)
 		}
 	}
 	if err := stream.CloseSend(); err != nil {
-		return err
+		wg.Wait()
+		return errors.Join(recvErr, err)
 	}
 
 	wg.Wait()

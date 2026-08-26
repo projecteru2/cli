@@ -257,8 +257,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "realloc",
-				Usage:     "realloc workloads resource",
-				ArgsUsage: workloadArgsUsage,
+				Usage:     "realloc workload resource",
+				ArgsUsage: "workloadID",
 				Action:    utils.ExitCoder(cmdWorkloadRealloc),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{

@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"io"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -34,6 +35,9 @@ func (o *execWorkloadOptions) run(ctx context.Context) error {
 	}
 
 	if err = resp.Send(opts); err != nil {
+		if _, recvErr := resp.Recv(); recvErr != nil && !errors.Is(recvErr, io.EOF) {
+			err = recvErr
+		}
 		return err
 	}
 

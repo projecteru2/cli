@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -48,7 +49,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			break
 		}
 		if err != nil {
-			return err
+			return errors.Join(errs, err)
 		}
 
 		if msg.Error != "" {
@@ -56,7 +57,8 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			continue
 		}
 
-		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), msg.Name, now)
+		path := strings.ReplaceAll(strings.Trim(msg.Path, "/"), "/", "_")
+		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), path, now)
 		files[filename] = append(files[filename], msg.Data...)
 	}
 
@@ -79,18 +81,9 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	sources := map[string][]string{}
-	for _, source := range cmd.Args().Slice() {
-		id, paths, ok := strings.Cut(source, ":")
-		if !ok || id == "" || paths == "" {
-			return fmt.Errorf("invalid source %q, want %s", source, copyArgsUsage)
-		}
-
-		sources[id] = strings.Split(paths, ",")
-	}
-
-	if len(sources) == 0 {
-		return errors.New("source files should not be empty")
+	sources, err := parseCopySources(cmd.Args().Slice())
+	if err != nil {
+		return err
 	}
 
 	o := &copyWorkloadsOptions{
@@ -99,4 +92,25 @@ func cmdWorkloadCopy(ctx context.Context, cmd *cli.Command) error {
 		dir:             cmd.String("dir"),
 	}
 	return o.run(ctx)
+}
+
+func parseCopySources(args []string) (map[string][]string, error) {
+	sources := map[string][]string{}
+	for _, source := range args {
+		id, paths, ok := strings.Cut(source, ":")
+		if !ok || id == "" || paths == "" {
+			return nil, fmt.Errorf("invalid source %q, want %s", source, copyArgsUsage)
+		}
+
+		for path := range strings.SplitSeq(paths, ",") {
+			if !slices.Contains(sources[id], path) {
+				sources[id] = append(sources[id], path)
+			}
+		}
+	}
+
+	if len(sources) == 0 {
+		return nil, errors.New("source files should not be empty")
+	}
+	return sources, nil
 }
