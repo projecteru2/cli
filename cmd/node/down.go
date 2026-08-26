@@ -24,13 +24,9 @@ func (o *setNodeDownOptions) run(ctx context.Context) error {
 	if o.check {
 		checkCtx, cancel := context.WithTimeout(ctx, time.Duration(o.checkTimeout)*time.Second)
 		defer cancel()
-		if _, err := o.client.GetNodeResource(checkCtx, &corepb.GetNodeResourceOptions{
-			Opts: &corepb.GetNodeOptions{
-				Nodename: o.name,
-			},
-		}); err == nil {
-			logger.Warn(ctx, "node is not down")
-			return nil
+		status, err := o.client.GetNodeStatus(checkCtx, &corepb.GetNodeStatusOptions{Nodename: o.name})
+		if err == nil && status.Alive {
+			return errors.New("node is still alive, not marking it down")
 		}
 	}
 

@@ -34,6 +34,19 @@ func TestGenerateSetNodeOptionsUpdatesExplicitTLS(t *testing.T) {
 	}
 }
 
+func TestGenerateSetNodeOptionsRejectsPartialTLS(t *testing.T) {
+	c := Command()
+	lookupSubcommand(t, c, "set").Action = func(_ context.Context, cmd *cli.Command) error {
+		if _, err := generateSetNodeOptions(cmd); err == nil {
+			t.Error("got nil, want an error for a partial tls update")
+		}
+		return nil
+	}
+	if err := c.Run(t.Context(), []string{"node", "set", "--ca", "/nonexistent/ca", "node1"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+}
+
 func runSetNodeCommand(t *testing.T, args []string) *corepb.SetNodeOptions {
 	t.Helper()
 	var opts *corepb.SetNodeOptions

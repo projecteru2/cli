@@ -12,6 +12,16 @@ import (
 	"testing"
 )
 
+func TestTarDirectoryRejectsAFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "Dockerfile")
+	if err := os.WriteFile(path, []byte("FROM alpine"), 0o600); err != nil {
+		t.Fatalf("setup: %v", err)
+	}
+	if _, err := TarDirectory(path); err == nil {
+		t.Error("got nil, want an error for a non-directory path")
+	}
+}
+
 func TestTarDirectory(t *testing.T) {
 	dir := t.TempDir()
 	if err := os.Mkdir(filepath.Join(dir, "sub"), 0o755); err != nil {

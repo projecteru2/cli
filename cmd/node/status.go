@@ -3,6 +3,7 @@ package node
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/projecteru2/core/log"
@@ -55,6 +56,9 @@ func cmdNodeSetStatus(ctx context.Context, cmd *cli.Command) error {
 	name := cmd.Args().First()
 	if name == "" {
 		return errors.New("node name must be given")
+	}
+	if cmd.Int("interval") < 0 {
+		return fmt.Errorf("--interval must not be negative, got %d", cmd.Int("interval"))
 	}
 
 	o := &setNodeStatusOptions{

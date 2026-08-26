@@ -111,6 +111,9 @@ func lookupSubcommand(t *testing.T, cmd *cli.Command, name string) *cli.Command 
 func decodeParams(t *testing.T, raw []byte) resourcetypes.RawParams {
 	t.Helper()
 	params := resourcetypes.RawParams{}
+	if len(raw) == 0 {
+		return params
+	}
 	if err := json.Unmarshal(raw, &params); err != nil {
 		t.Fatalf("decode %s: %v", raw, err)
 	}

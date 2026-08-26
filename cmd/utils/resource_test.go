@@ -39,6 +39,17 @@ func TestEncodeResources(t *testing.T) {
 			want:      map[string]map[string]any{"cpumem": {"cpu-limit": 2.0}},
 		},
 		{
+			name:      "untouched plugins are omitted",
+			resources: resourcetypes.Resources{"cpumem": {}, "storage": {"storage-limit": 1.0}},
+			want:      map[string]map[string]any{"storage": {"storage-limit": 1.0}},
+		},
+		{
+			name:      "extra resources fill an untouched plugin",
+			extra:     `{"cpumem":{"cpu-limit":3}}`,
+			resources: resourcetypes.Resources{"cpumem": {}},
+			want:      map[string]map[string]any{"cpumem": {"cpu-limit": 3.0}},
+		},
+		{
 			name:      "malformed extra resources",
 			extra:     "{",
 			resources: resourcetypes.Resources{},

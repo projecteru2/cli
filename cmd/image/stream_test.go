@@ -137,6 +137,22 @@ func TestRemoveImageReportsFailure(t *testing.T) {
 	}
 }
 
+func TestImageListKeepsPartialResults(t *testing.T) {
+	o := &listImageOptions{
+		client: &fakeImageClient{list: &fakeStream[corepb.ListImageMessage]{msgs: []*corepb.ListImageMessage{
+			{Nodename: "node1", Err: "engine unavailable"},
+			{Nodename: "node2"},
+		}}},
+		opts: &corepb.ListImageOptions{},
+	}
+
+	var err error
+	_ = captureStdout(t, func() { err = o.run(t.Context()) })
+	if err == nil || !strings.Contains(err.Error(), "node1") {
+		t.Errorf("got %v, want the failing node named", err)
+	}
+}
+
 func captureStdout(t *testing.T, f func()) string {
 	t.Helper()
 	r, w, err := os.Pipe()
@@ -178,6 +194,11 @@ type fakeImageClient struct {
 	build  *fakeStream[corepb.BuildImageMessage]
 	cache  *fakeStream[corepb.CacheImageMessage]
 	remove *fakeStream[corepb.RemoveImageMessage]
+	list   *fakeStream[corepb.ListImageMessage]
+}
+
+func (f *fakeImageClient) ListImage(context.Context, *corepb.ListImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ListImageMessage], error) {
+	return f.list, nil
 }
 
 func (f *fakeImageClient) BuildImage(context.Context, *corepb.BuildImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.BuildImageMessage], error) {

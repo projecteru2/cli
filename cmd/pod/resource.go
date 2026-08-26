@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -24,7 +25,7 @@ type resourcePodOptions struct {
 	stream bool
 }
 
-func (o *resourcePodOptions) filter(ch <-chan *corepb.NodeResource) (<-chan *corepb.NodeResource, error) {
+func (o *resourcePodOptions) filter(ctx context.Context, ch <-chan *corepb.NodeResource) (<-chan *corepb.NodeResource, error) {
 	if o.expr == "" {
 		return ch, nil
 	}
@@ -54,8 +55,13 @@ func (o *resourcePodOptions) filter(ch <-chan *corepb.NodeResource) (<-chan *cor
 	rv := make(chan *corepb.NodeResource)
 	go func() {
 		defer close(rv)
+		logger := log.WithFunc("pod.resourcePodOptions.filter")
 		for nr := range ch {
-			l := attr(nr, filter["name"])
+			l, err := attr(nr, filter["name"])
+			if err != nil {
+				logger.Errorf(ctx, err, "resource percent of node %s", nr.Name)
+				continue
+			}
 			if !compare(filter["op"], l, v) {
 				continue
 			}
@@ -74,7 +80,7 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 	}
 
 	ch, wait := utils.StreamToChan(resp.Recv)
-	resChan, err := o.filter(ch)
+	resChan, err := o.filter(ctx, ch)
 	if err != nil {
 		return err
 	}
@@ -131,21 +137,21 @@ func compare(operator string, left, right float64) bool {
 	}
 }
 
-func attr(nr *corepb.NodeResource, name string) float64 {
+func attr(nr *corepb.NodeResource, name string) (float64, error) {
 	cr, sr, err := describe.ToResourcePercent(nr)
 	if err != nil {
-		return 0.0
+		return 0, err
 	}
 	switch name {
 	case flagCPU:
-		return cr[flagCPU]
+		return cr[flagCPU], nil
 	case flagMemory:
-		return cr[flagMemory]
+		return cr[flagMemory], nil
 	case flagStorage:
-		return sr[flagStorage]
+		return sr[flagStorage], nil
 	case "volume":
-		return sr["volumes"]
+		return sr["volumes"], nil
 	default:
-		return 0
+		return 0, nil
 	}
 }

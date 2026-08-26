@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"slices"
 	"testing"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -70,11 +71,31 @@ func TestPodResourceRejectsUnparsableFilter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &resourcePodOptions{expr: tt.expr}
-			_, err := o.filter(make(chan *corepb.NodeResource))
+			_, err := o.filter(t.Context(), make(chan *corepb.NodeResource))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestPodResourceFilterDropsUnparsableNodes(t *testing.T) {
+	o := &resourcePodOptions{expr: "cpu<=100%"}
+	ch := make(chan *corepb.NodeResource, 2)
+	ch <- &corepb.NodeResource{Name: "bad", ResourceUsage: "{"}
+	ch <- &corepb.NodeResource{Name: "good", ResourceUsage: "{}", ResourceCapacity: "{}"}
+	close(ch)
+
+	out, err := o.filter(t.Context(), ch)
+	if err != nil {
+		t.Fatalf("filter: %v", err)
+	}
+	names := []string{}
+	for nr := range out {
+		names = append(names, nr.Name)
+	}
+	if !slices.Equal(names, []string{"good"}) {
+		t.Errorf("got %v, want only the parsable node", names)
 	}
 }
 

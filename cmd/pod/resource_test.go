@@ -101,7 +101,11 @@ func TestAttr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := attr(nr, tt.attr); got != tt.want {
+			got, err := attr(nr, tt.attr)
+			if err != nil {
+				t.Fatalf("attr: %v", err)
+			}
+			if got != tt.want {
 				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})

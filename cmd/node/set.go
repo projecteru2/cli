@@ -53,6 +53,9 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 	updateTLS := cmd.IsSet(flagCA) || cmd.IsSet(flagCert) || cmd.IsSet(flagKey)
 	var ca, cert, key string
 	if updateTLS {
+		if !cmd.IsSet(flagCA) || !cmd.IsSet(flagCert) || !cmd.IsSet(flagKey) {
+			return nil, errors.New("--ca, --cert and --key must be given together")
+		}
 		var err error
 		ca, cert, key, err = readTLSConfigs(cmd)
 		if err != nil {
