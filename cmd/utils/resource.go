@@ -19,6 +19,9 @@ const (
 func EncodeResources(cmd *cli.Command, resources resourcetypes.Resources) (map[string][]byte, error) {
 	encoded := make(map[string][]byte, len(resources))
 	for plugin, params := range resources {
+		if len(params) == 0 {
+			continue
+		}
 		b, err := encodeResource(plugin, params)
 		if err != nil {
 			return nil, err

@@ -15,6 +15,26 @@ import (
 	"github.com/projecteru2/cli/types"
 )
 
+func argIDs(cmd *cli.Command) ([]string, error) {
+	ids := cmd.Args().Slice()
+	if len(ids) == 0 {
+		return nil, errors.New("workload id(s) should not be empty")
+	}
+	return ids, nil
+}
+
+func validateDeployFlags(cmd *cli.Command, keys ...string) error {
+	for _, key := range keys {
+		if cmd.String(key) == "" {
+			return fmt.Errorf("no %s given", key)
+		}
+	}
+	if strings.Contains(cmd.String(flagEntry), "_") {
+		return errors.New("entry can not contain _")
+	}
+	return nil
+}
+
 func loadSpecs(ctx context.Context, cmd *cli.Command) (*types.Specs, error) {
 	specURI := cmd.Args().First()
 	if specURI == "" {

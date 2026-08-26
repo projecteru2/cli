@@ -55,28 +55,7 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("pod name must be given")
 	}
 
-	memory, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
-	if err != nil {
-		return fmt.Errorf("parse memory: %w", err)
-	}
-
-	storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
-	if err != nil {
-		return fmt.Errorf("parse storage: %w", err)
-	}
-
-	cpumem := resourcetypes.RawParams{
-		flagCPU:    cmd.Float64(flagCPU),
-		flagMemory: memory,
-	}
-	if cmd.Bool("cpu-bind") {
-		cpumem["cpu-bind"] = true
-	}
-
-	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
-		utils.ResourceCPUMem:  cpumem,
-		utils.ResourceStorage: resourcetypes.RawParams{flagStorage: storage},
-	})
+	resources, err := capacityResources(cmd)
 	if err != nil {
 		return err
 	}
@@ -88,4 +67,35 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		resources: resources,
 	}
 	return o.run(ctx)
+}
+
+func capacityResources(cmd *cli.Command) (map[string][]byte, error) {
+	memory, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
+	if err != nil {
+		return nil, fmt.Errorf("parse memory: %w", err)
+	}
+
+	storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
+	if err != nil {
+		return nil, fmt.Errorf("parse storage: %w", err)
+	}
+
+	cpu := cmd.Float64(flagCPU)
+	cpumem := resourcetypes.RawParams{
+		"cpu-request":    cpu,
+		"cpu-limit":      cpu,
+		"memory-request": memory,
+		"memory-limit":   memory,
+	}
+	if cmd.Bool("cpu-bind") {
+		cpumem["cpu-bind"] = true
+	}
+
+	return utils.EncodeResources(cmd, resourcetypes.Resources{
+		utils.ResourceCPUMem: cpumem,
+		utils.ResourceStorage: resourcetypes.RawParams{
+			"storage-request": storage,
+			"storage-limit":   storage,
+		},
+	})
 }

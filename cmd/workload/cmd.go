@@ -257,8 +257,8 @@ func Command() *cli.Command {
 			},
 			{
 				Name:      "realloc",
-				Usage:     "realloc workloads resource",
-				ArgsUsage: workloadArgsUsage,
+				Usage:     "realloc workload resource",
+				ArgsUsage: "workloadID",
 				Action:    utils.ExitCoder(cmdWorkloadRealloc),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
@@ -317,7 +317,7 @@ func Command() *cli.Command {
 						Usage: "shortcut to set storage-limit/request equally to this value",
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},
@@ -557,7 +557,7 @@ func Command() *cli.Command {
 						Value: "",
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},

@@ -37,7 +37,7 @@ func (o *statusOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	return utils.EachMessage(resp.Recv, func(msg *corepb.WorkloadStatusStreamMessage) error {
+	err = utils.EachMessage(resp.Recv, func(msg *corepb.WorkloadStatusStreamMessage) error {
 		if msg.Error != "" {
 			if msg.Delete {
 				logger.Warnf(ctx, "%s deleted", coreutils.ShortID(msg.Id))
@@ -65,6 +65,10 @@ func (o *statusOptions) run(ctx context.Context) error {
 		}
 		return nil
 	})
+	if sigCtx.Err() != nil {
+		return nil
+	}
+	return err
 }
 
 func cmdStatus(ctx context.Context, cmd *cli.Command) error {

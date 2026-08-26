@@ -21,8 +21,6 @@ func TestFilterSkip(t *testing.T) {
 	}{
 		{name: "no filter keeps the workload", filter: filter{}, workload: workload},
 		{name: "nil workload is skipped", filter: filter{}, want: true},
-		{name: "matching node", filter: filter{nodenames: []string{"node1"}}, workload: workload},
-		{name: "other node", filter: filter{nodenames: []string{"node2"}}, workload: workload, want: true},
 		{name: "matching pod", filter: filter{podnames: []string{"dev"}}, workload: workload},
 		{name: "other pod", filter: filter{podnames: []string{"prod"}}, workload: workload, want: true},
 		{name: "matching ip", filter: filter{ips: []string{"10.0.0.2"}}, workload: workload},

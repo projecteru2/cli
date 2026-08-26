@@ -25,13 +25,13 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 	}{
 		{
 			name:      "cpu and share",
-			args:      []string{"node", "add", "--endpoint", "tcp://127.0.0.1:2375", "--cpu", "64", "--share", "100", "dev"},
+			args:      []string{"node", "add", "--endpoint", "process://127.0.0.1", "--cpu", "64", "--share", "100", "dev"},
 			wantCPU:   64,
 			wantShare: "100",
 		},
 		{
 			name:        "memory storage and volumes",
-			args:        []string{"node", "add", "--endpoint", "tcp://127.0.0.1:2375", "--memory", "1G", "--storage", "10G", "--volume", "/data:100G", "dev"},
+			args:        []string{"node", "add", "--endpoint", "process://127.0.0.1", "--memory", "1G", "--storage", "10G", "--volume", "/data:100G", "dev"},
 			wantMemory:  "1G",
 			wantStorage: "10G",
 			wantVolumes: []string{"/data:100G"},
@@ -64,6 +64,19 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 				t.Errorf("volumes: got %v, want %v", got, tt.wantVolumes)
 			}
 		})
+	}
+}
+
+func TestGenerateAddNodeOptionsRequiresEndpoint(t *testing.T) {
+	c := Command()
+	lookupSubcommand(t, c, "add").Action = func(_ context.Context, cmd *cli.Command) error {
+		if _, err := generateAddNodeOptions(cmd); err == nil {
+			t.Error("got nil, want an error for a missing endpoint")
+		}
+		return nil
+	}
+	if err := c.Run(t.Context(), []string{"node", "add", "dev"}); err != nil {
+		t.Fatalf("run: %v", err)
 	}
 }
 
@@ -111,6 +124,9 @@ func lookupSubcommand(t *testing.T, cmd *cli.Command, name string) *cli.Command 
 func decodeParams(t *testing.T, raw []byte) resourcetypes.RawParams {
 	t.Helper()
 	params := resourcetypes.RawParams{}
+	if len(raw) == 0 {
+		return params
+	}
 	if err := json.Unmarshal(raw, &params); err != nil {
 		t.Fatalf("decode %s: %v", raw, err)
 	}

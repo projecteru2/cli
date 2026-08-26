@@ -2,9 +2,7 @@ package workload
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -31,13 +29,8 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	for _, key := range []string{flagEntry, flagImage} {
-		if cmd.String(key) == "" {
-			return fmt.Errorf("no %s given", key)
-		}
-	}
-	if strings.Contains(cmd.String(flagEntry), "_") {
-		return errors.New("entry can not contain _")
+	if err = validateDeployFlags(cmd, flagEntry, flagImage); err != nil {
+		return err
 	}
 
 	opts, err := generateReplaceOptions(ctx, cmd)

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"slices"
 	"testing"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -70,11 +71,45 @@ func TestPodResourceRejectsUnparsableFilter(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &resourcePodOptions{expr: tt.expr}
-			_, err := o.filter(make(chan *corepb.NodeResource))
+			_, err := o.filter(t.Context(), make(chan *corepb.NodeResource))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestPodResourceFilterDropsUnparsableNodes(t *testing.T) {
+	o := &resourcePodOptions{expr: "cpu<=100%"}
+	ch := make(chan *corepb.NodeResource, 2)
+	ch <- &corepb.NodeResource{Name: "bad", ResourceUsage: "{"}
+	ch <- &corepb.NodeResource{Name: "good", ResourceUsage: "{}", ResourceCapacity: "{}"}
+	close(ch)
+
+	out, err := o.filter(t.Context(), ch)
+	if err != nil {
+		t.Fatalf("filter: %v", err)
+	}
+	names := []string{}
+	for nr := range out {
+		names = append(names, nr.Name)
+	}
+	if !slices.Equal(names, []string{"good"}) {
+		t.Errorf("got %v, want only the parsable node", names)
+	}
+}
+
+func TestListDownNodesUsesOneCall(t *testing.T) {
+	client := &fakePodClient{nodes: func() *fakeStream[corepb.Node] {
+		return &fakeStream[corepb.Node]{msgs: []*corepb.Node{{Name: "n1", Available: true}}}
+	}}
+	o := &listPodNodesOptions{client: client, name: "dev", filter: down}
+
+	if err := discardStdout(t, func() error { return o.run(t.Context()) }); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if len(client.listOpts) != 1 || !client.listOpts[0].All {
+		t.Errorf("got %d calls, want one call listing every node", len(client.listOpts))
 	}
 }
 
@@ -96,9 +131,11 @@ type fakePodClient struct {
 	corepb.CoreRPCClient
 	nodes     func() *fakeStream[corepb.Node]
 	resources func() *fakeStream[corepb.NodeResource]
+	listOpts  []*corepb.ListNodesOptions
 }
 
-func (f *fakePodClient) ListPodNodes(context.Context, *corepb.ListNodesOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.Node], error) {
+func (f *fakePodClient) ListPodNodes(_ context.Context, opts *corepb.ListNodesOptions, _ ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.Node], error) {
+	f.listOpts = append(f.listOpts, opts)
 	return f.nodes(), nil
 }
 

@@ -3,6 +3,7 @@ package utils
 import (
 	"archive/tar"
 	"bytes"
+	"fmt"
 	"io"
 	"io/fs"
 	"os"
@@ -11,9 +12,17 @@ import (
 
 // TarDirectory packs dir into an uncompressed tar whose entry names are relative to dir.
 func TarDirectory(dir string) ([]byte, error) {
+	info, err := os.Stat(dir)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() {
+		return nil, fmt.Errorf("%s is not a directory", dir)
+	}
+
 	buf := &bytes.Buffer{}
 	tw := tar.NewWriter(buf)
-	err := filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
+	err = filepath.WalkDir(dir, func(path string, entry fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
@@ -70,6 +79,8 @@ func writeTarEntry(tw *tar.Writer, path, name string, entry fs.DirEntry) error {
 		return err
 	}
 	defer func() { _ = f.Close() }()
-	_, err = io.Copy(tw, f)
-	return err
+	if _, err = io.CopyN(tw, f, info.Size()); err != nil {
+		return fmt.Errorf("read %s: %w", path, err)
+	}
+	return nil
 }

@@ -100,9 +100,9 @@ func toTableRows(rows [][]string) []table.Row {
 		maxLength = max(maxLength, len(row))
 	}
 
-	rs := []table.Row{}
+	rs := make([]table.Row, 0, maxLength)
 	for i := range maxLength {
-		lines := []any{}
+		lines := make([]any, 0, total)
 		for j := range total {
 			if i < len(rows[j]) {
 				lines = append(lines, rows[j][i])
@@ -143,6 +143,26 @@ func parseAll(params resourcetypes.RawParams) []string {
 		rows = append(rows, parse(key, params[key])...)
 	}
 	return rows
+}
+
+func sortedKVLines(m map[string]string) []string {
+	lines := make([]string, 0, len(m))
+	for _, k := range slices.Sorted(maps.Keys(m)) {
+		lines = append(lines, fmt.Sprintf("%s: %s", k, m[k]))
+	}
+	return lines
+}
+
+func pluginNames(resourceSets ...[]resourcetypes.Resources) []string {
+	plugins := map[string]struct{}{}
+	for _, set := range resourceSets {
+		for _, resources := range set {
+			for plugin := range resources {
+				plugins[plugin] = struct{}{}
+			}
+		}
+	}
+	return slices.Sorted(maps.Keys(plugins))
 }
 
 func unmarshalResources(encoded string) resourcetypes.Resources {

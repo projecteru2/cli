@@ -41,10 +41,6 @@ entrypoints:
     privileged: true
     sysctls:
       net.core.somaxconn: "1024"
-    log:
-      type: journald
-      config:
-        tag: elb
     hook:
       after_start:
         - "ls -al /tmp"
@@ -86,7 +82,6 @@ extra_hosts:
 | `restart` | string | Restart policy passed to the engine, e.g. `always`. |
 | `publish` | list | Ports to publish, `<port>/<proto>`. |
 | `sysctls` | map | Sysctls to set inside the workload. |
-| `log` | map | `type` (`journald`, `json-file`, `none`) and a `config` map. |
 | `healthcheck` | map | `tcp_ports`, `http_port`, `url`, `code`. |
 | `hook` | map | `after_start`, `before_stop` command lists and `force`. |
 
@@ -156,10 +151,11 @@ Each stage takes:
 | `labels` | map | Labels set on the produced image. |
 | `cache` | map | Paths carried from this stage into the next, `source: destination`. |
 | `artifacts` | map | Paths copied into the final image, `source: destination`. |
+| `stop_signal` | string | Signal used to stop workloads built from the image. |
 | `security` | bool | Run the stage with extended privileges. |
 
-Keys are the lowercased protobuf field names, so they are single words: use `stopsignal`, not
-`stop_signal`. `--stop-signal` on the command line overrides every stage; without it the value from
+Keys are the snake_case protobuf field names as they appear on the wire: use `stop_signal`, not
+`stopsignal`. `--stop-signal` on the command line overrides every stage; without it the value from
 the spec is kept.
 
 ```shell

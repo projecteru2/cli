@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -19,7 +20,6 @@ type runLambdaOptions struct {
 	client          corepb.CoreRPCClient
 	opts            *corepb.RunAndWaitOptions
 	stdin           bool
-	count           int
 	printWorkloadID bool
 }
 
@@ -38,6 +38,9 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 	}
 
 	if err := resp.Send(o.opts); err != nil {
+		if _, recvErr := resp.Recv(); recvErr != nil && !errors.Is(recvErr, io.EOF) {
+			err = recvErr
+		}
 		return -1, err
 	}
 
@@ -49,11 +52,11 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 		_ = iStream.Send(newline)
 	}()
 
-	exitCount := o.count
+	exitCount, stdin := int(o.opts.GetDeployOptions().GetCount()), o.stdin
 	if o.opts.Async {
-		exitCount = 0
+		exitCount, stdin = 0, false
 	}
-	return interactive.HandleStream(ctx, o.stdin, iStream, exitCount, o.printWorkloadID)
+	return interactive.HandleStream(ctx, stdin, iStream, exitCount, o.printWorkloadID)
 }
 
 func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
@@ -71,7 +74,6 @@ func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
 		client:          client,
 		opts:            opts,
 		stdin:           cmd.Bool("stdin"),
-		count:           cmd.Int("count"),
 		printWorkloadID: cmd.Bool("workload-id"),
 	}
 	return o.run(ctx)

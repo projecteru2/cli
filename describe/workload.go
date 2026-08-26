@@ -60,14 +60,10 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	}
 
 	resources := make([]resourcetypes.Resources, len(workloads))
-	plugins := map[string]struct{}{}
 	for i, workload := range workloads {
 		resources[i] = unmarshalResources(workload.Resources)
-		for plugin := range resources[i] {
-			plugins[plugin] = struct{}{}
-		}
 	}
-	names := slices.Sorted(maps.Keys(plugins))
+	names := pluginNames(resources)
 
 	header := []any{"Name/ID/Pod/Node/Privileged/CreateTime", "Networks"}
 	for _, name := range names {
@@ -131,27 +127,18 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
 
 	for _, s := range workloadStatuses {
-		ns := []string{}
-		for _, name := range slices.Sorted(maps.Keys(s.Networks)) {
-			ns = append(ns, fmt.Sprintf("%s: %s", name, s.Networks[name]))
-		}
-
 		extensions := map[string]string{}
 		if len(s.Extension) != 0 {
 			if err := json.Unmarshal(s.Extension, &extensions); err != nil {
 				continue
 			}
 		}
-		es := []string{}
-		for _, k := range slices.Sorted(maps.Keys(extensions)) {
-			es = append(es, fmt.Sprintf("%s: %s", k, extensions[k]))
-		}
 
 		rows := [][]string{
 			{s.Id},
 			{fmt.Sprintf("Running: %v", s.Running), fmt.Sprintf("Healthy: %v", s.Healthy)},
-			ns,
-			es,
+			sortedKVLines(s.Networks),
+			sortedKVLines(extensions),
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()

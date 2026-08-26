@@ -11,9 +11,6 @@ const (
 
 	flagLabel   = "label"
 	flagStorage = "storage"
-	flagCA      = "ca"
-	flagCert    = "cert"
-	flagKey     = "key"
 )
 
 // Command returns the node command tree.
@@ -175,22 +172,7 @@ func Command() *cli.Command {
 						Usage: "update node endpoint",
 					},
 					&cli.StringFlag{
-						Name:  flagCA,
-						Usage: "ca file, like /etc/docker/tls/ca.crt",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  flagCert,
-						Usage: "cert file, like /etc/docker/tls/client.crt",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  flagKey,
-						Usage: "key file, like /etc/docker/tls/client.key",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},
@@ -210,22 +192,7 @@ func Command() *cli.Command {
 					},
 					&cli.StringFlag{
 						Name:  "endpoint",
-						Usage: "endpoint of the node, the scheme picks the engine: tcp://, unix://, process://, containerd://, cocoon://, mock://",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  flagCA,
-						Usage: "ca file of docker server, like /etc/docker/tls/ca.crt",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  flagCert,
-						Usage: "cert file of docker server, like /etc/docker/tls/client.crt",
-						Value: "",
-					},
-					&cli.StringFlag{
-						Name:  flagKey,
-						Usage: "key file of docker server, like /etc/docker/tls/client.key",
+						Usage: "endpoint of the node, the scheme picks the engine: process://, containerd://, cocoon://, mock://",
 						Value: "",
 					},
 					&cli.IntFlag{
@@ -272,7 +239,7 @@ func Command() *cli.Command {
 						Usage: "mark node for testing, maybe no health check and status report",
 					},
 					&cli.StringFlag{
-						Name:  "extra-resources",
+						Name:  utils.FlagExtraResources,
 						Usage: "add extra resource requests",
 						Value: "",
 					},

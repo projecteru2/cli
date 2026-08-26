@@ -3,9 +3,11 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"maps"
 	"slices"
+	"strings"
 	"testing"
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -29,15 +31,26 @@ func TestLambdaEOFRequiresSynchronousExitCode(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			o := &runLambdaOptions{
-				client: &fakeLambdaClient{},
-				opts:   &corepb.RunAndWaitOptions{Async: tt.async},
-				count:  1,
+				client: &fakeLambdaClient{stream: &fakeLambdaStream{}},
+				opts:   &corepb.RunAndWaitOptions{Async: tt.async, DeployOptions: &corepb.DeployOptions{Count: 1}},
 			}
 			_, err := o.lambda(t.Context())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("got %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestLambdaSurfacesTheStreamStatusOnSendFailure(t *testing.T) {
+	o := &runLambdaOptions{
+		client: &fakeLambdaClient{stream: &fakeLambdaStream{sendErr: io.EOF, recvErr: errors.New("core unavailable")}},
+		opts:   &corepb.RunAndWaitOptions{},
+	}
+
+	_, err := o.lambda(t.Context())
+	if err == nil || !strings.Contains(err.Error(), "core unavailable") {
+		t.Errorf("got %v, want the stream status", err)
 	}
 }
 
@@ -160,21 +173,27 @@ func decodeParams(t *testing.T, raw []byte) resourcetypes.RawParams {
 
 type fakeLambdaClient struct {
 	corepb.CoreRPCClient
+	stream *fakeLambdaStream
 }
 
 func (f *fakeLambdaClient) RunAndWait(context.Context, ...grpc.CallOption) (grpc.BidiStreamingClient[corepb.RunAndWaitOptions, corepb.AttachWorkloadMessage], error) {
-	return &fakeLambdaStream{}, nil
+	return f.stream, nil
 }
 
 type fakeLambdaStream struct {
 	grpc.ClientStream
+	sendErr error
+	recvErr error
 }
 
 func (f *fakeLambdaStream) Send(*corepb.RunAndWaitOptions) error {
-	return nil
+	return f.sendErr
 }
 
 func (f *fakeLambdaStream) Recv() (*corepb.AttachWorkloadMessage, error) {
+	if f.recvErr != nil {
+		return nil, f.recvErr
+	}
 	return nil, io.EOF
 }
 

@@ -54,10 +54,6 @@ func (o *listWorkloadsOptions) run(ctx context.Context) error {
 		skipIPs:  o.skipIPs,
 		podnames: o.podnames,
 	}
-	if o.nodename != "" {
-		f.nodenames = []string{o.nodename}
-	}
-
 	workloads = f.filterIn(workloads)
 
 	if o.statistics {
@@ -91,10 +87,9 @@ func cmdWorkloadList(ctx context.Context, cmd *cli.Command) error {
 }
 
 type filter struct {
-	ips       []string
-	skipIPs   []string
-	nodenames []string
-	podnames  []string
+	ips      []string
+	skipIPs  []string
+	podnames []string
 }
 
 func (f filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
@@ -103,9 +98,6 @@ func (f filter) filterIn(workloads []*corepb.Workload) []*corepb.Workload {
 
 func (f filter) skip(workload *corepb.Workload) bool {
 	if workload == nil {
-		return true
-	}
-	if len(f.nodenames) > 0 && !slices.Contains(f.nodenames, workload.Nodename) {
 		return true
 	}
 	if len(f.podnames) > 0 && !slices.Contains(f.podnames, workload.Podname) {

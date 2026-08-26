@@ -2,7 +2,6 @@ package workload
 
 import (
 	"context"
-	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -32,9 +31,9 @@ func cmdWorkloadGet(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	ids := cmd.Args().Slice()
-	if len(ids) == 0 {
-		return errors.New("workload id(s) should not be empty")
+	ids, err := argIDs(cmd)
+	if err != nil {
+		return err
 	}
 
 	o := &getWorkloadsOptions{

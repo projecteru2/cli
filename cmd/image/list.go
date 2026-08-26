@@ -3,7 +3,7 @@ package image
 import (
 	"context"
 	"errors"
-	"io"
+	"fmt"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -24,24 +24,16 @@ func (o *listImageOptions) run(ctx context.Context) error {
 	}
 
 	msgs := []*corepb.ListImageMessage{}
-	for {
-		msg, err := resp.Recv()
-		if errors.Is(err, io.EOF) {
-			break
-		}
-		if err != nil {
-			return err
-		}
-
+	err = utils.EachMessage(resp.Recv, func(msg *corepb.ListImageMessage) error {
 		if msg.Err != "" {
-			return cli.Exit(msg.Err, -1)
+			return fmt.Errorf("list images on %s: %s", msg.Nodename, msg.Err)
 		}
-
 		msgs = append(msgs, msg)
-	}
+		return nil
+	})
 
 	describe.Images(msgs...)
-	return nil
+	return err
 }
 
 func cmdImageList(ctx context.Context, cmd *cli.Command) error {

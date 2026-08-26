@@ -1,7 +1,6 @@
 package interactive
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -25,22 +24,21 @@ var (
 	winchCommand = []byte{0x80}
 )
 
-type messageWriter func(io.Writer, *corepb.AttachWorkloadMessage) error
+type sendFunc func(cmd []byte) error
 
-type window struct {
-	Row uint16
-	Col uint16
-}
+type recvFunc func() (*corepb.AttachWorkloadMessage, error)
+
+type closeFunc func() error
 
 // Stream carries the send and recv half of an attach stream.
 type Stream struct {
-	Send      func(cmd []byte) error
-	Recv      func() (*corepb.AttachWorkloadMessage, error)
-	CloseSend func() error
+	Send      sendFunc
+	Recv      recvFunc
+	CloseSend closeFunc
 }
 
 // NewStream serializes send and closeSend, which grpc forbids calling from several goroutines.
-func NewStream(send func(cmd []byte) error, recv func() (*corepb.AttachWorkloadMessage, error), closeSend func() error) Stream {
+func NewStream(send sendFunc, recv recvFunc, closeSend closeFunc) Stream {
 	var mu sync.Mutex
 	closed := false
 	return Stream{
@@ -113,6 +111,8 @@ func HandleStream(ctx context.Context, interactive bool, iStream Stream, exitCou
 	}
 }
 
+type messageWriter func(io.Writer, *corepb.AttachWorkloadMessage) error
+
 func outputWriter(printWorkloadID bool) messageWriter {
 	if printWorkloadID {
 		return func(w io.Writer, msg *corepb.AttachWorkloadMessage) error {
@@ -151,18 +151,30 @@ func attachTerminal(ctx context.Context, iStream Stream) func() {
 
 func pumpStdin(ctx context.Context, iStream Stream) {
 	logger := log.WithFunc("interactive.pumpStdin")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Split(bufio.ScanRunes)
-	for scanner.Scan() {
+	buf := make([]byte, 32*1024)
+	for {
+		n, err := os.Stdin.Read(buf)
 		if ctx.Err() != nil {
 			return
 		}
-		if err := iStream.Send(scanner.Bytes()); err != nil {
-			logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
+		if n > 0 {
+			if sendErr := iStream.Send(buf[:n]); sendErr != nil {
+				logger.Errorf(ctx, sendErr, "send %d bytes", n)
+			}
+		}
+		if err != nil {
+			if !errors.Is(err, io.EOF) {
+				logger.Error(ctx, err, "read stdin")
+			}
+			logger.Error(ctx, iStream.CloseSend(), "close the send side")
+			return
 		}
 	}
-	logger.Error(ctx, scanner.Err(), "read stdin")
-	logger.Error(ctx, iStream.CloseSend(), "close the send side")
+}
+
+type window struct {
+	Row uint16
+	Col uint16
 }
 
 func watchWindowSize(ctx context.Context, iStream Stream, stdinFd int, sigs <-chan os.Signal) {

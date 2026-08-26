@@ -50,9 +50,9 @@ See [docs/cli.md](docs/cli.md) for the full command reference and
 - [core](https://github.com/projecteru2/core) — the gRPC scheduler this client drives.
 - [agent](https://github.com/projecteru2/agent) — per-node agent reporting workload health.
 - [yavirt](https://github.com/projecteru2/yavirt) — virtual machine engine for eru.
-- [resource-storage](https://github.com/projecteru2/resource-storage),
-  [resource-gpu](https://github.com/projecteru2/resource-gpu) — resource plugins whose parameters
-  this client passes through with `--extra-resources`.
+- [resource-extend](https://github.com/projecteru2/resource-extend) — out-of-tree GPU and
+  storage/volume resource plugins whose parameters this client passes through with
+  `--extra-resources`.
 
 ## Development
 

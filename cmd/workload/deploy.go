@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -73,13 +72,8 @@ func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	for _, key := range []string{flagPod, flagEntry, flagImage} {
-		if cmd.String(key) == "" {
-			return fmt.Errorf("no %s given", key)
-		}
-	}
-	if strings.Contains(cmd.String(flagEntry), "_") {
-		return errors.New("entry can not contain _")
+	if err = validateDeployFlags(cmd, flagPod, flagEntry, flagImage); err != nil {
+		return err
 	}
 
 	opts, err := generateDeployOptions(ctx, cmd)
