@@ -5,8 +5,10 @@ import (
 	"io"
 )
 
+type recvFunc[T any] func() (*T, error)
+
 // StreamToChan returns a wait func that reports the recv error once the channel is drained.
-func StreamToChan[T any](recv func() (*T, error)) (<-chan *T, func() error) {
+func StreamToChan[T any](recv recvFunc[T]) (<-chan *T, func() error) {
 	var recvErr error
 	ch := make(chan *T)
 	go func() {
@@ -19,7 +21,7 @@ func StreamToChan[T any](recv func() (*T, error)) (<-chan *T, func() error) {
 	return ch, func() error { return recvErr }
 }
 
-func EachMessage[T any](recv func() (*T, error), fn func(*T) error) error {
+func EachMessage[T any](recv recvFunc[T], fn func(*T) error) error {
 	var errs error
 	for {
 		msg, err := recv()
