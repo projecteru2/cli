@@ -74,10 +74,10 @@ eru-cli pod capacity --cpu 2 --memory 1G --storage 10G <pod>
 
 | Command | Arguments | Notable options |
 |---|---|---|
-| `node add` | `<pod name>` | `--nodename` (`$HOSTNAME`), `--endpoint`, `--ca`/`--cert`/`--key`, `--cpu`, `--share`, `--memory`, `--storage`, `--volume`, `--disk`, `--numa-cpu`, `--numa-memory`, `--label`, `--test`, `--extra-resources` |
+| `node add` | `<pod name>` | `--nodename` (`$HOSTNAME`), `--endpoint` (required), `--cpu`, `--share`, `--memory`, `--storage`, `--volume`, `--disk`, `--numa-cpu`, `--numa-memory`, `--label`, `--test`, `--extra-resources` |
 | `node get` | `<node name>` | |
 | `node remove` | `<node name>` | |
-| `node set`, `node update` | `<node name>` | `--cpu`, `--memory`, `--storage`, `--volume`, `--disk`, `--rm-disk`, `--numa-cpu`, `--numa-memory`, `--label`, `--delta`, `--endpoint`, `--ca`/`--cert`/`--key`, `--mark-workloads-down`, `--extra-resources` |
+| `node set`, `node update` | `<node name>` | `--cpu`, `--memory`, `--storage`, `--volume`, `--disk`, `--rm-disk`, `--numa-cpu`, `--numa-memory`, `--label`, `--delta`, `--endpoint`, `--mark-workloads-down`, `--extra-resources` |
 | `node up` | `<node name>` | |
 | `node down` | `<node name>` | `--check`, `--check-timeout` (default `20`) |
 | `node workloads`, `node containers` | `<node name>` | `--label` |
@@ -89,8 +89,6 @@ The scheme of `--endpoint` picks the engine core drives the node with:
 
 | Endpoint | Engine | What the node needs |
 |---|---|---|
-| `tcp://<host>:<port>` | docker | A docker daemon listening on that address, with the TLS material given by `--ca`/`--cert`/`--key` when it requires TLS. |
-| `unix://<path>` | docker | A docker daemon on that local socket; TLS flags are ignored. |
 | `process://[user@]host[:port]` | process | `sshd`, systemd on cgroup v2 and `oras`; workloads are transient systemd units. |
 | `containerd://[user@]host[:port]` | containerd | `sshd` and a running containerd. |
 | `cocoon://[user@]host[:port]` | cocoon | `sshd` and the cocoon runtime. |
@@ -98,12 +96,9 @@ The scheme of `--endpoint` picks the engine core drives the node with:
 
 `process://`, `containerd://` and `cocoon://` reach the node over SSH with the key pair in core's
 `ssh` configuration, so that public key has to be authorized for the endpoint's user — which
-defaults to core's configured one when the endpoint omits it. Image builds run on docker nodes,
-picked by core's `build.node_filter`. The engines themselves are documented in core's
+defaults to core's configured one when the endpoint omits it. Image builds run on the nodes core's
+`build.node_filter` picks. The engines themselves are documented in core's
 [engine reference](https://projecteru2.github.io/core/engines).
-
-When `--endpoint` is omitted, `node add` derives `tcp://<local ipv4>:2376` — or port `2375` when no
-CA certificate is found — and looks for TLS material under `/etc/docker/tls/`.
 
 `--delta` on `node set` makes every value relative to the current one, so
 `--memory -10G --delta` subtracts ten gigabytes instead of setting ten.
@@ -148,8 +143,9 @@ program are passed through untouched:
 eru-cli workload exec -i <workload id> -- ls -al /tmp
 ```
 
-`workload copy` writes one tar per workload into `--dir`, named
-`<short id>-<workload name>-<timestamp>.tar`; an existing file of that name is left alone. Each
+`workload copy` writes one tar per copied path into `--dir`, named
+`<short id>-<path, / as _>-<timestamp>.tar` with a numeric suffix when two paths collide on the
+same name; an existing file of that name is left alone. Each
 argument must read `<workload id>:<path>[,<path>...]` — anything else is rejected rather than
 skipped. `workload sendlarge` rejects an empty source file.
 

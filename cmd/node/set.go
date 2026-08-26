@@ -50,19 +50,6 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 		return nil, errors.New("node name must be given")
 	}
 
-	updateTLS := cmd.IsSet(flagCA) || cmd.IsSet(flagCert) || cmd.IsSet(flagKey)
-	var ca, cert, key string
-	if updateTLS {
-		if !cmd.IsSet(flagCA) || !cmd.IsSet(flagCert) || !cmd.IsSet(flagKey) {
-			return nil, errors.New("--ca, --cert and --key must be given together")
-		}
-		var err error
-		ca, cert, key, err = readTLSConfigs(cmd)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	cpumem, storage := collectResourceParams(cmd)
 	if cmd.IsSet("cpu") {
 		cpumem["cpu"] = cmd.String("cpu")
@@ -86,9 +73,5 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 		WorkloadsDown: cmd.Bool("mark-workloads-down"),
 		Endpoint:      cmd.String("endpoint"),
 		Delta:         cmd.Bool("delta"),
-		UpdateTls:     updateTLS,
-		Ca:            ca,
-		Cert:          cert,
-		Key:           key,
 	}, nil
 }

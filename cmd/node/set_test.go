@@ -2,53 +2,15 @@ package node
 
 import (
 	"context"
-	"os"
-	"path/filepath"
 	"testing"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
-func TestGenerateSetNodeOptionsKeepsTLSByDefault(t *testing.T) {
-	opts := runSetNodeCommand(t, []string{"node", "set", "--cpu", "64", "node1"})
-	if opts.UpdateTls || opts.Ca != "" || opts.Cert != "" || opts.Key != "" {
-		t.Errorf("got update_tls=%v ca=%q cert=%q key=%q", opts.UpdateTls, opts.Ca, opts.Cert, opts.Key)
-	}
-}
-
-func TestGenerateSetNodeOptionsUpdatesExplicitTLS(t *testing.T) {
-	dir := t.TempDir()
-	ca := filepath.Join(dir, "ca")
-	cert := filepath.Join(dir, "cert")
-	key := filepath.Join(dir, "key")
-	for path, content := range map[string]string{ca: "ca-data", cert: "cert-data", key: "key-data"} {
-		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
-			t.Fatalf("write tls file: %v", err)
-		}
-	}
-
-	opts := runSetNodeCommand(t, []string{"node", "set", "--ca", ca, "--cert", cert, "--key", key, "node1"})
-	if !opts.UpdateTls || opts.Ca != "ca-data" || opts.Cert != "cert-data" || opts.Key != "key-data" {
-		t.Errorf("got update_tls=%v ca=%q cert=%q key=%q", opts.UpdateTls, opts.Ca, opts.Cert, opts.Key)
-	}
-}
-
-func TestGenerateSetNodeOptionsRejectsPartialTLS(t *testing.T) {
-	c := Command()
-	lookupSubcommand(t, c, "set").Action = func(_ context.Context, cmd *cli.Command) error {
-		if _, err := generateSetNodeOptions(cmd); err == nil {
-			t.Error("got nil, want an error for a partial tls update")
-		}
-		return nil
-	}
-	if err := c.Run(t.Context(), []string{"node", "set", "--ca", "/nonexistent/ca", "node1"}); err != nil {
-		t.Fatalf("run: %v", err)
-	}
-}
-
-func runSetNodeCommand(t *testing.T, args []string) *corepb.SetNodeOptions {
-	t.Helper()
+func TestGenerateSetNodeOptions(t *testing.T) {
 	var opts *corepb.SetNodeOptions
 	c := Command()
 	lookupSubcommand(t, c, "set").Action = func(_ context.Context, cmd *cli.Command) error {
@@ -56,11 +18,19 @@ func runSetNodeCommand(t *testing.T, args []string) *corepb.SetNodeOptions {
 		opts, err = generateSetNodeOptions(cmd)
 		return err
 	}
-	if err := c.Run(t.Context(), args); err != nil {
+	if err := c.Run(t.Context(), []string{"node", "set", "--cpu", "+2", "--rm-disk", "sda", "node1"}); err != nil {
 		t.Fatalf("run: %v", err)
 	}
 	if opts == nil {
 		t.Fatal("got nil options")
 	}
-	return opts
+
+	cpumem := decodeParams(t, opts.Resources[utils.ResourceCPUMem])
+	if got := cpumem.String("cpu"); got != "+2" {
+		t.Errorf("cpu: got %q, want %q", got, "+2")
+	}
+	storage := decodeParams(t, opts.Resources[utils.ResourceStorage])
+	if got := storage.String("rm-disks"); got != "sda" {
+		t.Errorf("rm-disks: got %q, want %q", got, "sda")
+	}
 }
