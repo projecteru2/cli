@@ -1,7 +1,6 @@
 package interactive
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -151,18 +150,25 @@ func attachTerminal(ctx context.Context, iStream Stream) func() {
 
 func pumpStdin(ctx context.Context, iStream Stream) {
 	logger := log.WithFunc("interactive.pumpStdin")
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Split(bufio.ScanRunes)
-	for scanner.Scan() {
+	buf := make([]byte, 32*1024)
+	for {
+		n, err := os.Stdin.Read(buf)
 		if ctx.Err() != nil {
 			return
 		}
-		if err := iStream.Send(scanner.Bytes()); err != nil {
-			logger.Errorf(ctx, err, "send command %s", scanner.Bytes())
+		if n > 0 {
+			if sendErr := iStream.Send(buf[:n]); sendErr != nil {
+				logger.Errorf(ctx, sendErr, "send %d bytes", n)
+			}
+		}
+		if err != nil {
+			if !errors.Is(err, io.EOF) {
+				logger.Error(ctx, err, "read stdin")
+			}
+			logger.Error(ctx, iStream.CloseSend(), "close the send side")
+			return
 		}
 	}
-	logger.Error(ctx, scanner.Err(), "read stdin")
-	logger.Error(ctx, iStream.CloseSend(), "close the send side")
 }
 
 func watchWindowSize(ctx context.Context, iStream Stream, stdinFd int, sigs <-chan os.Signal) {
