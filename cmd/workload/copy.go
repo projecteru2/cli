@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"path"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -42,17 +44,6 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 
 	var errs error
 	files := make(map[string][]byte)
-	owners := map[string]string{}
-	filenameFor := func(id, path string) string {
-		base := fmt.Sprintf("%s-%s-%s", coreutils.ShortID(id), strings.ReplaceAll(strings.Trim(path, "/"), "/", "_"), now)
-		owner := id + "\x00" + path
-		name := base + ".tar"
-		for i := 1; owners[name] != "" && owners[name] != owner; i++ {
-			name = fmt.Sprintf("%s-%d.tar", base, i)
-		}
-		owners[name] = owner
-		return name
-	}
 
 	for {
 		msg, err := resp.Recv()
@@ -68,7 +59,8 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 			continue
 		}
 
-		filename := filenameFor(msg.Id, msg.Path)
+		encoded := url.PathEscape(strings.TrimPrefix(msg.Path, "/"))
+		filename := fmt.Sprintf("%s-%s-%s.tar", coreutils.ShortID(msg.Id), encoded, now)
 		files[filename] = append(files[filename], msg.Data...)
 	}
 
@@ -112,9 +104,10 @@ func parseCopySources(args []string) (map[string][]string, error) {
 			return nil, fmt.Errorf("invalid source %q, want %s", source, copyArgsUsage)
 		}
 
-		for path := range strings.SplitSeq(paths, ",") {
-			if !slices.Contains(sources[id], path) {
-				sources[id] = append(sources[id], path)
+		for p := range strings.SplitSeq(paths, ",") {
+			p = path.Clean("/" + p)
+			if !slices.Contains(sources[id], p) {
+				sources[id] = append(sources[id], p)
 			}
 		}
 	}

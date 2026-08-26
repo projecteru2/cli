@@ -96,12 +96,12 @@ func TestCopyKeepsPathsApart(t *testing.T) {
 }
 
 func TestCopyMergesRepeatedIDs(t *testing.T) {
-	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,/etc/hosts"})
+	sources, err := parseCopySources([]string{"cid1:/etc/hosts", "cid1:/etc/passwd,etc/hosts/"})
 	if err != nil {
 		t.Fatalf("parse: %v", err)
 	}
 	if !slices.Equal(sources["cid1"], []string{"/etc/hosts", "/etc/passwd"}) {
-		t.Errorf("got %v, want both paths once", sources["cid1"])
+		t.Errorf("got %v, want both canonical paths once", sources["cid1"])
 	}
 }
 

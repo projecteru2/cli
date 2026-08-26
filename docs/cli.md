@@ -144,8 +144,7 @@ eru-cli workload exec -i <workload id> -- ls -al /tmp
 ```
 
 `workload copy` writes one tar per copied path into `--dir`, named
-`<short id>-<path, / as _>-<timestamp>.tar` with a numeric suffix when two paths collide on the
-same name; an existing file of that name is left alone. Each
+`<short id>-<url-escaped path>-<timestamp>.tar`; an existing file of that name is left alone. Each
 argument must read `<workload id>:<path>[,<path>...]` — anything else is rejected rather than
 skipped. `workload sendlarge` rejects an empty source file.
 
