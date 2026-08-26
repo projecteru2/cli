@@ -3,6 +3,7 @@ package workload
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 
 	"github.com/projecteru2/core/log"
@@ -46,8 +47,7 @@ func (o *workloadLogsOptions) run(ctx context.Context) error {
 		}
 
 		if msg.Error != "" {
-			logger.Errorf(ctx, errors.New(msg.Error), "get log of %s failed", coreutils.ShortID(msg.Id))
-			continue
+			return fmt.Errorf("get log of %s: %s", coreutils.ShortID(msg.Id), msg.Error)
 		}
 
 		logger.Info(ctx, string(msg.Data))

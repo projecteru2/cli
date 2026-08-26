@@ -164,6 +164,21 @@ func TestDissociateAddsNodeWorkloads(t *testing.T) {
 	}
 }
 
+func TestDissociateDeduplicatesSelections(t *testing.T) {
+	client := &fakeWorkloadClient{
+		nodeWorkloads: map[string][]string{"node1": {"cid1", "cid2", "cid2"}},
+		dissociate:    &fakeStream[corepb.DissociateWorkloadMessage]{},
+	}
+	o := &dissociateWorkloadsOptions{client: client, ids: []string{"cid1", "cid1"}, nodes: []string{"node1"}}
+
+	if err := o.run(t.Context()); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if !slices.Equal(client.dissociated, []string{"cid1", "cid2"}) {
+		t.Errorf("got %v, want cid1 and cid2", client.dissociated)
+	}
+}
+
 func TestDissociateReadsTheNodeFlag(t *testing.T) {
 	var nodes []string
 	c := Command()
@@ -176,6 +191,43 @@ func TestDissociateReadsTheNodeFlag(t *testing.T) {
 	}
 	if !slices.Equal(nodes, []string{"node1", "node2"}) {
 		t.Errorf("got %v, want node1 and node2", nodes)
+	}
+}
+
+func TestAutoReplaceChecksTheTargetPod(t *testing.T) {
+	tests := []struct {
+		name        string
+		workloads   []*corepb.Workload
+		wantCreate  bool
+		wantReplace bool
+	}{
+		{name: "other pod creates", workloads: []*corepb.Workload{{Podname: "prod"}}, wantCreate: true},
+		{name: "target pod replaces", workloads: []*corepb.Workload{{Podname: "prod"}, {Podname: "dev"}}, wantReplace: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &fakeWorkloadClient{
+				list:    &fakeStream[corepb.Workload]{msgs: tt.workloads},
+				create:  &fakeStream[corepb.CreateWorkloadMessage]{},
+				replace: &fakeStream[corepb.ReplaceWorkloadMessage]{},
+			}
+			o := &deployWorkloadsOptions{
+				client:      client,
+				opts:        &corepb.DeployOptions{Name: "app", Podname: "dev", Entrypoint: &corepb.EntrypointOptions{Name: "web"}},
+				autoReplace: true,
+			}
+
+			if err := o.run(t.Context()); err != nil {
+				t.Fatalf("run: %v", err)
+			}
+			if client.created != tt.wantCreate || client.replaced != tt.wantReplace {
+				t.Errorf("got create=%v replace=%v, want create=%v replace=%v", client.created, client.replaced, tt.wantCreate, tt.wantReplace)
+			}
+			if client.listOpts.Limit != 0 {
+				t.Errorf("got limit %d, want the complete app and entrypoint selection", client.listOpts.Limit)
+			}
+		})
 	}
 }
 
@@ -237,6 +289,16 @@ func TestFailedItemsReachTheExitCode(t *testing.T) {
 				return o.run(ctx)
 			},
 			wantErr: "remove cid1 failed",
+		},
+		{
+			name: "logs",
+			run: func(ctx context.Context) error {
+				o := &workloadLogsOptions{client: &fakeWorkloadClient{logs: &fakeStream[corepb.LogStreamMessage]{msgs: []*corepb.LogStreamMessage{
+					{Id: "cid1", Error: "engine unavailable"},
+				}}}, id: "cid1"}
+				return o.run(ctx)
+			},
+			wantErr: "engine unavailable",
 		},
 		{
 			name: "dissociate",
@@ -302,16 +364,32 @@ type fakeWorkloadClient struct {
 	control       *fakeStream[corepb.ControlWorkloadMessage]
 	remove        *fakeStream[corepb.RemoveWorkloadMessage]
 	dissociate    *fakeStream[corepb.DissociateWorkloadMessage]
+	logs          *fakeStream[corepb.LogStreamMessage]
+	list          *fakeStream[corepb.Workload]
 	nodeWorkloads map[string][]string
 	dissociated   []string
+	listOpts      *corepb.ListWorkloadsOptions
+	created       bool
+	replaced      bool
 }
 
 func (f *fakeWorkloadClient) CreateWorkload(context.Context, *corepb.DeployOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CreateWorkloadMessage], error) {
+	f.created = true
 	return f.create, nil
 }
 
 func (f *fakeWorkloadClient) ReplaceWorkload(context.Context, *corepb.ReplaceOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ReplaceWorkloadMessage], error) {
+	f.replaced = true
 	return f.replace, nil
+}
+
+func (f *fakeWorkloadClient) ListWorkloads(_ context.Context, opts *corepb.ListWorkloadsOptions, _ ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.Workload], error) {
+	f.listOpts = opts
+	return f.list, nil
+}
+
+func (f *fakeWorkloadClient) LogStream(context.Context, *corepb.LogStreamOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.LogStreamMessage], error) {
+	return f.logs, nil
 }
 
 func (f *fakeWorkloadClient) Send(context.Context, *corepb.SendOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.SendMessage], error) {

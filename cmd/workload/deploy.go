@@ -44,7 +44,6 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	lsOpts := &corepb.ListWorkloadsOptions{
 		Appname:    o.opts.Name,
 		Entrypoint: o.opts.Entrypoint.Name,
-		Limit:      1,
 	}
 	probeCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -52,16 +51,20 @@ func (o *deployWorkloadsOptions) run(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("check workload: %w", err)
 	}
-	_, err = resp.Recv()
-	cancel()
-	if errors.Is(err, io.EOF) {
-		logger.Warn(ctx, "there is no workload to replace")
-		return doCreateWorkload(ctx, o.client, o.opts)
+	for {
+		workload, recvErr := resp.Recv()
+		if errors.Is(recvErr, io.EOF) {
+			logger.Warn(ctx, "there is no workload in the target pod to replace")
+			return doCreateWorkload(ctx, o.client, o.opts)
+		}
+		if recvErr != nil {
+			return recvErr
+		}
+		if workload.Podname == o.opts.Podname {
+			cancel()
+			return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, nil, nil)
+		}
 	}
-	if err != nil {
-		return err
-	}
-	return doReplaceWorkload(ctx, o.client, o.opts, o.networkInherit, nil, nil)
 }
 
 func cmdWorkloadDeploy(ctx context.Context, cmd *cli.Command) error {

@@ -49,7 +49,11 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 		_ = iStream.Send(newline)
 	}()
 
-	return interactive.HandleStream(ctx, o.stdin, iStream, o.count, o.printWorkloadID)
+	exitCount := o.count
+	if o.opts.Async {
+		exitCount = 0
+	}
+	return interactive.HandleStream(ctx, o.stdin, iStream, exitCount, o.printWorkloadID)
 }
 
 func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {

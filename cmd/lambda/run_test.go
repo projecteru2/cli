@@ -3,6 +3,7 @@ package lambda
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"maps"
 	"slices"
 	"testing"
@@ -10,9 +11,35 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
+	"google.golang.org/grpc"
 
 	"github.com/projecteru2/cli/cmd/utils"
 )
+
+func TestLambdaEOFRequiresSynchronousExitCode(t *testing.T) {
+	tests := []struct {
+		name    string
+		async   bool
+		wantErr bool
+	}{
+		{name: "synchronous", wantErr: true},
+		{name: "asynchronous", async: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			o := &runLambdaOptions{
+				client: &fakeLambdaClient{},
+				opts:   &corepb.RunAndWaitOptions{Async: tt.async},
+				count:  1,
+			}
+			_, err := o.lambda(t.Context())
+			if (err != nil) != tt.wantErr {
+				t.Errorf("got %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
 
 func TestGenerateLambdaOptions(t *testing.T) {
 	tests := []struct {
@@ -129,4 +156,28 @@ func decodeParams(t *testing.T, raw []byte) resourcetypes.RawParams {
 		t.Fatalf("decode %s: %v", raw, err)
 	}
 	return params
+}
+
+type fakeLambdaClient struct {
+	corepb.CoreRPCClient
+}
+
+func (f *fakeLambdaClient) RunAndWait(context.Context, ...grpc.CallOption) (grpc.BidiStreamingClient[corepb.RunAndWaitOptions, corepb.AttachWorkloadMessage], error) {
+	return &fakeLambdaStream{}, nil
+}
+
+type fakeLambdaStream struct {
+	grpc.ClientStream
+}
+
+func (f *fakeLambdaStream) Send(*corepb.RunAndWaitOptions) error {
+	return nil
+}
+
+func (f *fakeLambdaStream) Recv() (*corepb.AttachWorkloadMessage, error) {
+	return nil, io.EOF
+}
+
+func (f *fakeLambdaStream) CloseSend() error {
+	return nil
 }

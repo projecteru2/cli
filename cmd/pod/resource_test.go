@@ -1,10 +1,32 @@
 package pod
 
 import (
+	"context"
+	"slices"
 	"testing"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
+	"github.com/urfave/cli/v3"
 )
+
+func TestResourceCommandDefaultsToNoFilter(t *testing.T) {
+	c := Command()
+	idx := slices.IndexFunc(c.Commands, func(cmd *cli.Command) bool { return cmd.Name == "resource" })
+	if idx < 0 {
+		t.Fatal("resource command not found")
+	}
+	var filter string
+	c.Commands[idx].Action = func(_ context.Context, cmd *cli.Command) error {
+		filter = cmd.String("filter")
+		return nil
+	}
+	if err := c.Run(t.Context(), []string{"pod", "resource", "dev"}); err != nil {
+		t.Fatalf("run: %v", err)
+	}
+	if filter != "" {
+		t.Errorf("got %q, want no filter", filter)
+	}
+}
 
 func TestMatch(t *testing.T) {
 	tests := []struct {
@@ -17,7 +39,7 @@ func TestMatch(t *testing.T) {
 		{name: "percent", expr: "cpu > 40%", wantName: "cpu", wantOp: ">", wantValue: "40%"},
 		{name: "fraction", expr: "memory<=0.4", wantName: "memory", wantOp: "<=", wantValue: "0.4"},
 		{name: "equality", expr: "volume==1", wantName: "volume", wantOp: "==", wantValue: "1"},
-		{name: "no filter", expr: "all"},
+		{name: "unsupported word", expr: "all"},
 	}
 
 	for _, tt := range tests {
