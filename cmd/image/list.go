@@ -18,12 +18,6 @@ type listImageOptions struct {
 }
 
 func (o *listImageOptions) run(ctx context.Context) error {
-	podname, err := resolvePodname(ctx, o.client, o.opts.Podname, o.opts.Nodenames)
-	if err != nil {
-		return err
-	}
-	o.opts.Podname = podname
-
 	resp, err := o.client.ListImage(ctx, o.opts)
 	if err != nil {
 		return err
