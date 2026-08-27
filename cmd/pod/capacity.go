@@ -92,10 +92,7 @@ func capacityResources(cmd *cli.Command) (map[string][]byte, error) {
 	}
 
 	return utils.EncodeResources(cmd, resourcetypes.Resources{
-		utils.ResourceCPUMem: cpumem,
-		utils.ResourceStorage: utils.CompactParams(resourcetypes.RawParams{
-			"storage-request": storage,
-			"storage-limit":   storage,
-		}),
+		utils.ResourceCPUMem:  cpumem,
+		utils.ResourceStorage: utils.StorageParams(storage, storage, nil, nil),
 	})
 }
