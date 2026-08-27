@@ -86,13 +86,6 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 		flagMemoryRequest: memoryRequest,
 		flagMemoryLimit:   memoryLimit,
 	}
-	storage := resourcetypes.RawParams{
-		flagStorageRequest: storageRequest,
-		flagStorageLimit:   storageLimit,
-		flagVolumesRequest: volumesRequest,
-		flagVolumesLimit:   volumesLimit,
-	}
-
 	switch {
 	case bindCPU:
 		cpumem["cpu-bind"] = true
@@ -102,7 +95,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
 		utils.ResourceCPUMem:  cpumem,
-		utils.ResourceStorage: utils.CompactParams(storage),
+		utils.ResourceStorage: utils.StorageParams(storageRequest, storageLimit, volumesRequest, volumesLimit),
 	})
 	if err != nil {
 		return nil, err

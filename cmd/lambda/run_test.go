@@ -58,6 +58,7 @@ func TestGenerateLambdaOptions(t *testing.T) {
 	tests := []struct {
 		name            string
 		args            []string
+		wantStorage     bool
 		wantStorageReq  int64
 		wantStorageLim  int64
 		wantVolumesReq  []string
@@ -72,7 +73,8 @@ func TestGenerateLambdaOptions(t *testing.T) {
 			wantMemoryLimit: 512 * 1024 * 1024,
 		},
 		{
-			name: "storage and volumes",
+			name:        "storage and volumes",
+			wantStorage: true,
 			args: []string{
 				"lambda",
 				"--storage-request", "1G",
@@ -95,9 +97,8 @@ func TestGenerateLambdaOptions(t *testing.T) {
 			opts := runLambdaCommand(t, tt.args)
 
 			raw, ok := opts.DeployOptions.Resources[utils.ResourceStorage]
-			wantStorage := tt.wantStorageReq != 0 || tt.wantStorageLim != 0 || tt.wantVolumesReq != nil || tt.wantVolumesLim != nil
-			if ok != wantStorage {
-				t.Fatalf("storage entry present=%v, want %v", ok, wantStorage)
+			if ok != tt.wantStorage {
+				t.Fatalf("storage entry present=%v, want %v", ok, tt.wantStorage)
 			}
 			if ok {
 				storage := decodeParams(t, raw)

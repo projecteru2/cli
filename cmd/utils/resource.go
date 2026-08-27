@@ -15,23 +15,22 @@ const (
 	FlagExtraResources = "extra-resources"
 )
 
-// CompactParams drops zero values so an all-default plugin entry defers to --extra-resources.
-func CompactParams(params resourcetypes.RawParams) resourcetypes.RawParams {
-	compact := make(resourcetypes.RawParams, len(params))
-	for key, value := range params {
-		switch v := value.(type) {
-		case int64:
-			if v == 0 {
-				continue
-			}
-		case []string:
-			if len(v) == 0 {
-				continue
-			}
-		}
-		compact[key] = value
+// StorageParams builds the storage plugin request; zero values stay out, so an untouched entry defers to --extra-resources.
+func StorageParams(storageRequest, storageLimit int64, volumesRequest, volumesLimit []string) resourcetypes.RawParams {
+	params := resourcetypes.RawParams{}
+	if storageRequest != 0 {
+		params["storage-request"] = storageRequest
 	}
-	return compact
+	if storageLimit != 0 {
+		params["storage-limit"] = storageLimit
+	}
+	if len(volumesRequest) != 0 {
+		params["volumes-request"] = volumesRequest
+	}
+	if len(volumesLimit) != 0 {
+		params["volumes-limit"] = volumesLimit
+	}
+	return params
 }
 
 // EncodeResources encodes plugin params for the core rpc; --extra-resources fills only the plugins not already present.
