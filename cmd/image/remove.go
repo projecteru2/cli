@@ -22,14 +22,9 @@ type removeImageOptions struct {
 
 func (o *removeImageOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("image.removeImageOptions.run")
-	podname, err := resolvePodname(ctx, o.client, o.podname, o.nodenames)
-	if err != nil {
-		return err
-	}
-
 	opts := &corepb.RemoveImageOptions{
 		Images:    o.images,
-		Podname:   podname,
+		Podname:   o.podname,
 		Nodenames: o.nodenames,
 		Prune:     o.prune,
 	}

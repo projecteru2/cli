@@ -21,14 +21,9 @@ type cacheImageOptions struct {
 
 func (o *cacheImageOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("image.cacheImageOptions.run")
-	podname, err := resolvePodname(ctx, o.client, o.podname, o.nodenames)
-	if err != nil {
-		return err
-	}
-
 	opts := &corepb.CacheImageOptions{
 		Images:    o.images,
-		Podname:   podname,
+		Podname:   o.podname,
 		Nodenames: o.nodenames,
 	}
 	resp, err := o.client.CacheImage(ctx, opts)
