@@ -3,6 +3,7 @@ package image
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 	"strings"
@@ -153,6 +154,68 @@ func TestImageListKeepsPartialResults(t *testing.T) {
 	}
 }
 
+func TestImageCommandsResolveThePodFromTheNode(t *testing.T) {
+	tests := []struct {
+		name string
+		run  func(context.Context, *fakeImageClient) error
+	}{
+		{
+			name: "list",
+			run: func(ctx context.Context, c *fakeImageClient) error {
+				o := &listImageOptions{client: c, opts: &corepb.ListImageOptions{Nodenames: []string{"node1"}}}
+				return o.run(ctx)
+			},
+		},
+		{
+			name: "cache",
+			run: func(ctx context.Context, c *fakeImageClient) error {
+				o := &cacheImageOptions{client: c, images: []string{"app:v1"}, nodenames: []string{"node1"}}
+				return o.run(ctx)
+			},
+		},
+		{
+			name: "remove",
+			run: func(ctx context.Context, c *fakeImageClient) error {
+				o := &removeImageOptions{client: c, images: []string{"app:v1"}, nodenames: []string{"node1"}}
+				return o.run(ctx)
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			client := &fakeImageClient{
+				podname: "dev",
+				build:   &fakeStream[corepb.BuildImageMessage]{},
+				cache:   &fakeStream[corepb.CacheImageMessage]{},
+				remove:  &fakeStream[corepb.RemoveImageMessage]{},
+				list:    &fakeStream[corepb.ListImageMessage]{},
+			}
+			_ = captureStdout(t, func() {
+				if err := tt.run(t.Context(), client); err != nil {
+					t.Errorf("run: %v", err)
+				}
+			})
+			if client.askedNodename != "node1" {
+				t.Errorf("GetNode nodename: got %q, want %q", client.askedNodename, "node1")
+			}
+			if client.sentPodname != "dev" {
+				t.Errorf("podname sent to core: got %q, want %q", client.sentPodname, "dev")
+			}
+		})
+	}
+}
+
+func TestImageCommandsSurfaceTheNodeLookupFailure(t *testing.T) {
+	client := &fakeImageClient{nodeErr: errors.New("key: /node/node1: entity count invalid")}
+	o := &listImageOptions{client: client, opts: &corepb.ListImageOptions{Nodenames: []string{"node1"}}}
+
+	err := o.run(t.Context())
+	if err == nil || !strings.Contains(err.Error(), "node1") {
+		t.Errorf("got %v, want core's error naming the node", err)
+	}
+}
+
 func captureStdout(t *testing.T, f func()) string {
 	t.Helper()
 	r, w, err := os.Pipe()
@@ -191,13 +254,27 @@ func captureLog(t *testing.T, f func()) string {
 
 type fakeImageClient struct {
 	corepb.CoreRPCClient
-	build  *fakeStream[corepb.BuildImageMessage]
-	cache  *fakeStream[corepb.CacheImageMessage]
-	remove *fakeStream[corepb.RemoveImageMessage]
-	list   *fakeStream[corepb.ListImageMessage]
+	build   *fakeStream[corepb.BuildImageMessage]
+	cache   *fakeStream[corepb.CacheImageMessage]
+	remove  *fakeStream[corepb.RemoveImageMessage]
+	list    *fakeStream[corepb.ListImageMessage]
+	podname string
+	nodeErr error
+
+	askedNodename string
+	sentPodname   string
 }
 
-func (f *fakeImageClient) ListImage(context.Context, *corepb.ListImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ListImageMessage], error) {
+func (f *fakeImageClient) GetNode(_ context.Context, opts *corepb.GetNodeOptions, _ ...grpc.CallOption) (*corepb.Node, error) {
+	f.askedNodename = opts.Nodename
+	if f.nodeErr != nil {
+		return nil, f.nodeErr
+	}
+	return &corepb.Node{Name: opts.Nodename, Podname: f.podname}, nil
+}
+
+func (f *fakeImageClient) ListImage(_ context.Context, opts *corepb.ListImageOptions, _ ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.ListImageMessage], error) {
+	f.sentPodname = opts.Podname
 	return f.list, nil
 }
 
@@ -205,11 +282,13 @@ func (f *fakeImageClient) BuildImage(context.Context, *corepb.BuildImageOptions,
 	return f.build, nil
 }
 
-func (f *fakeImageClient) CacheImage(context.Context, *corepb.CacheImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CacheImageMessage], error) {
+func (f *fakeImageClient) CacheImage(_ context.Context, opts *corepb.CacheImageOptions, _ ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.CacheImageMessage], error) {
+	f.sentPodname = opts.Podname
 	return f.cache, nil
 }
 
-func (f *fakeImageClient) RemoveImage(context.Context, *corepb.RemoveImageOptions, ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.RemoveImageMessage], error) {
+func (f *fakeImageClient) RemoveImage(_ context.Context, opts *corepb.RemoveImageOptions, _ ...grpc.CallOption) (grpc.ServerStreamingClient[corepb.RemoveImageMessage], error) {
+	f.sentPodname = opts.Podname
 	return f.remove, nil
 }
 

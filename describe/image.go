@@ -1,7 +1,9 @@
 package describe
 
 import (
+	"fmt"
 	"os"
+	"slices"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/jedib0t/go-pretty/v6/text"
@@ -13,6 +15,11 @@ func Images(msgs ...*corepb.ListImageMessage) {
 }
 
 func describeImages(msgs []*corepb.ListImageMessage) {
+	if !slices.ContainsFunc(msgs, func(msg *corepb.ListImageMessage) bool { return len(msg.Images) > 0 }) {
+		fmt.Println("no images")
+		return
+	}
+
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Node", "Image", "Tags"})
