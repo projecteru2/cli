@@ -11,7 +11,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/docker/go-units"
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 )
@@ -31,21 +31,9 @@ func GetNetworks(network string) map[string]string {
 	return networks
 }
 
-// ParseRAMInHuman converts a human readable size such as 100KB into bytes.
+// ParseRAMInHuman parses a human-readable size ("100KB", "-1T") into bytes; the implementation lives with core's RawParams.
 func ParseRAMInHuman(ram string) (int64, error) {
-	if ram == "" {
-		return 0, nil
-	}
-	sign := int64(1)
-	if trimmed, ok := strings.CutPrefix(ram, "-"); ok {
-		sign = int64(-1)
-		ram = trimmed
-	}
-	ramInBytes, err := units.RAMInBytes(ram)
-	if err != nil {
-		return 0, err
-	}
-	return ramInBytes * sign, nil
+	return resourcetypes.ParseRAMInHuman(ram)
 }
 
 // ParseDeployStrategy maps a --deploy-strategy value onto the core enum.
