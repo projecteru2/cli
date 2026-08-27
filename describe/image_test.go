@@ -63,3 +63,21 @@ func TestImages(t *testing.T) {
 		})
 	}
 }
+
+func TestImagesWithoutAnyImage(t *testing.T) {
+	tests := []struct {
+		name string
+		msgs []*corepb.ListImageMessage
+	}{
+		{name: "no node reported"},
+		{name: "node reported no image", msgs: []*corepb.ListImageMessage{{Nodename: "node1"}}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := captureStdout(t, func() { Images(tt.msgs...) }); got != "no images\n" {
+				t.Errorf("got %q, want %q", got, "no images\n")
+			}
+		})
+	}
+}
