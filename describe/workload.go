@@ -14,6 +14,8 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type workloadStatistics struct {
@@ -34,9 +36,9 @@ func WorkloadsStatistics(workloads ...*corepb.Workload) {
 		if err := json.Unmarshal([]byte(w.Resources), &res); err != nil {
 			continue
 		}
-		stat.CPUs += res["cpumem"].Float64("cpu_request")
-		stat.Memory += int64(coreutils.Round(res["cpumem"].Float64("memory_request")))
-		stat.Storage += int64(coreutils.Round(res["storage"].Float64("storage_request")))
+		stat.CPUs += res[utils.ResourceCPUMem].Float64("cpu_request")
+		stat.Memory += int64(coreutils.Round(res[utils.ResourceCPUMem].Float64("memory_request")))
+		stat.Storage += int64(coreutils.Round(res[utils.ResourceStorage].Float64("storage_request")))
 	}
 
 	describeOr(stat, describeStatistics)

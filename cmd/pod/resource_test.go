@@ -83,8 +83,8 @@ func TestCompare(t *testing.T) {
 
 func TestAttr(t *testing.T) {
 	nr := &corepb.NodeResource{
-		ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512},"storage":{"storage":50,"volumes":{"/data":10}}}`,
-		ResourceCapacity: `{"cpumem":{"cpu":8,"memory":2048},"storage":{"storage":200,"volumes":{"/data":40}}}`,
+		ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}`,
+		ResourceCapacity: `{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}`,
 	}
 
 	tests := []struct {
