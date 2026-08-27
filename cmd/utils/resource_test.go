@@ -85,6 +85,44 @@ func TestEncodeResources(t *testing.T) {
 	}
 }
 
+func TestCompactParamsLetsExtraResourcesFillStorage(t *testing.T) {
+	storage := resourcetypes.RawParams{
+		"storage-request": int64(0),
+		"storage-limit":   int64(0),
+		"volumes-request": []string(nil),
+		"volumes-limit":   []string{},
+	}
+	if got := CompactParams(storage); len(got) != 0 {
+		t.Errorf("got %v, want every zero value dropped", got)
+	}
+
+	kept := resourcetypes.RawParams{
+		"storage-request": int64(0),
+		"storage-limit":   int64(1073741824),
+		"volumes-limit":   []string{"/data0:1G"},
+	}
+	want := resourcetypes.RawParams{
+		"storage-limit": int64(1073741824),
+		"volumes-limit": []string{"/data0:1G"},
+	}
+	if got := CompactParams(kept); !maps.EqualFunc(got, want, func(a, b any) bool {
+		aj, _ := json.Marshal(a)
+		bj, _ := json.Marshal(b)
+		return string(aj) == string(bj)
+	}) {
+		t.Errorf("got %v, want %v", got, want)
+	}
+
+	cmd := commandWithExtraResources(t, `{"resource-storage":{"storage":2147483648}}`)
+	encoded, err := EncodeResources(cmd, resourcetypes.Resources{"resource-storage": CompactParams(storage)})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(encoded["resource-storage"]) != `{"storage":2147483648}` {
+		t.Errorf("got %s, want the extra request once no storage flag is set", encoded["resource-storage"])
+	}
+}
+
 func commandWithExtraResources(t *testing.T, extra string) *cli.Command {
 	t.Helper()
 	var parsed *cli.Command

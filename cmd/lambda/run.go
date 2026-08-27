@@ -129,7 +129,7 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
 		utils.ResourceCPUMem:  cpumem,
-		utils.ResourceStorage: storage,
+		utils.ResourceStorage: utils.CompactParams(storage),
 	})
 	if err != nil {
 		return nil, err

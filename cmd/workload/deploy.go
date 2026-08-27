@@ -154,7 +154,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
 		utils.ResourceCPUMem:  cpumem,
-		utils.ResourceStorage: storage,
+		utils.ResourceStorage: utils.CompactParams(storage),
 	})
 	if err != nil {
 		return nil, err
