@@ -136,15 +136,15 @@ func TestNodeResources(t *testing.T) {
   "diffs": [
     "cpu diff"
   ],
-  "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048},\"storage\":{\"storage\":200,\"volumes\":{\"/data\":40}}}",
-  "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512},\"storage\":{\"storage\":50,\"volumes\":{\"/data\":10}}}"
+  "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048},\"resource-storage\":{\"storage\":200,\"volumes\":{\"/data\":40}}}",
+  "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512},\"resource-storage\":{\"storage\":50,\"volumes\":{\"/data\":10}}}"
 }
 `},
 		{name: "yaml", format: "yaml", want: `diffs:
 - cpu diff
 name: node1
-resource_capacity: '{"cpumem":{"cpu":8,"memory":2048},"storage":{"storage":200,"volumes":{"/data":40}}}'
-resource_usage: '{"cpumem":{"cpu":2,"memory":512},"storage":{"storage":50,"volumes":{"/data":10}}}'
+resource_capacity: '{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}'
+resource_usage: '{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}'
 
 `},
 	}
@@ -375,8 +375,8 @@ func testNodeResources() []*corepb.NodeResource {
 	return []*corepb.NodeResource{
 		{
 			Name:             "node1",
-			ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512},"storage":{"storage":50,"volumes":{"/data":10}}}`,
-			ResourceCapacity: `{"cpumem":{"cpu":8,"memory":2048},"storage":{"storage":200,"volumes":{"/data":40}}}`,
+			ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}`,
+			ResourceCapacity: `{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}`,
 			Diffs:            []string{"cpu diff"},
 		},
 	}

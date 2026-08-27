@@ -10,7 +10,7 @@ import (
 
 const (
 	ResourceCPUMem  = "cpumem"
-	ResourceStorage = "storage"
+	ResourceStorage = "resource-storage"
 
 	FlagExtraResources = "extra-resources"
 )

@@ -12,6 +12,8 @@ import (
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"sigs.k8s.io/yaml"
+
+	"github.com/projecteru2/cli/cmd/utils"
 )
 
 const headerName = "Name"
@@ -40,10 +42,10 @@ func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[strin
 	if err := json.Unmarshal([]byte(resource.ResourceCapacity), &resCap); err != nil {
 		return nil, nil, err
 	}
-	cpumemUsage := resUsage["cpumem"]
-	storageUsage := resUsage["storage"]
-	cpumemCap := resCap["cpumem"]
-	storageCap := resCap["storage"]
+	cpumemUsage := resUsage[utils.ResourceCPUMem]
+	storageUsage := resUsage[utils.ResourceStorage]
+	cpumemCap := resCap[utils.ResourceCPUMem]
+	storageCap := resCap[utils.ResourceStorage]
 	cr, sr := map[string]float64{}, map[string]float64{}
 	if cpumemUsage != nil && cpumemCap != nil {
 		cpuUsage := cpumemUsage.Float64("cpu")

@@ -84,8 +84,8 @@ func TestWorkloadsStatistics(t *testing.T) {
 			name:   "cpumem and storage",
 			format: "json",
 			workloads: []*corepb.Workload{
-				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"storage":{"storage_request":2048}}`},
-				{Resources: `{"cpumem":{"cpu_request":0.5,"memory_request":512},"storage":{"storage_request":512}}`},
+				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"resource-storage":{"storage_request":2048}}`},
+				{Resources: `{"cpumem":{"cpu_request":0.5,"memory_request":512},"resource-storage":{"storage_request":512}}`},
 			},
 			want: `{
   "cpus": 2,
@@ -133,7 +133,7 @@ func TestWorkloadsStatistics(t *testing.T) {
 			name:   "yaml",
 			format: "yaml",
 			workloads: []*corepb.Workload{
-				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"storage":{"storage_request":2048}}`},
+				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"resource-storage":{"storage_request":2048}}`},
 			},
 			want: `cpus: 1.5
 memory: 1024
@@ -145,7 +145,7 @@ storage: 2048
 			name:   "table",
 			format: "",
 			workloads: []*corepb.Workload{
-				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"storage":{"storage_request":2048}}`},
+				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"resource-storage":{"storage_request":2048}}`},
 			},
 			want: `┌──────────┬────────┬─────────┐
 │ CPUS     │ MEMORY │ STORAGE │
