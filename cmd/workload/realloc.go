@@ -102,7 +102,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{
 		utils.ResourceCPUMem:  cpumem,
-		utils.ResourceStorage: storage,
+		utils.ResourceStorage: utils.CompactParams(storage),
 	})
 	if err != nil {
 		return nil, err

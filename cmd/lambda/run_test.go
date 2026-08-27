@@ -94,18 +94,25 @@ func TestGenerateLambdaOptions(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			opts := runLambdaCommand(t, tt.args)
 
-			storage := decodeParams(t, opts.DeployOptions.Resources[utils.ResourceStorage])
-			if got := storage.Int64("storage-request"); got != tt.wantStorageReq {
-				t.Errorf("storage-request: got %d, want %d", got, tt.wantStorageReq)
+			raw, ok := opts.DeployOptions.Resources[utils.ResourceStorage]
+			wantStorage := tt.wantStorageReq != 0 || tt.wantStorageLim != 0 || tt.wantVolumesReq != nil || tt.wantVolumesLim != nil
+			if ok != wantStorage {
+				t.Fatalf("storage entry present=%v, want %v", ok, wantStorage)
 			}
-			if got := storage.Int64("storage-limit"); got != tt.wantStorageLim {
-				t.Errorf("storage-limit: got %d, want %d", got, tt.wantStorageLim)
-			}
-			if got := storage.StringSlice("volumes-request"); !slices.Equal(got, tt.wantVolumesReq) {
-				t.Errorf("volumes-request: got %v, want %v", got, tt.wantVolumesReq)
-			}
-			if got := storage.StringSlice("volumes-limit"); !slices.Equal(got, tt.wantVolumesLim) {
-				t.Errorf("volumes-limit: got %v, want %v", got, tt.wantVolumesLim)
+			if ok {
+				storage := decodeParams(t, raw)
+				if got := storage.Int64("storage-request"); got != tt.wantStorageReq {
+					t.Errorf("storage-request: got %d, want %d", got, tt.wantStorageReq)
+				}
+				if got := storage.Int64("storage-limit"); got != tt.wantStorageLim {
+					t.Errorf("storage-limit: got %d, want %d", got, tt.wantStorageLim)
+				}
+				if got := storage.StringSlice("volumes-request"); !slices.Equal(got, tt.wantVolumesReq) {
+					t.Errorf("volumes-request: got %v, want %v", got, tt.wantVolumesReq)
+				}
+				if got := storage.StringSlice("volumes-limit"); !slices.Equal(got, tt.wantVolumesLim) {
+					t.Errorf("volumes-limit: got %v, want %v", got, tt.wantVolumesLim)
+				}
 			}
 
 			cpumem := decodeParams(t, opts.DeployOptions.Resources[utils.ResourceCPUMem])
