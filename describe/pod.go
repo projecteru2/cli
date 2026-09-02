@@ -49,7 +49,7 @@ func describePods(pods []*corepb.Pod) {
 		nameRow = append(nameRow, pod.Name)
 		descRow = append(descRow, pod.Desc)
 	}
-	renderTable([]string{headerName, "Description"}, nameRow, descRow)
+	renderTable([]string{headerName, "Description"}, [][]string{nameRow, descRow})
 }
 
 func describePodCapacities(capacity *capacityOfPod) {
@@ -61,5 +61,5 @@ func describePodCapacities(capacity *capacityOfPod) {
 		nameRow = append(nameRow, node.Name)
 		descRow = append(descRow, strconv.FormatInt(node.Capacity, 10))
 	}
-	renderTable([]string{"Node", "Capacity"}, nameRow, descRow)
+	renderTable([]string{"Node", "Capacity"}, [][]string{nameRow, descRow})
 }

@@ -208,7 +208,7 @@ func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
 	describeOr(items, func([]T) {})
 }
 
-func renderTable(header []string, rows ...[]string) {
+func renderTable(header []string, groups ...[][]string) {
 	h := make(table.Row, len(header))
 	for i, name := range header {
 		h[i] = name
@@ -217,8 +217,10 @@ func renderTable(header []string, rows ...[]string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(h)
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
+	for _, rows := range groups {
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+	}
 	t.SetStyle(table.StyleLight)
 	t.Render()
 }
