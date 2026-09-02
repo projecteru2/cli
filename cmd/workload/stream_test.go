@@ -240,9 +240,10 @@ func TestSendLargeReturnsFailures(t *testing.T) {
 					err:     tt.recvErr,
 					sendErr: tt.sendErr,
 				}},
-				ids:     []string{"cid1"},
-				dst:     "/etc/app",
-				content: []byte("payload"),
+				ids:  []string{"cid1"},
+				dst:  "/etc/app",
+				src:  strings.NewReader("payload"),
+				size: 7,
 			}
 
 			err := o.run(t.Context())

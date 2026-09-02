@@ -40,42 +40,57 @@ func GenerateFileOptions(cmd *cli.Command) (*FileOptions, error) {
 	return o, nil
 }
 
+// FileSpec is one --file value: a local path and where it lands in the workload.
+type FileSpec struct {
+	Src  string
+	Dst  string
+	File types.LinuxFile
+}
+
+// ParseFileSpec parses src:dst[:mode[:uid:gid]] without touching the file.
+func ParseFileSpec(file string) (*FileSpec, error) {
+	ps := strings.Split(file, ":")
+	if len(ps) != 2 && len(ps) != 3 && len(ps) != 5 {
+		return nil, fmt.Errorf("invalid file %q, want src:dst[:mode[:uid:gid]]", file)
+	}
+
+	spec := &FileSpec{Src: ps[0], Dst: ps[1]}
+	if len(ps) == 5 {
+		uid, err := strconv.ParseInt(ps[3], 10, 0)
+		if err != nil {
+			return nil, fmt.Errorf("parse uid of %q: %w", file, err)
+		}
+		gid, err := strconv.ParseInt(ps[4], 10, 0)
+		if err != nil {
+			return nil, fmt.Errorf("parse gid of %q: %w", file, err)
+		}
+		spec.File.UID = int(uid)
+		spec.File.GID = int(gid)
+	}
+	if len(ps) >= 3 {
+		mode, err := strconv.ParseInt(ps[2], 8, 0)
+		if err != nil {
+			return nil, fmt.Errorf("parse mode of %q: %w", file, err)
+		}
+		spec.File.Mode = mode
+	}
+	return spec, nil
+}
+
 // ReadAllFiles reads srcfile:dstfile[:mode[:uid:gid]] pairs into a dstfile keyed map.
 func ReadAllFiles(files []string) (map[string]*types.LinuxFile, error) {
 	m := map[string]*types.LinuxFile{}
 	for _, file := range files {
-		ps := strings.Split(file, ":")
-		if len(ps) != 2 && len(ps) != 3 && len(ps) != 5 {
-			return nil, fmt.Errorf("invalid file %q, want src:dst[:mode[:uid:gid]]", file)
-		}
-
-		f := &types.LinuxFile{}
-		if len(ps) == 5 {
-			uid, err := strconv.ParseInt(ps[3], 10, 0)
-			if err != nil {
-				return nil, fmt.Errorf("parse uid of %q: %w", file, err)
-			}
-			gid, err := strconv.ParseInt(ps[4], 10, 0)
-			if err != nil {
-				return nil, fmt.Errorf("parse gid of %q: %w", file, err)
-			}
-			f.UID = int(uid)
-			f.GID = int(gid)
-		}
-		if len(ps) >= 3 {
-			mode, err := strconv.ParseInt(ps[2], 8, 0)
-			if err != nil {
-				return nil, fmt.Errorf("parse mode of %q: %w", file, err)
-			}
-			f.Mode = mode
-		}
-
-		content, err := os.ReadFile(ps[0]) //nolint:gosec
+		spec, err := ParseFileSpec(file)
 		if err != nil {
-			return nil, fmt.Errorf("read %q: %w", ps[0], err)
+			return nil, err
 		}
-		f.Content = content
-		m[ps[1]] = f
+		content, err := os.ReadFile(spec.Src) //nolint:gosec
+		if err != nil {
+			return nil, fmt.Errorf("read %q: %w", spec.Src, err)
+		}
+		spec.File.Content = content
+		m[spec.Dst] = &spec.File
 	}
 	return m, nil
 }

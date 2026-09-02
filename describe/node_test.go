@@ -38,38 +38,39 @@ func TestNodes(t *testing.T) {
 │       │                     │                 │ memory: 1024 │
 └───────┴─────────────────────┴─────────────────┴──────────────┘
 `},
-		{name: "json", format: "json", want: `{
-  "name": "node1",
-  "endpoint": "tcp://10.0.0.1:2376",
-  "available": true,
-  "info": "{\"ID\":\"ABC\",\"NCPU\":8}",
-  "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048}}",
-  "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512}}"
-}
-{
-  "name": "node2",
-  "endpoint": "tcp://10.0.0.2:2376",
-  "bypass": true,
-  "info": "{\"ID\":\"DEF\"}",
-  "resource_capacity": "{\"cpumem\":{\"cpu\":4,\"memory\":1024}}",
-  "resource_usage": "{\"cpumem\":{\"cpu\":4,\"memory\":1024}}",
-  "test": true
-}
+		{name: "json", format: "json", want: `[
+  {
+    "name": "node1",
+    "endpoint": "tcp://10.0.0.1:2376",
+    "available": true,
+    "info": "{\"ID\":\"ABC\",\"NCPU\":8}",
+    "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048}}",
+    "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512}}"
+  },
+  {
+    "name": "node2",
+    "endpoint": "tcp://10.0.0.2:2376",
+    "bypass": true,
+    "info": "{\"ID\":\"DEF\"}",
+    "resource_capacity": "{\"cpumem\":{\"cpu\":4,\"memory\":1024}}",
+    "resource_usage": "{\"cpumem\":{\"cpu\":4,\"memory\":1024}}",
+    "test": true
+  }
+]
 `},
-		{name: "yaml", format: "yaml", want: `available: true
-endpoint: tcp://10.0.0.1:2376
-info: '{"ID":"ABC","NCPU":8}'
-name: node1
-resource_capacity: '{"cpumem":{"cpu":8,"memory":2048}}'
-resource_usage: '{"cpumem":{"cpu":2,"memory":512}}'
-
-bypass: true
-endpoint: tcp://10.0.0.2:2376
-info: '{"ID":"DEF"}'
-name: node2
-resource_capacity: '{"cpumem":{"cpu":4,"memory":1024}}'
-resource_usage: '{"cpumem":{"cpu":4,"memory":1024}}'
-test: true
+		{name: "yaml", format: "yaml", want: `- available: true
+  endpoint: tcp://10.0.0.1:2376
+  info: '{"ID":"ABC","NCPU":8}'
+  name: node1
+  resource_capacity: '{"cpumem":{"cpu":8,"memory":2048}}'
+  resource_usage: '{"cpumem":{"cpu":2,"memory":512}}'
+- bypass: true
+  endpoint: tcp://10.0.0.2:2376
+  info: '{"ID":"DEF"}'
+  name: node2
+  resource_capacity: '{"cpumem":{"cpu":4,"memory":1024}}'
+  resource_usage: '{"cpumem":{"cpu":4,"memory":1024}}'
+  test: true
 
 `},
 	}
@@ -131,20 +132,22 @@ func TestNodeResources(t *testing.T) {
 │ node1 │ 25.00% │ 25.00% │ 25.00%  │ 25.00% │ cpu diff │
 └───────┴────────┴────────┴─────────┴────────┴──────────┘
 `},
-		{name: "json", format: "json", want: `{
-  "name": "node1",
-  "diffs": [
-    "cpu diff"
-  ],
-  "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048},\"resource-storage\":{\"storage\":200,\"volumes\":{\"/data\":40}}}",
-  "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512},\"resource-storage\":{\"storage\":50,\"volumes\":{\"/data\":10}}}"
-}
+		{name: "json", format: "json", want: `[
+  {
+    "name": "node1",
+    "diffs": [
+      "cpu diff"
+    ],
+    "resource_capacity": "{\"cpumem\":{\"cpu\":8,\"memory\":2048},\"resource-storage\":{\"storage\":200,\"volumes\":{\"/data\":40}}}",
+    "resource_usage": "{\"cpumem\":{\"cpu\":2,\"memory\":512},\"resource-storage\":{\"storage\":50,\"volumes\":{\"/data\":10}}}"
+  }
+]
 `},
-		{name: "yaml", format: "yaml", want: `diffs:
-- cpu diff
-name: node1
-resource_capacity: '{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}'
-resource_usage: '{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}'
+		{name: "yaml", format: "yaml", want: `- diffs:
+  - cpu diff
+  name: node1
+  resource_capacity: '{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}'
+  resource_usage: '{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}'
 
 `},
 	}

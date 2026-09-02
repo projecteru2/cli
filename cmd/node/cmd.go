@@ -171,11 +171,7 @@ func Command() *cli.Command {
 						Name:  "endpoint",
 						Usage: "update node endpoint",
 					},
-					&cli.StringFlag{
-						Name:  utils.FlagExtraResources,
-						Usage: "add extra resource requests",
-						Value: "",
-					},
+					utils.ExtraResourcesFlag(),
 				},
 			},
 			{
@@ -238,11 +234,7 @@ func Command() *cli.Command {
 						Name:  "test",
 						Usage: "mark node for testing, maybe no health check and status report",
 					},
-					&cli.StringFlag{
-						Name:  utils.FlagExtraResources,
-						Usage: "add extra resource requests",
-						Value: "",
-					},
+					utils.ExtraResourcesFlag(),
 				},
 			},
 		},

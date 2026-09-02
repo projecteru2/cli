@@ -5,8 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
-	"slices"
+	"os"
 	"sync"
 
 	"github.com/projecteru2/core/log"
@@ -18,12 +17,13 @@ import (
 )
 
 type sendLargeWorkloadsOptions struct {
-	client  corepb.CoreRPCClient
-	ids     []string
-	dst     string
-	content []byte
-	modes   *corepb.FileMode
-	owners  *corepb.FileOwner
+	client corepb.CoreRPCClient
+	ids    []string
+	dst    string
+	src    io.Reader
+	size   int64
+	modes  *corepb.FileMode
+	owners *corepb.FileOwner
 }
 
 func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
@@ -46,14 +46,23 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		})
 	})
 
-	for chunk := range slices.Chunk(o.content, types.SendLargeFileChunkSize) {
+	chunk := make([]byte, types.SendLargeFileChunkSize)
+	for {
+		n, readErr := io.ReadFull(o.src, chunk)
+		if n == 0 && errors.Is(readErr, io.EOF) {
+			break
+		}
+		if readErr != nil && !errors.Is(readErr, io.EOF) && !errors.Is(readErr, io.ErrUnexpectedEOF) {
+			wg.Wait()
+			return errors.Join(recvErr, readErr)
+		}
 		if err := stream.Send(&corepb.FileOptions{
 			Ids:   o.ids,
 			Dst:   o.dst,
-			Size:  int64(len(o.content)),
+			Size:  o.size,
 			Mode:  o.modes,
 			Owner: o.owners,
-			Chunk: chunk,
+			Chunk: chunk[:n],
 		}); err != nil {
 			logger.Errorf(ctx, err, "send %s failed", o.dst)
 			wg.Wait()
@@ -64,6 +73,9 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 				}
 			}
 			return errors.Join(recvErr, err)
+		}
+		if readErr != nil {
+			break
 		}
 	}
 	if err := stream.CloseSend(); err != nil {
@@ -81,15 +93,13 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	files, err := utils.GenerateFileOptions(cmd)
+	files := cmd.StringSlice("file")
+	if len(files) != 1 {
+		return errors.New("sendlarge takes exactly one --file")
+	}
+	spec, err := utils.ParseFileSpec(files[0])
 	if err != nil {
 		return err
-	}
-	if len(files.Data) == 0 {
-		return errors.New("files should not be empty")
-	}
-	if len(files.Data) >= 2 {
-		return errors.New("can not send multiple files at the same time")
 	}
 
 	ids, err := argIDs(cmd)
@@ -97,17 +107,26 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	dst := slices.Collect(maps.Keys(files.Data))[0]
-	if len(files.Data[dst]) == 0 {
-		return fmt.Errorf("%s is empty, nothing to send", dst)
+	src, err := os.Open(spec.Src)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = src.Close() }()
+	stat, err := src.Stat()
+	if err != nil {
+		return err
+	}
+	if stat.Size() == 0 {
+		return fmt.Errorf("%s is empty, nothing to send", spec.Src)
 	}
 	o := &sendLargeWorkloadsOptions{
-		client:  client,
-		ids:     ids,
-		dst:     dst,
-		content: files.Data[dst],
-		modes:   files.Modes[dst],
-		owners:  files.Owners[dst],
+		client: client,
+		ids:    ids,
+		dst:    spec.Dst,
+		src:    src,
+		size:   stat.Size(),
+		modes:  &corepb.FileMode{Mode: spec.File.Mode},
+		owners: &corepb.FileOwner{Uid: int32(spec.File.UID), Gid: int32(spec.File.GID)}, //nolint:gosec
 	}
 	return o.run(ctx)
 }

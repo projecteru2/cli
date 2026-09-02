@@ -93,10 +93,7 @@ func Command() *cli.Command {
 				Aliases: []string{"s"},
 				Value:   false,
 			},
-			&cli.StringFlag{
-				Name:  utils.FlagExtraResources,
-				Usage: "extra resources, e.g., {\"gpu\":{\"count\":1}}",
-			},
+			utils.ExtraResourcesFlag(),
 			&cli.StringFlag{
 				Name:  "deploy-strategy",
 				Usage: "deploy method auto/fill/each/global/drained/dummy",
@@ -107,10 +104,7 @@ func Command() *cli.Command {
 				Usage: "which user",
 				Value: "root",
 			},
-			&cli.StringSliceFlag{
-				Name:  "file",
-				Usage: "copy local file to workload, can use multiple times. src_path:dst_path",
-			},
+			utils.FileFlag("copy local files into the workload before it starts, repeatable"),
 			&cli.BoolFlag{
 				Name:  "async",
 				Usage: "run lambda async",
