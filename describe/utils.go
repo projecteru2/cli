@@ -21,17 +21,6 @@ const headerName = "Name"
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-func ToChan[T any](items ...T) chan T {
-	ch := make(chan T)
-	go func() {
-		defer close(ch)
-		for _, item := range items {
-			ch <- item
-		}
-	}()
-	return ch
-}
-
 // ToResourcePercent reports node usage as a fraction of capacity, per resource.
 func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[string]float64, err error) {
 	var resUsage resourcetypes.Resources

@@ -93,6 +93,17 @@ func TestToTableRows(t *testing.T) {
 	}
 }
 
+func ToChan[T any](items ...T) chan T {
+	ch := make(chan T)
+	go func() {
+		defer close(ch)
+		for _, item := range items {
+			ch <- item
+		}
+	}()
+	return ch
+}
+
 func captureStdout(t *testing.T, f func()) string {
 	t.Helper()
 	r, w, err := os.Pipe()
