@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 	"gopkg.in/yaml.v3"
@@ -109,4 +110,14 @@ func cpuOption(cmd *cli.Command) (float64, float64) {
 		cpuRequest, cpuLimit = cpu, cpu
 	}
 	return cpuRequest, cpuLimit
+}
+
+func cpumemParams(cmd *cli.Command, memoryRequest, memoryLimit int64) resourcetypes.RawParams {
+	cpuRequest, cpuLimit := cpuOption(cmd)
+	return resourcetypes.RawParams{
+		flagCPURequest:    cpuRequest,
+		flagCPULimit:      cpuLimit,
+		flagMemoryRequest: memoryRequest,
+		flagMemoryLimit:   memoryLimit,
+	}
 }

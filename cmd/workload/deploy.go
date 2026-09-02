@@ -134,14 +134,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}
 
-	cpuRequest, cpuLimit := cpuOption(cmd)
-
-	cpumem := resourcetypes.RawParams{
-		flagCPURequest:    cpuRequest,
-		flagCPULimit:      cpuLimit,
-		flagMemoryRequest: memoryRequest,
-		flagMemoryLimit:   memoryLimit,
-	}
+	cpumem := cpumemParams(cmd, memoryRequest, memoryLimit)
 	if cmd.Bool("cpu-bind") {
 		cpumem["cpu-bind"] = true
 	}
