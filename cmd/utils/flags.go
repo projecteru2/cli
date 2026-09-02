@@ -13,7 +13,7 @@ func ExtraResourcesFlag() *cli.StringFlag {
 // FileFlag is the one --file every file-carrying command shares; usage says what the command does with the files.
 func FileFlag(usage string) *cli.StringSliceFlag {
 	return &cli.StringSliceFlag{
-		Name:  "file",
+		Name:  FlagFile,
 		Usage: usage + ", src_path:dst_path[:mode[:uid:gid]]",
 	}
 }

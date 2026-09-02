@@ -17,7 +17,6 @@ const (
 	flagNode    = "node"
 	flagPod     = "pod"
 	flagForce   = "force"
-	flagFile    = "file"
 	flagEnv     = "env"
 	flagImage   = "image"
 	flagNetwork = "network"

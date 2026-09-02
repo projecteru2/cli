@@ -22,7 +22,7 @@ type FileOptions struct {
 }
 
 func GenerateFileOptions(cmd *cli.Command) (*FileOptions, error) {
-	files, err := ReadAllFiles(cmd.StringSlice("file"))
+	files, err := ReadAllFiles(cmd.StringSlice(FlagFile))
 	if err != nil {
 		return nil, err
 	}

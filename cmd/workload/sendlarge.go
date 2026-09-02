@@ -96,7 +96,7 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	files := cmd.StringSlice("file")
+	files := cmd.StringSlice(utils.FlagFile)
 	if len(files) != 1 {
 		return errors.New("sendlarge takes exactly one --file")
 	}
