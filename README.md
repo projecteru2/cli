@@ -9,7 +9,8 @@ pods, nodes, workloads, images, networks and one-shot lambdas.
 ## Highlights
 
 - Eight command groups — `core`, `pod`, `node`, `workload`, `image`, `network`, `status`, `lambda` —
-  covering every RPC eru core exposes.
+  covering eru core's RPCs; `GetPod`, `GetWorkload`, `GetNodeStatus`, `GetNodeEngineInfo` and
+  `RawEngine` have no command of their own.
 - Table, JSON or YAML output for every read command, selected once with `--output`.
 - Interactive streams: `workload exec` and `lambda` attach a raw terminal, forward `SIGWINCH`
   and return the remote exit code as their own.

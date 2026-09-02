@@ -128,7 +128,7 @@ func Command() *cli.Command {
 					},
 					&cli.Int64Flag{
 						Name:  "limit",
-						Usage: "limit data size",
+						Usage: "cap the rows the server returns; --pod, --match-ip and --skip-ip then filter on the client, so fewer rows can come back",
 					},
 					&cli.StringSliceFlag{
 						Name:  "match-ip",
