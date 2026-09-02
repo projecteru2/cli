@@ -28,6 +28,8 @@ type sendLargeWorkloadsOptions struct {
 
 func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("workload.sendLargeWorkloadsOptions.run")
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	stream, err := o.client.SendLargeFile(ctx)
 	if err != nil {
 		logger.Errorf(ctx, err, "send %s failed", o.dst)
@@ -53,8 +55,9 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			break
 		}
 		if readErr != nil && !errors.Is(readErr, io.EOF) && !errors.Is(readErr, io.ErrUnexpectedEOF) {
+			cancel()
 			wg.Wait()
-			return errors.Join(recvErr, readErr)
+			return readErr
 		}
 		if err := stream.Send(&corepb.FileOptions{
 			Ids:   o.ids,

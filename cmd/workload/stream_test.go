@@ -9,6 +9,8 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"testing/iotest"
+	"time"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -503,6 +505,27 @@ func TestCopyRejectsAMalformedSource(t *testing.T) {
 	}
 }
 
+func TestSendLargeCancelsTheStreamOnALocalReadError(t *testing.T) {
+	o := &sendLargeWorkloadsOptions{
+		client: &hangingSendClient{},
+		ids:    []string{"cid1"},
+		dst:    "/etc/app",
+		src:    iotest.ErrReader(errors.New("is a directory")),
+		size:   4096,
+	}
+
+	done := make(chan error, 1)
+	go func() { done <- o.run(t.Context()) }()
+	select {
+	case err := <-done:
+		if err == nil || !strings.Contains(err.Error(), "is a directory") {
+			t.Errorf("got %v, want the read error", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("run waited on the receiver after a local read error")
+	}
+}
+
 func runCommand(t *testing.T, args ...string) error {
 	t.Helper()
 	exiter, writer := cli.OsExiter, cli.ErrWriter
@@ -658,5 +681,31 @@ func (f *fakeSendStream) Recv() (*corepb.SendMessage, error) {
 }
 
 func (f *fakeSendStream) CloseSend() error {
+	return nil
+}
+
+type hangingSendClient struct {
+	corepb.CoreRPCClient
+}
+
+func (h *hangingSendClient) SendLargeFile(ctx context.Context, _ ...grpc.CallOption) (grpc.BidiStreamingClient[corepb.FileOptions, corepb.SendMessage], error) {
+	return &hangingSendStream{ctx: ctx}, nil
+}
+
+type hangingSendStream struct {
+	grpc.ClientStream
+	ctx context.Context
+}
+
+func (h *hangingSendStream) Send(*corepb.FileOptions) error {
+	return nil
+}
+
+func (h *hangingSendStream) Recv() (*corepb.SendMessage, error) {
+	<-h.ctx.Done()
+	return nil, h.ctx.Err()
+}
+
+func (h *hangingSendStream) CloseSend() error {
 	return nil
 }
