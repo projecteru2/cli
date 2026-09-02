@@ -17,7 +17,6 @@ const (
 	flagNode    = "node"
 	flagPod     = "pod"
 	flagForce   = "force"
-	flagFile    = "file"
 	flagEnv     = "env"
 	flagImage   = "image"
 	flagNetwork = "network"
@@ -225,10 +224,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadSend),
 				Flags: []cli.Flag{
-					&cli.StringSliceFlag{
-						Name:  flagFile,
-						Usage: "copy local files to workload, can use multiple times. src_path:dst_path[:mode[:uid:gid]]",
-					},
+					utils.FileFlag("copy local files into the workloads, repeatable"),
 				},
 			},
 			{
@@ -237,10 +233,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadSendLarge),
 				Flags: []cli.Flag{
-					&cli.StringSliceFlag{
-						Name:  flagFile,
-						Usage: "copy local file to workload, only can use single time. src_path:dst_path[:mode[:uid:gid]]",
-					},
+					utils.FileFlag("stream one local file into the workloads"),
 				},
 			},
 			{
@@ -316,11 +309,7 @@ func Command() *cli.Command {
 						Name:  flagStorage,
 						Usage: "shortcut to set storage-limit/request equally to this value",
 					},
-					&cli.StringFlag{
-						Name:  utils.FlagExtraResources,
-						Usage: "add extra resource requests",
-						Value: "",
-					},
+					utils.ExtraResourcesFlag(),
 				},
 			},
 			{
@@ -398,10 +387,7 @@ func Command() *cli.Command {
 						Name:  "label",
 						Usage: "filter workload by labels",
 					},
-					&cli.StringSliceFlag{
-						Name:  flagFile,
-						Usage: "copy local files to workload, can use multiple times. src_path:dst_path",
-					},
+					utils.FileFlag("copy local files into the new workload, repeatable"),
 					&cli.StringSliceFlag{
 						Name:  "copy",
 						Usage: "copy old workload files to new workload, can use multiple times. src_path:dst_path",
@@ -520,10 +506,7 @@ func Command() *cli.Command {
 						Usage: "which user",
 						Value: "root",
 					},
-					&cli.StringSliceFlag{
-						Name:  flagFile,
-						Usage: "copy local file to workload, can use multiple times. src_path:dst_path",
-					},
+					utils.FileFlag("copy local files into the workload before it starts, repeatable"),
 					&cli.StringSliceFlag{
 						Name:  "after-create",
 						Usage: "run commands after create",
@@ -556,11 +539,7 @@ func Command() *cli.Command {
 						Usage: "raw args in json (for docker engine)",
 						Value: "",
 					},
-					&cli.StringFlag{
-						Name:  utils.FlagExtraResources,
-						Usage: "add extra resource requests",
-						Value: "",
-					},
+					utils.ExtraResourcesFlag(),
 				},
 			},
 		},

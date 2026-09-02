@@ -13,6 +13,7 @@ const (
 	ResourceStorage = "resource-storage"
 
 	FlagExtraResources = "extra-resources"
+	FlagFile           = "file"
 )
 
 // StorageParams builds the storage plugin request; zero values stay out, so an untouched entry defers to --extra-resources.
