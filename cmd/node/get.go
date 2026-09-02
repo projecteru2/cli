@@ -24,7 +24,7 @@ func (o *getNodeOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.Nodes(describe.ToChan(node), true, false)
+	describe.Nodes(true, node)
 	return nil
 }
 

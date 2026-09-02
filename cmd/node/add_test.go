@@ -18,7 +18,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 		name        string
 		args        []string
 		wantCPU     int64
-		wantShare   string
+		wantShare int64
 		wantMemory  string
 		wantStorage string
 		wantVolumes []string
@@ -27,7 +27,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 			name:      "cpu and share",
 			args:      []string{"node", "add", "--endpoint", "process://127.0.0.1", "--cpu", "64", "--share", "100", "dev"},
 			wantCPU:   64,
-			wantShare: "100",
+			wantShare: 100,
 		},
 		{
 			name:        "memory storage and volumes",
@@ -49,8 +49,8 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 			if got := cpumem.Int64("cpu"); got != tt.wantCPU {
 				t.Errorf("cpu: got %d, want %d", got, tt.wantCPU)
 			}
-			if got := cpumem.String("share"); got != tt.wantShare {
-				t.Errorf("share: got %q, want %q", got, tt.wantShare)
+			if got := cpumem.Int64("share"); got != tt.wantShare {
+				t.Errorf("share: got %d, want %d", got, tt.wantShare)
 			}
 			if got := cpumem.String("memory"); got != tt.wantMemory {
 				t.Errorf("memory: got %q, want %q", got, tt.wantMemory)

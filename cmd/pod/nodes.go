@@ -3,7 +3,6 @@ package pod
 import (
 	"context"
 	"errors"
-	"slices"
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -24,35 +23,9 @@ type listPodNodesOptions struct {
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
-	if o.filter == up || o.filter == all {
-		return o.listUpOrAll(ctx)
-	}
-	return o.listDown(ctx)
-}
-
-func (o *listPodNodesOptions) listDown(ctx context.Context) error {
-	allNodes, err := o.list(ctx, &corepb.ListNodesOptions{
-		Podname:         o.name,
-		All:             true,
-		Labels:          o.labels,
-		TimeoutInSecond: o.timeoutInSecond,
-		SkipInfo:        !o.showInfo,
-	})
-	if err != nil {
-		return err
-	}
-
-	downNodes := slices.DeleteFunc(allNodes, func(node *corepb.Node) bool {
-		return node.Available && !node.Bypass
-	})
-	describe.Nodes(describe.ToChan(downNodes...), o.showInfo, o.stream)
-	return nil
-}
-
-func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	ch, wait, err := o.listChan(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
-		All:             o.filter == all,
+		All:             o.filter != up,
 		Labels:          o.labels,
 		TimeoutInSecond: o.timeoutInSecond,
 		SkipInfo:        !o.showInfo,
@@ -60,23 +33,11 @@ func (o *listPodNodesOptions) listUpOrAll(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
-	describe.Nodes(ch, o.showInfo, o.stream)
-
+	if o.filter == down {
+		ch = downOnly(ch)
+	}
+	describe.NodesStream(ch, o.showInfo, o.stream)
 	return wait()
-}
-
-func (o *listPodNodesOptions) list(ctx context.Context, opt *corepb.ListNodesOptions) ([]*corepb.Node, error) {
-	ch, wait, err := o.listChan(ctx, opt)
-	if err != nil {
-		return nil, err
-	}
-
-	nodes := []*corepb.Node{}
-	for n := range ch {
-		nodes = append(nodes, n)
-	}
-	return nodes, wait()
 }
 
 func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNodesOptions) (<-chan *corepb.Node, func() error, error) {
@@ -109,4 +70,17 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 		stream:          cmd.Bool("stream"),
 	}
 	return o.run(ctx)
+}
+
+func downOnly(nodes <-chan *corepb.Node) <-chan *corepb.Node {
+	down := make(chan *corepb.Node)
+	go func() {
+		defer close(down)
+		for node := range nodes {
+			if !node.Available || node.Bypass {
+				down <- node
+			}
+		}
+	}()
+	return down
 }

@@ -75,8 +75,9 @@ func TestImagesWithoutAnyImage(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := captureStdout(t, func() { Images(tt.msgs...) }); got != "no images\n" {
-				t.Errorf("got %q, want %q", got, "no images\n")
+			want := "┌──────┬───────┬──────┐\n│ NODE │ IMAGE │ TAGS │\n├──────┼───────┼──────┤\n└──────┴───────┴──────┘\n"
+			if got := captureStdout(t, func() { Images(tt.msgs...) }); got != want {
+				t.Errorf("got %q, want the header-only table", got)
 			}
 		})
 	}

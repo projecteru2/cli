@@ -13,8 +13,19 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
-func Nodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
+// Nodes describes nodes a command already holds.
+func Nodes(showInfo bool, nodes ...*corepb.Node) {
+	describeOr(nodes, func(all []*corepb.Node) { renderNodes(showInfo, all...) })
+}
+
+// NodesStream describes nodes as they arrive, one table per node when stream is set.
+func NodesStream(nodes <-chan *corepb.Node, showInfo, stream bool) {
 	describeChOr(nodes, func(ch <-chan *corepb.Node) { describeNodes(ch, showInfo, stream) })
+}
+
+// NodeResource describes one node's resource.
+func NodeResource(ctx context.Context, resource *corepb.NodeResource) {
+	describeOr(resource, func(r *corepb.NodeResource) { renderNodeResources(ctx, r) })
 }
 
 func NodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
@@ -42,10 +53,6 @@ func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
 }
 
 func renderNodes(showInfo bool, nodes ...*corepb.Node) {
-	if len(nodes) == 0 {
-		return
-	}
-
 	capacities := make([]resourcetypes.Resources, len(nodes))
 	usages := make([]resourcetypes.Resources, len(nodes))
 	for i, node := range nodes {
@@ -99,12 +106,25 @@ func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
 }
 
 func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
-	logger := log.WithFunc("describe.describeNodeResources")
+	if stream {
+		for resource := range resources {
+			renderNodeResources(ctx, resource)
+		}
+		return
+	}
+	all := []*corepb.NodeResource{}
+	for resource := range resources {
+		all = append(all, resource)
+	}
+	renderNodeResources(ctx, all...)
+}
+
+func renderNodeResources(ctx context.Context, resources ...*corepb.NodeResource) {
+	logger := log.WithFunc("describe.renderNodeResources")
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"})
-
-	for resource := range resources {
+	for _, resource := range resources {
 		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
 			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
@@ -120,16 +140,9 @@ func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeRes
 		}
 		t.AppendRows(toTableRows(rows))
 		t.AppendSeparator()
-		if stream {
-			t.SetStyle(table.StyleLight)
-			t.Render()
-			t.ResetRows()
-		}
 	}
-	if !stream {
-		t.SetStyle(table.StyleLight)
-		t.Render()
-	}
+	t.SetStyle(table.StyleLight)
+	t.Render()
 }
 
 func describeNodeStatusMessage(ctx context.Context, ms []*corepb.NodeStatusStreamMessage) {

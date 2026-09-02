@@ -20,7 +20,7 @@ Global options come before the command name and apply to all of it.
 | `--eru`, `-e` | `ERU` | `127.0.0.1:5001` | Address of the eru core to call. |
 | `--username`, `-u` | `ERU_USERNAME` | empty | Username when core requires authentication. |
 | `--password`, `-p` | `ERU_PASSWORD` | empty | Password when core requires authentication. |
-| `--output`, `-o` | `ERU_OUTPUT_FORMAT` | empty | `json`, `yaml`, or empty for a table. |
+| `--output`, `-o` | `ERU_OUTPUT_FORMAT` | empty | `json`, `yaml`, or empty for a table. `core watch` and `status` print their own line format and ignore it. |
 | `--debug`, `-d` | | off | Log at debug level instead of info. |
 | `--version`, `-v` | | | Print version, revision, build time and Go toolchain. |
 
@@ -207,7 +207,7 @@ command's exit code. Everything after the first positional argument is the remot
 | `--memory`, `--memory-request` | `512M` | Memory limit and request. |
 | `--storage`, `--storage-request` | | Storage limit and request. |
 | `--volume`, `--volume-request` | | Volume limit and request, repeatable. |
-| `--extra-resources` | | Extra resource plugin parameters as JSON, e.g. `{"gpu":{"count":1}}`. |
+| `--extra-resources` | | Extra resource plugin parameters as JSON, e.g. `{"gpu":{"count":1}}`. A plugin the command's own flags already encode (cpumem on deploy, realloc, lambda and capacity; cpumem and storage on node set) keeps the flag values; the JSON fills in only the plugins the flags left empty. |
 | `--env` | | `KEY=value`, repeatable. |
 | `--file` | | `src:dst`, repeatable. |
 | `--working-dir` | `/` | Working directory. |
