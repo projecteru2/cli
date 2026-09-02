@@ -51,10 +51,10 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	chunk := make([]byte, types.SendLargeFileChunkSize)
 	for {
 		n, readErr := io.ReadFull(o.src, chunk)
-		if n == 0 && errors.Is(readErr, io.EOF) {
+		if errors.Is(readErr, io.EOF) {
 			break
 		}
-		if readErr != nil && !errors.Is(readErr, io.EOF) && !errors.Is(readErr, io.ErrUnexpectedEOF) {
+		if readErr != nil && !errors.Is(readErr, io.ErrUnexpectedEOF) {
 			cancel()
 			wg.Wait()
 			return readErr
