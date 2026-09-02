@@ -1,6 +1,10 @@
 package network
 
 import (
+	"context"
+	"errors"
+
+	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -54,4 +58,22 @@ func Command() *cli.Command {
 			},
 		},
 	}
+}
+
+func networkTarget(ctx context.Context, cmd *cli.Command) (corepb.CoreRPCClient, []string, string, error) {
+	client, err := utils.NewCoreRPCClient(ctx, cmd)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	ids := cmd.Args().Slice()
+	if len(ids) == 0 {
+		return nil, nil, "", errors.New("workload id(s) must be specified")
+	}
+
+	network := cmd.String(flagNetwork)
+	if network == "" {
+		return nil, nil, "", errors.New("network must be specified")
+	}
+	return client, ids, network, nil
 }
