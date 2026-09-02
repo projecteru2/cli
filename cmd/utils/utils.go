@@ -19,10 +19,8 @@ import (
 // GetNetworks returns a networkmode -> ip map.
 func GetNetworks(network string) map[string]string {
 	var ip string
-	networkInfo := strings.Split(network, "=")
-	if len(networkInfo) == 2 {
-		network = networkInfo[0]
-		ip = networkInfo[1]
+	if name, address, ok := strings.Cut(network, "="); ok && !strings.Contains(address, "=") {
+		network, ip = name, address
 	}
 	networks := map[string]string{}
 	if network != "" {
