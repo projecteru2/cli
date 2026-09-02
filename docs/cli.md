@@ -13,16 +13,16 @@ eru-cli [global options] <command> [command options] [arguments...]
 
 ## Global options
 
-Global options come before the command name and apply to all of it.
+Global options may come before the command name and apply to all of it.
 
 | Option | Environment | Default | Meaning |
 |---|---|---|---|
 | `--eru`, `-e` | `ERU` | `127.0.0.1:5001` | Address of the eru core to call. |
 | `--username`, `-u` | `ERU_USERNAME` | empty | Username when core requires authentication. |
 | `--password`, `-p` | `ERU_PASSWORD` | empty | Password when core requires authentication. |
-| `--output`, `-o` | `ERU_OUTPUT_FORMAT` | empty | `json`, `yaml`, or empty for a table. `core watch` and `status` print their own line format and ignore it. |
+| `--output`, `-o` | `ERU_OUTPUT_FORMAT` | empty | `json`, `yaml`, or empty for a table. `core watch` and `status` print their own line format and ignore it, and so do `workload logs` and `image build`, which pass the remote bytes through. |
 | `--debug`, `-d` | | off | Log at debug level instead of info. |
-| `--version`, `-v` | | | Print version, revision, build time and Go toolchain. |
+| `--version`, `-v` | | | Print version, revision, build time, Go toolchain and OS/arch. |
 
 The table format prints a readable summary; `json` and `yaml` print the full message as core
 returned it and are the right choice for scripting.
@@ -32,9 +32,11 @@ returned it and are the right choice for scripting.
 `0` means every item succeeded. Commands that act on several workloads, images or nodes in one call
 — `deploy`, `replace`, `send`, `sendlarge`, `copy`, `start`, `stop`, `restart`, `remove`,
 `dissociate`, `image cache`, `image remove`, `network connect`, `network disconnect` — report each
-failure and exit non-zero if any of them failed, so a script does not need to parse the log. Any
-failing command exits `255`, except `workload exec` and `lambda`, which exit with the remote
-command's own code.
+failure and exit non-zero if any of them failed, so a script does not need to parse the log. A
+command that fails after its arguments are parsed exits `255`, except `workload exec` and `lambda`,
+which exit with the remote command's own code, and `image build`, which exits with the code core
+reported for the failed build. A usage error such as a missing required flag exits `1`, and an
+unknown command exits `3`.
 
 ## core
 
@@ -54,10 +56,10 @@ A pod is a named group of nodes.
 | `pod list` | | |
 | `pod add` | `<pod name>` | `--desc` |
 | `pod remove` | `<pod name>` | |
-| `pod nodes` | `<pod name>` | `--filter up\|down\|all` (default `all`), `--label a=1`, `--timeout 10`, `--show-info`, `--stream` |
+| `pod nodes` | `<pod name>` | `--filter`/`-f` `up\|down\|all` (default `all`), `--label a=1`, `--timeout 10`, `--show-info`, `--stream` |
 | `pod networks` | `<pod name>` | `--driver` |
-| `pod resource` | `<pod name>` | `--filter`, `--stream` |
-| `pod capacity` | `<pod name>` | `--cpu`, `--memory`, `--storage`, `--cpu-bind`, `--node`, `--extra-resources` |
+| `pod resource` | `<pod name>` | `--filter`/`-f`, `--stream` |
+| `pod capacity` | `<pod name>` | `--cpu`/`-c`, `--memory`/`-m`/`--mem`, `--storage`/`-s` (all required), `--cpu-bind`, `--node`/`-n`, `--extra-resources` |
 
 `pod resource --filter` takes an expression over the usage percentages, for example
 `--filter "cpu > 40%"` or `--filter "memory <= 0.4"`. The attribute is one of `cpu`, `memory`,
@@ -114,15 +116,15 @@ every `N` seconds; without it the status is set once.
 | `workload replace` | `<spec file uri>` | `--entry`, `--image` (required), `--pod`, `--node`, `--count`, `--network`, `--network-inherit`, `--env`, `--user`, `--label`, `--file`, `--copy`, `--after-create`, `--ignore-hook`, `--debug` |
 | `workload get` | `<workload id>...` | |
 | `workload list` | `[appname]` | `--entry`, `--node`, `--pod`, `--label`, `--limit`, `--match-ip`, `--skip-ip`, `--statistics` |
-| `workload start`/`stop`/`restart` | `<workload id>...` | `--force` |
-| `workload remove` | `<workload id>...` | `--force` |
+| `workload start`/`stop`/`restart` | `<workload id>...` | `--force`/`-f` |
+| `workload remove` | `<workload id>...` | `--force`/`-f` |
 | `workload realloc` | `<workload id>` | `--cpu*`, `--memory*`, `--storage*`, `--volumes-request`, `--volumes-limit`, `--cpu-bind`, `--cpu-unbind`, `--extra-resources` |
 | `workload dissociate` | `<workload id>...` | `--node` to take every workload on a node; returns the resources to eru without removing the workload. |
-| `workload exec` | `<workload id> -- cmd...` | `--interactive`, `--env`, `--workdir` |
-| `workload logs` | `<workload id>` | `--tail`, `--since`, `--until`, `--follow` |
+| `workload exec` | `<workload id> -- cmd...` | `--interactive`/`-i`, `--env`/`-e`, `--workdir`/`-w` |
+| `workload logs` | `<workload id>` | `--tail`, `--since`, `--until`, `--follow`/`-f` |
 | `workload get-status` | `<workload id>...` | |
 | `workload set-status` | `<workload id>...` | `--running`, `--healthy`, `--ttl`, `--network name=ip`, `--extension` |
-| `workload copy` | `<workload id>:path1,path2` | `--dir` (default `/tmp`) |
+| `workload copy` | `<workload id>:path1,path2` | `--dir`/`-d` (default `/tmp`) |
 | `workload send` | `<workload id>...` | `--file src:dst[:mode[:uid:gid]]` |
 | `workload sendlarge` | `<workload id>...` | `--file src:dst[:mode[:uid:gid]]`, one file per call, streamed in chunks |
 
@@ -194,7 +196,8 @@ eru-cli lambda [options] -- cmd1 cmd2 cmd3
 ```
 
 Runs a command inside a freshly created workload, streams its output back and exits with the
-command's exit code. Everything after the first positional argument is the remote command line.
+command's exit code. Everything from the first positional argument onwards is the remote command
+line.
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -204,18 +207,18 @@ command's exit code. Everything after the first positional argument is the remot
 | `--network` | | SDN network to join. |
 | `--count` | `1` | How many copies to run; the cli waits for all of them. |
 | `--cpu`, `--cpu-request` | `1`, `0` | CPU limit and request. |
-| `--memory`, `--memory-request` | `512M` | Memory limit and request. |
+| `--memory`, `--memory-request` | `512M`, empty | Memory limit and request. |
 | `--storage`, `--storage-request` | | Storage limit and request. |
 | `--volume`, `--volume-request` | | Volume limit and request, repeatable. |
-| `--extra-resources` | | Extra resource plugin parameters as JSON, e.g. `{"gpu":{"count":1}}`. A plugin the command's own flags already encode (cpumem on deploy, realloc, lambda and capacity; cpumem and storage on node set) keeps the flag values; the JSON fills in only the plugins the flags left empty. |
+| `--extra-resources` | | Extra resource plugin parameters as JSON, e.g. `{"resource-gpu":{"prod_count_map":{"nvidia-3070":1}}}`. A plugin the command's own flags already encode (cpumem on deploy, realloc and lambda; cpumem and storage on node add, node set and pod capacity) keeps the flag values; the JSON fills in only the plugins the flags left empty. |
 | `--env` | | `KEY=value`, repeatable. |
-| `--file` | | `src:dst`, repeatable. |
-| `--working-dir` | `/` | Working directory. |
+| `--file` | | `src_path:dst_path[:mode[:uid:gid]]`, repeatable. |
+| `--working-dir`, `--working_dir` | `/` | Working directory. |
 | `--user` | `root` | User inside the workload. |
 | `--privileged`, `-p` | off | Extended privileges. |
 | `--stdin`, `-s` | off | Attach stdin and put the terminal in raw mode. |
 | `--async`, `--async-timeout` | off, `30` | Return immediately and let core reap the workload. |
-| `--deploy-strategy` | `auto` | `auto`, `fill`, `each`, `global`, `drained` or `dummy`. |
+| `--deploy-strategy` | `AUTO` | `auto`, `fill`, `each`, `global`, `drained` or `dummy`. |
 | `--workload-id` | off | Prefix every output line with the workload id. |
 
 ```shell
