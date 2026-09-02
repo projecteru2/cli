@@ -48,9 +48,10 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 		})
 	})
 
+	src := io.LimitReader(o.src, o.size)
 	chunk := make([]byte, types.SendLargeFileChunkSize)
 	for {
-		n, readErr := io.ReadFull(o.src, chunk)
+		n, readErr := io.ReadFull(src, chunk)
 		if errors.Is(readErr, io.EOF) {
 			break
 		}

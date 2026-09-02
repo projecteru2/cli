@@ -505,6 +505,24 @@ func TestCopyRejectsAMalformedSource(t *testing.T) {
 	}
 }
 
+func TestSendLargeStopsAtTheDeclaredSize(t *testing.T) {
+	stream := &fakeSendStream{msgs: []*corepb.SendMessage{{Id: "cid1", Path: "/etc/app"}}}
+	o := &sendLargeWorkloadsOptions{
+		client: &fakeWorkloadClient{send: stream},
+		ids:    []string{"cid1"},
+		dst:    "/etc/app",
+		src:    strings.NewReader("payload and the bytes appended after stat"),
+		size:   7,
+	}
+
+	if err := o.run(t.Context()); err != nil {
+		t.Fatalf("got %v, want nil", err)
+	}
+	if stream.sent != 7 {
+		t.Errorf("sent %d bytes, want the declared 7", stream.sent)
+	}
+}
+
 func TestSendLargeCancelsTheStreamOnALocalReadError(t *testing.T) {
 	o := &sendLargeWorkloadsOptions{
 		client: &hangingSendClient{},
@@ -662,9 +680,11 @@ type fakeSendStream struct {
 	err     error
 	sendErr error
 	next    int
+	sent    int
 }
 
-func (f *fakeSendStream) Send(*corepb.FileOptions) error {
+func (f *fakeSendStream) Send(opts *corepb.FileOptions) error {
+	f.sent += len(opts.Chunk)
 	return f.sendErr
 }
 
