@@ -18,7 +18,7 @@ func TestGenerateAddNodeOptions(t *testing.T) {
 		name        string
 		args        []string
 		wantCPU     int64
-		wantShare int64
+		wantShare   int64
 		wantMemory  string
 		wantStorage string
 		wantVolumes []string
