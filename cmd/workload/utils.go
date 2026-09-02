@@ -86,6 +86,47 @@ func entrypointOptions(specs *types.Specs, entry string) (*corepb.EntrypointOpti
 	return opts, nil
 }
 
+func baseDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, *types.Specs, error) {
+	specs, err := loadSpecs(ctx, cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	files, err := utils.GenerateFileOptions(cmd)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return &corepb.DeployOptions{
+		Name:       specs.Appname,
+		Entrypoint: entrypoint,
+		Podname:    cmd.String(flagPod),
+		NodeFilter: &corepb.NodeFilter{
+			Includes: cmd.StringSlice(flagNode),
+		},
+		Image:          cmd.String(flagImage),
+		Count:          int32(cmd.Int("count")), //nolint:gosec
+		Env:            cmd.StringSlice(flagEnv),
+		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
+		Labels:         specs.Labels,
+		Dns:            specs.DNS,
+		ExtraHosts:     specs.ExtraHosts,
+		DeployStrategy: corepb.DeployOptions_AUTO,
+		Data:           files.Data,
+		Modes:          files.Modes,
+		Owners:         files.Owners,
+		User:           cmd.String("user"),
+		Debug:          cmd.Bool("debug"),
+		IgnoreHook:     cmd.Bool("ignore-hook"),
+		AfterCreate:    cmd.StringSlice("after-create"),
+	}, specs, nil
+}
+
 func ramOption(cmd *cli.Command, request, limit, shortcut string) (int64, int64, error) {
 	req, err := utils.ParseRAMInHuman(cmd.String(request))
 	if err != nil {
