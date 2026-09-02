@@ -197,15 +197,21 @@ func describeOr[T any](v T, fallback func(T)) {
 }
 
 func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
-	if !isJSON() && !isYAML() {
+	collect := func() []T {
+		items := []T{}
+		for t := range ch {
+			items = append(items, t)
+		}
+		return items
+	}
+	switch {
+	case isJSON():
+		describeAsJSON(collect())
+	case isYAML():
+		describeAsYAML(collect())
+	default:
 		fallback(ch)
-		return
 	}
-	items := []T{}
-	for t := range ch {
-		items = append(items, t)
-	}
-	describeOr(items, func([]T) {})
 }
 
 func renderTable(header []string, groups ...[][]string) {
