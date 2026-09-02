@@ -32,6 +32,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 		return err
 	}
 
+	interactive := term.IsTerminal(int(os.Stdout.Fd()))
 	progress := map[string]int{}
 	p := 0
 	for {
@@ -61,7 +62,7 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 					progress[msg.Id] = p
 					fmt.Println(data)
 					p++
-				} else if term.IsTerminal(int(os.Stdout.Fd())) {
+				} else if interactive {
 					fmt.Printf(progressRewrite, p-pos, data)
 				} else {
 					fmt.Println(data)

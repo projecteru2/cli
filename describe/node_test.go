@@ -80,7 +80,7 @@ func TestNodes(t *testing.T) {
 			Format = tt.format
 			t.Cleanup(func() { Format = "" })
 
-			if got := captureStdout(t, func() { Nodes(ToChan(testNodes()...), false, false) }); got != tt.want {
+			if got := captureStdout(t, func() { NodesStream(ToChan(testNodes()...), false, false) }); got != tt.want {
 				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
 			}
 		})
@@ -114,7 +114,7 @@ func TestNodesWithInfo(t *testing.T) {
 │       │                     │                 │ memory: 1024 │                       │
 └───────┴─────────────────────┴─────────────────┴──────────────┴───────────────────────┘
 `
-	got := captureStdout(t, func() { Nodes(ToChan(testNodes()...), true, false) })
+	got := captureStdout(t, func() { NodesStream(ToChan(testNodes()...), true, false) })
 	if got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
@@ -195,7 +195,7 @@ func TestNodesStream(t *testing.T) {
 │       │                     │                 │ memory: 1024 │
 └───────┴─────────────────────┴─────────────────┴──────────────┘
 `
-	got := captureStdout(t, func() { Nodes(ToChan(testNodes()...), false, true) })
+	got := captureStdout(t, func() { NodesStream(ToChan(testNodes()...), false, true) })
 	if got != want {
 		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
@@ -340,10 +340,10 @@ func TestNodesPluginColumns(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got := captureStdout(t, func() {
 				if tt.showInfo {
-					Nodes(ToChan(tt.nodes...), true, false)
+					NodesStream(ToChan(tt.nodes...), true, false)
 					return
 				}
-				Nodes(ToChan(tt.nodes...), false, false)
+				NodesStream(ToChan(tt.nodes...), false, false)
 			})
 			if got != tt.want {
 				t.Errorf("got\n%s\nwant\n%s", got, tt.want)

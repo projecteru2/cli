@@ -57,10 +57,6 @@ func describeStatistics(stat workloadStatistics) {
 }
 
 func describeWorkloads(workloads []*corepb.Workload) {
-	if len(workloads) == 0 {
-		return
-	}
-
 	resources := make([]resourcetypes.Resources, len(workloads))
 	for i, workload := range workloads {
 		resources[i] = unmarshalResources(workload.Resources)

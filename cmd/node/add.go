@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"strings"
 
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -26,7 +25,7 @@ func (o *addNodeOptions) run(ctx context.Context) error {
 		return err
 	}
 
-	describe.Nodes(describe.ToChan(node), false, false)
+	describe.Nodes(false, node)
 	return nil
 }
 
@@ -66,7 +65,7 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 		cpumem["cpu"] = cmd.Int("cpu")
 	}
 	if cmd.IsSet("share") {
-		cpumem["share"] = strconv.Itoa(cmd.Int("share"))
+		cpumem["share"] = cmd.Int("share")
 	}
 
 	resources, err := utils.EncodeResources(cmd, resourcetypes.Resources{

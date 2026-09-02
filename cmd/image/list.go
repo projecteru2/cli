@@ -2,7 +2,6 @@ package image
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -42,29 +41,17 @@ func cmdImageList(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	opts, err := generateListOptions(cmd)
-	if err != nil {
-		return err
-	}
-
 	o := &listImageOptions{
 		client: client,
-		opts:   opts,
+		opts:   generateListOptions(cmd),
 	}
 	return o.run(ctx)
 }
 
-func generateListOptions(cmd *cli.Command) (*corepb.ListImageOptions, error) {
-	filter := cmd.String("filter")
-	podname := cmd.String(flagPod)
-	nodename := cmd.StringSlice(flagNode)
-	if len(nodename) == 0 && podname == "" {
-		return nil, errors.New("podname or nodenames should be given")
-	}
-
+func generateListOptions(cmd *cli.Command) *corepb.ListImageOptions {
 	return &corepb.ListImageOptions{
-		Podname:   podname,
-		Nodenames: nodename,
-		Filter:    filter,
-	}, nil
+		Podname:   cmd.String(flagPod),
+		Nodenames: cmd.StringSlice(flagNode),
+		Filter:    cmd.String("filter"),
+	}
 }
