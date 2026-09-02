@@ -23,7 +23,7 @@ type listPodNodesOptions struct {
 }
 
 func (o *listPodNodesOptions) run(ctx context.Context) error {
-	ch, wait, err := o.listChan(ctx, &corepb.ListNodesOptions{
+	stream, err := o.client.ListPodNodes(ctx, &corepb.ListNodesOptions{
 		Podname:         o.name,
 		All:             o.filter != up,
 		Labels:          o.labels,
@@ -33,20 +33,13 @@ func (o *listPodNodesOptions) run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+
+	ch, wait := utils.StreamToChan(stream.Recv)
 	if o.filter == down {
 		ch = downOnly(ch)
 	}
 	describe.NodesStream(ch, o.showInfo, o.stream)
 	return wait()
-}
-
-func (o *listPodNodesOptions) listChan(ctx context.Context, opt *corepb.ListNodesOptions) (<-chan *corepb.Node, func() error, error) {
-	stream, err := o.client.ListPodNodes(ctx, opt)
-	if err != nil {
-		return nil, nil, err
-	}
-	ch, wait := utils.StreamToChan(stream.Recv)
-	return ch, wait, nil
 }
 
 func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
