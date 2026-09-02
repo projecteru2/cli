@@ -124,3 +124,10 @@ func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 	}
 	return io.ReadAll(resp.Body)
 }
+
+func ReadSpecURI(ctx context.Context, uri string) ([]byte, error) {
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return GetSpecFromRemote(ctx, uri)
+	}
+	return os.ReadFile(uri) //nolint:gosec
+}

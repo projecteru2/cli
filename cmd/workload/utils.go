@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -41,15 +40,7 @@ func loadSpecs(ctx context.Context, cmd *cli.Command) (*types.Specs, error) {
 		return nil, errors.New("a spec must be given")
 	}
 
-	var (
-		data []byte
-		err  error
-	)
-	if strings.HasPrefix(specURI, "http://") || strings.HasPrefix(specURI, "https://") {
-		data, err = utils.GetSpecFromRemote(ctx, specURI)
-	} else {
-		data, err = os.ReadFile(specURI) //nolint:gosec
-	}
+	data, err := utils.ReadSpecURI(ctx, specURI)
 	if err != nil {
 		return nil, err
 	}
