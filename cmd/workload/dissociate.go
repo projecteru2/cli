@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -20,27 +21,17 @@ type dissociateWorkloadsOptions struct {
 
 func (o *dissociateWorkloadsOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("workload.dissociateWorkloadsOptions.run")
-	ids := make([]string, 0, len(o.ids))
-	seen := map[string]struct{}{}
-	appendID := func(id string) {
-		if _, ok := seen[id]; ok {
-			return
-		}
-		seen[id] = struct{}{}
-		ids = append(ids, id)
-	}
-	for _, id := range o.ids {
-		appendID(id)
-	}
+	ids := slices.Clone(o.ids)
 	for _, node := range o.nodes {
 		wrks, err := o.client.ListNodeWorkloads(ctx, &corepb.GetNodeOptions{Nodename: node})
 		if err != nil {
 			return err
 		}
 		for _, wrk := range wrks.Workloads {
-			appendID(wrk.Id)
+			ids = append(ids, wrk.Id)
 		}
 	}
+	ids = slices.Compact(slices.Sorted(slices.Values(ids)))
 	if len(ids) == 0 {
 		return errors.New("no workloads found")
 	}

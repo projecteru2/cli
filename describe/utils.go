@@ -21,17 +21,6 @@ const headerName = "Name"
 // Format selects the output format: json, yaml, or empty for a table.
 var Format string
 
-func ToChan[T any](items ...T) chan T {
-	ch := make(chan T)
-	go func() {
-		defer close(ch)
-		for _, item := range items {
-			ch <- item
-		}
-	}()
-	return ch
-}
-
 // ToResourcePercent reports node usage as a fraction of capacity, per resource.
 func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[string]float64, err error) {
 	var resUsage resourcetypes.Resources
@@ -197,18 +186,24 @@ func describeOr[T any](v T, fallback func(T)) {
 }
 
 func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
-	if !isJSON() && !isYAML() {
+	collect := func() []T {
+		items := []T{}
+		for t := range ch {
+			items = append(items, t)
+		}
+		return items
+	}
+	switch {
+	case isJSON():
+		describeAsJSON(collect())
+	case isYAML():
+		describeAsYAML(collect())
+	default:
 		fallback(ch)
-		return
 	}
-	items := []T{}
-	for t := range ch {
-		items = append(items, t)
-	}
-	describeOr(items, func([]T) {})
 }
 
-func renderTable(header []string, rows ...[]string) {
+func renderTable(header []string, groups ...[][]string) {
 	h := make(table.Row, len(header))
 	for i, name := range header {
 		h[i] = name
@@ -217,8 +212,10 @@ func renderTable(header []string, rows ...[]string) {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(h)
-	t.AppendRows(toTableRows(rows))
-	t.AppendSeparator()
+	for _, rows := range groups {
+		t.AppendRows(toTableRows(rows))
+		t.AppendSeparator()
+	}
 	t.SetStyle(table.StyleLight)
 	t.Render()
 }

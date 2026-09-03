@@ -4,13 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"maps"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	coreutils "github.com/projecteru2/core/utils"
@@ -49,11 +47,11 @@ func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
 }
 
 func describeStatistics(stat workloadStatistics) {
-	renderTable([]string{"CPUs", "Memory", "Storage"},
-		[]string{fmt.Sprintf("%f", stat.CPUs)},
-		[]string{strconv.FormatInt(stat.Memory, 10)},
-		[]string{strconv.FormatInt(stat.Storage, 10)},
-	)
+	renderTable([]string{"CPUs", "Memory", "Storage"}, [][]string{
+		{fmt.Sprintf("%f", stat.CPUs)},
+		{strconv.FormatInt(stat.Memory, 10)},
+		{strconv.FormatInt(stat.Storage, 10)},
+	})
 }
 
 func describeWorkloads(workloads []*corepb.Workload) {
@@ -63,15 +61,9 @@ func describeWorkloads(workloads []*corepb.Workload) {
 	}
 	names := pluginNames(resources)
 
-	header := []any{"Name/ID/Pod/Node/Privileged/CreateTime", "Networks"}
-	for _, name := range names {
-		header = append(header, name)
-	}
+	header := append([]string{"Name/ID/Pod/Node/Privileged/CreateTime", "Networks"}, names...)
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(header)
-
+	groups := make([][][]string, 0, len(workloads))
 	for i, c := range workloads {
 		rows := [][]string{
 			{c.Name, c.Id, c.Podname, c.Nodename, fmt.Sprintf("Privileged: %v", c.Privileged), time.Unix(c.CreateTime, 0).UTC().Format(time.RFC3339)},
@@ -80,12 +72,10 @@ func describeWorkloads(workloads []*corepb.Workload) {
 		for _, name := range names {
 			rows = append(rows, parseAll(resources[i][name]))
 		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
+		groups = append(groups, rows)
 	}
 
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable(header, groups...)
 }
 
 func workloadNetworks(workload *corepb.Workload) []string {
@@ -120,10 +110,7 @@ func workloadNetworks(workload *corepb.Workload) []string {
 }
 
 func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"ID", "Status", "Networks", "Extensions"})
-
+	groups := make([][][]string, 0, len(workloadStatuses))
 	for _, s := range workloadStatuses {
 		extensions := map[string]string{}
 		if len(s.Extension) != 0 {
@@ -132,16 +119,13 @@ func describeWorkloadStatuses(workloadStatuses []*corepb.WorkloadStatus) {
 			}
 		}
 
-		rows := [][]string{
+		groups = append(groups, [][]string{
 			{s.Id},
 			{fmt.Sprintf("Running: %v", s.Running), fmt.Sprintf("Healthy: %v", s.Healthy)},
 			sortedKVLines(s.Networks),
 			sortedKVLines(extensions),
-		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
+		})
 	}
 
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable([]string{"ID", "Status", "Networks", "Extensions"}, groups...)
 }

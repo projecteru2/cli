@@ -114,12 +114,7 @@ func doCreateWorkload(ctx context.Context, client corepb.CoreRPCClient, deployOp
 }
 
 func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOptions, error) {
-	specs, err := loadSpecs(ctx, cmd)
-	if err != nil {
-		return nil, err
-	}
-
-	entrypoint, err := entrypointOptions(specs, cmd.String(flagEntry))
+	opts, specs, err := baseDeployOptions(ctx, cmd)
 	if err != nil {
 		return nil, err
 	}
@@ -134,14 +129,7 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}
 
-	cpuRequest, cpuLimit := cpuOption(cmd)
-
-	cpumem := resourcetypes.RawParams{
-		flagCPURequest:    cpuRequest,
-		flagCPULimit:      cpuLimit,
-		flagMemoryRequest: memoryRequest,
-		flagMemoryLimit:   memoryLimit,
-	}
+	cpumem := cpumemParams(cmd, memoryRequest, memoryLimit)
 	if cmd.Bool("cpu-bind") {
 		cpumem["cpu-bind"] = true
 	}
@@ -153,41 +141,15 @@ func generateDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.Deplo
 		return nil, err
 	}
 
-	files, err := utils.GenerateFileOptions(cmd)
-	if err != nil {
-		return nil, err
-	}
-
 	deployStrategy, err := utils.ParseDeployStrategy(cmd.String("deploy-strategy"))
 	if err != nil {
 		return nil, err
 	}
 
-	return &corepb.DeployOptions{
-		Name:       specs.Appname,
-		Entrypoint: entrypoint,
-		Resources:  resources,
-		Podname:    cmd.String(flagPod),
-		NodeFilter: &corepb.NodeFilter{
-			Includes: cmd.StringSlice(flagNode),
-			Labels:   utils.SplitEquality(cmd.StringSlice("nodelabel")),
-		},
-		Image:          cmd.String(flagImage),
-		Count:          int32(cmd.Int("count")), //nolint:gosec
-		Env:            cmd.StringSlice(flagEnv),
-		Networks:       utils.GetNetworks(cmd.String(flagNetwork)),
-		Labels:         specs.Labels,
-		Dns:            specs.DNS,
-		ExtraHosts:     specs.ExtraHosts,
-		DeployStrategy: deployStrategy,
-		Data:           files.Data,
-		Modes:          files.Modes,
-		Owners:         files.Owners,
-		User:           cmd.String("user"),
-		Debug:          cmd.Bool("debug"),
-		NodesLimit:     int32(cmd.Int("nodes-limit")), //nolint:gosec
-		IgnoreHook:     cmd.Bool("ignore-hook"),
-		AfterCreate:    cmd.StringSlice("after-create"),
-		RawArgs:        []byte(cmd.String("raw-args")),
-	}, nil
+	opts.Resources = resources
+	opts.NodeFilter.Labels = utils.SplitEquality(cmd.StringSlice("nodelabel"))
+	opts.DeployStrategy = deployStrategy
+	opts.NodesLimit = int32(cmd.Int("nodes-limit")) //nolint:gosec
+	opts.RawArgs = []byte(cmd.String("raw-args"))
+	return opts, nil
 }

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -119,15 +118,7 @@ func generateBuildOptions(ctx context.Context, cmd *cli.Command) (*corepb.BuildI
 		specURI := cmd.Args().First()
 		log.WithFunc("image.generateBuildOptions").Debugf(ctx, "deploy %s", specURI)
 
-		var (
-			data []byte
-			err  error
-		)
-		if strings.HasPrefix(specURI, "http://") || strings.HasPrefix(specURI, "https://") {
-			data, err = utils.GetSpecFromRemote(ctx, specURI)
-		} else {
-			data, err = os.ReadFile(specURI) //nolint:gosec
-		}
+		data, err := utils.ReadSpecURI(ctx, specURI)
 		if err != nil {
 			return nil, fmt.Errorf("read spec: %w", err)
 		}

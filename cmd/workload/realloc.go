@@ -78,14 +78,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 		return nil, err
 	}
 
-	cpuRequest, cpuLimit := cpuOption(cmd)
-
-	cpumem := resourcetypes.RawParams{
-		flagCPURequest:    cpuRequest,
-		flagCPULimit:      cpuLimit,
-		flagMemoryRequest: memoryRequest,
-		flagMemoryLimit:   memoryLimit,
-	}
+	cpumem := cpumemParams(cmd, memoryRequest, memoryLimit)
 	switch {
 	case bindCPU:
 		cpumem["cpu-bind"] = true

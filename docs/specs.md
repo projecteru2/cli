@@ -10,7 +10,7 @@ their single positional argument.
 
 The build spec — and only the build spec — is rendered as a Go text template with the process
 environment as its data before parsing, so `{{.CI_COMMIT_SHA}}` expands to that environment
-variable. A name that is not set renders empty rather than failing.
+variable. A name that is not set renders the literal `<no value>` rather than failing.
 
 ## Deploy spec
 

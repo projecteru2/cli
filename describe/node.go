@@ -4,10 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
 
-	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -61,18 +59,12 @@ func renderNodes(showInfo bool, nodes ...*corepb.Node) {
 	}
 	names := pluginNames(capacities, usages)
 
-	header := []any{headerName, "Endpoint", "Status"}
-	for _, name := range names {
-		header = append(header, name)
-	}
+	header := append([]string{headerName, "Endpoint", "Status"}, names...)
 	if showInfo {
 		header = append(header, "Info")
 	}
 
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(header)
-
+	groups := make([][][]string, 0, len(nodes))
 	for i, node := range nodes {
 		status := "DOWN"
 		if !node.Bypass && node.Available {
@@ -87,12 +79,10 @@ func renderNodes(showInfo bool, nodes ...*corepb.Node) {
 		if showInfo {
 			rows = append(rows, []string{node.Info})
 		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
+		groups = append(groups, rows)
 	}
 
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable(header, groups...)
 }
 
 func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
@@ -121,28 +111,23 @@ func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeRes
 
 func renderNodeResources(ctx context.Context, resources ...*corepb.NodeResource) {
 	logger := log.WithFunc("describe.renderNodeResources")
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"})
+	groups := make([][][]string, 0, len(resources))
 	for _, resource := range resources {
 		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
 			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
 			continue
 		}
-		rows := [][]string{
+		groups = append(groups, [][]string{
 			{resource.Name},
 			{fmt.Sprintf("%.2f%%", cr["cpu"]*100)},
 			{fmt.Sprintf("%.2f%%", cr["memory"]*100)},
 			{fmt.Sprintf("%.2f%%", sr["storage"]*100)},
 			{fmt.Sprintf("%.2f%%", sr["volumes"]*100)},
 			{strings.Join(resource.Diffs, "\n")},
-		}
-		t.AppendRows(toTableRows(rows))
-		t.AppendSeparator()
+		})
 	}
-	t.SetStyle(table.StyleLight)
-	t.Render()
+	renderTable([]string{headerName, "Cpu", "Memory", "Storage", "Volume", "Diffs"}, groups...)
 }
 
 func describeNodeStatusMessage(ctx context.Context, ms []*corepb.NodeStatusStreamMessage) {

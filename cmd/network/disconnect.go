@@ -8,8 +8,6 @@ import (
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
-
-	"github.com/projecteru2/cli/cmd/utils"
 )
 
 type disconnectNetworkOptions struct {
@@ -35,19 +33,9 @@ func (o *disconnectNetworkOptions) run(ctx context.Context) error {
 }
 
 func cmdNetworkDisconnect(ctx context.Context, cmd *cli.Command) error {
-	client, err := utils.NewCoreRPCClient(ctx, cmd)
+	client, ids, network, err := networkTarget(ctx, cmd)
 	if err != nil {
 		return err
-	}
-
-	ids := cmd.Args().Slice()
-	if len(ids) == 0 {
-		return errors.New("workload id(s) must be specified")
-	}
-
-	network := cmd.String(flagNetwork)
-	if network == "" {
-		return errors.New("network must be specified")
 	}
 
 	o := &disconnectNetworkOptions{
