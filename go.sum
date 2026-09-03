@@ -48,8 +48,8 @@ github.com/pingcap/errors v0.11.4/go.mod h1:Oi8TUi2kEtXXLMJk9l1cGmz20kV3TaQ0usTw
 github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
-github.com/projecteru2/core v0.1.4-0.20260902141333-1026ce2f983e h1:7hrFOS8Wouf925kVJBcyYCNlshViBof918vxW1LmEuE=
-github.com/projecteru2/core v0.1.4-0.20260902141333-1026ce2f983e/go.mod h1:4WGV1OlU8TY0hra+N8Ua2s8hbX1AeJmcjnj3PcztnI4=
+github.com/projecteru2/core v0.1.4-0.20260903022120-11a0a292cfdf h1:mq6HLNvO1BYoMi5T3UXvkUPsy2WkJNxaygKOOij6O6Q=
+github.com/projecteru2/core v0.1.4-0.20260903022120-11a0a292cfdf/go.mod h1:4WGV1OlU8TY0hra+N8Ua2s8hbX1AeJmcjnj3PcztnI4=
 github.com/rivo/uniseg v0.2.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/rivo/uniseg v0.4.7 h1:WUdvkW8uEhrYfLC4ZzdpI2ztxP1I582+49Oc5Mq64VQ=
 github.com/rivo/uniseg v0.4.7/go.mod h1:FN3SvrM+Zdj16jyLfmOkMNblXMcoc8DfTHruCPUcx88=
