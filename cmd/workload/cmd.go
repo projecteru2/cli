@@ -32,8 +32,6 @@ const (
 	flagVolumesLimit   = "volumes-limit"
 )
 
-var stopOnFirstArg = 1
-
 // Command returns the workload command tree.
 func Command() *cli.Command {
 	return &cli.Command{
@@ -316,7 +314,7 @@ func Command() *cli.Command {
 				Name:         "exec",
 				Usage:        "run a command in a running workload",
 				ArgsUsage:    "workloadID -- cmd1 cmd2 cmd3",
-				StopOnNthArg: &stopOnFirstArg,
+				StopOnNthArg: new(1),
 				Action:       utils.ExitCoder(cmdWorkloadExec),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
