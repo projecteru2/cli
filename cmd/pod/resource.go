@@ -39,8 +39,8 @@ func (o *resourcePodOptions) filter(ctx context.Context, ch <-chan *corepb.NodeR
 		value   = filter["value"]
 		percent bool
 	)
-	if strings.HasSuffix(value, "%") {
-		value = value[:len(value)-1]
+	if v, ok := strings.CutSuffix(value, "%"); ok {
+		value = v
 		percent = true
 	}
 
