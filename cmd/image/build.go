@@ -33,7 +33,6 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 
 	interactive := term.IsTerminal(int(os.Stdout.Fd()))
 	progress := map[string]int{}
-	p := 0
 	for {
 		msg, err := resp.Recv()
 		if errors.Is(err, io.EOF) {
@@ -50,7 +49,6 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			fmt.Print(msg.Stream)
 			if msg.Status == "finished" {
 				clear(progress)
-				p = 0
 			}
 		case msg.Status != "":
 			if msg.Id == "" {
@@ -58,11 +56,10 @@ func (o *buildImageOptions) run(ctx context.Context) error {
 			} else {
 				data := fmt.Sprintf("%s: %s %s", msg.Id, msg.Status, msg.Progress)
 				if pos, ok := progress[msg.Id]; !ok {
-					progress[msg.Id] = p
+					progress[msg.Id] = len(progress)
 					fmt.Println(data)
-					p++
 				} else if interactive {
-					fmt.Printf(progressRewrite, p-pos, data)
+					fmt.Printf(progressRewrite, len(progress)-pos, data)
 				} else {
 					fmt.Println(data)
 				}

@@ -13,20 +13,13 @@ import (
 )
 
 type cacheImageOptions struct {
-	client    corepb.CoreRPCClient
-	images    []string
-	podname   string
-	nodenames []string
+	client corepb.CoreRPCClient
+	opts   *corepb.CacheImageOptions
 }
 
 func (o *cacheImageOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("image.cacheImageOptions.run")
-	opts := &corepb.CacheImageOptions{
-		Images:    o.images,
-		Podname:   o.podname,
-		Nodenames: o.nodenames,
-	}
-	resp, err := o.client.CacheImage(ctx, opts)
+	resp, err := o.client.CacheImage(ctx, o.opts)
 	if err != nil {
 		return err
 	}
@@ -52,10 +45,12 @@ func cmdImageCache(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	o := &cacheImageOptions{
-		client:    client,
-		images:    images,
-		podname:   cmd.String(flagPod),
-		nodenames: cmd.StringSlice(flagNode),
+		client: client,
+		opts: &corepb.CacheImageOptions{
+			Images:    images,
+			Podname:   cmd.String(flagPod),
+			Nodenames: cmd.StringSlice(flagNode),
+		},
 	}
 	return o.run(ctx)
 }

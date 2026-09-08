@@ -114,7 +114,7 @@ func TestCacheImageReportsFailureReason(t *testing.T) {
 		client: &fakeImageClient{cache: &fakeStream[corepb.CacheImageMessage]{msgs: []*corepb.CacheImageMessage{
 			{Image: "app:v1", Nodename: "node1", Success: false, Message: "no such image"},
 		}}},
-		images: []string{"app:v1"},
+		opts: &corepb.CacheImageOptions{Images: []string{"app:v1"}},
 	}
 
 	err := o.run(t.Context())
@@ -128,7 +128,7 @@ func TestRemoveImageReportsFailure(t *testing.T) {
 		client: &fakeImageClient{remove: &fakeStream[corepb.RemoveImageMessage]{msgs: []*corepb.RemoveImageMessage{
 			{Image: "app:v1", Success: false},
 		}}},
-		images: []string{"app:v1"},
+		opts: &corepb.RemoveImageOptions{Images: []string{"app:v1"}},
 	}
 
 	err := o.run(t.Context())
@@ -168,14 +168,14 @@ func TestImageCommandsPassANodeOnlyRequestThrough(t *testing.T) {
 		{
 			name: "cache",
 			run: func(ctx context.Context, c *fakeImageClient) error {
-				o := &cacheImageOptions{client: c, images: []string{"app:v1"}, nodenames: []string{"node1"}}
+				o := &cacheImageOptions{client: c, opts: &corepb.CacheImageOptions{Images: []string{"app:v1"}, Nodenames: []string{"node1"}}}
 				return o.run(ctx)
 			},
 		},
 		{
 			name: "remove",
 			run: func(ctx context.Context, c *fakeImageClient) error {
-				o := &removeImageOptions{client: c, images: []string{"app:v1"}, nodenames: []string{"node1"}}
+				o := &removeImageOptions{client: c, opts: &corepb.RemoveImageOptions{Images: []string{"app:v1"}, Nodenames: []string{"node1"}}}
 				return o.run(ctx)
 			},
 		},

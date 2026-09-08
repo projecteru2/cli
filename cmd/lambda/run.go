@@ -19,7 +19,6 @@ var newline = []byte{'\n'}
 type runLambdaOptions struct {
 	client          corepb.CoreRPCClient
 	opts            *corepb.RunAndWaitOptions
-	stdin           bool
 	printWorkloadID bool
 }
 
@@ -52,7 +51,7 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 		_ = iStream.Send(newline)
 	}()
 
-	exitCount, stdin := int(o.opts.GetDeployOptions().GetCount()), o.stdin
+	exitCount, stdin := int(o.opts.GetDeployOptions().GetCount()), o.opts.GetDeployOptions().GetOpenStdin()
 	if o.opts.Async {
 		exitCount, stdin = 0, false
 	}
@@ -73,7 +72,6 @@ func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
 	o := &runLambdaOptions{
 		client:          client,
 		opts:            opts,
-		stdin:           cmd.Bool("stdin"),
 		printWorkloadID: cmd.Bool("workload-id"),
 	}
 	return o.run(ctx)
