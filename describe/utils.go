@@ -11,6 +11,7 @@ import (
 	"github.com/jedib0t/go-pretty/v6/table"
 	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
+	coreutils "github.com/projecteru2/core/utils"
 	"sigs.k8s.io/yaml"
 
 	"github.com/projecteru2/cli/cmd/utils"
@@ -37,21 +38,14 @@ func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[strin
 	storageCap := resCap[utils.ResourceStorage]
 	cr, sr := map[string]float64{}, map[string]float64{}
 	if cpumemUsage != nil && cpumemCap != nil {
-		cr["cpu"] = ratio(cpumemUsage.Float64("cpu"), cpumemCap.Float64("cpu"))
-		cr["memory"] = ratio(cpumemUsage.Float64("memory"), cpumemCap.Float64("memory"))
+		cr["cpu"] = coreutils.AdvancedDivide(cpumemUsage.Float64("cpu"), cpumemCap.Float64("cpu"))
+		cr["memory"] = coreutils.AdvancedDivide(cpumemUsage.Float64("memory"), cpumemCap.Float64("memory"))
 	}
 	if storageUsage != nil && storageCap != nil {
-		sr["storage"] = ratio(storageUsage.Float64("storage"), storageCap.Float64("storage"))
-		sr["volumes"] = ratio(sumParams(storageUsage.RawParams("volumes")), sumParams(storageCap.RawParams("volumes")))
+		sr["storage"] = coreutils.AdvancedDivide(storageUsage.Float64("storage"), storageCap.Float64("storage"))
+		sr["volumes"] = coreutils.AdvancedDivide(sumParams(storageUsage.RawParams("volumes")), sumParams(storageCap.RawParams("volumes")))
 	}
 	return cr, sr, nil
-}
-
-func ratio(usage, capacity float64) float64 {
-	if capacity == 0 {
-		return 0
-	}
-	return usage / capacity
 }
 
 func sumParams(params resourcetypes.RawParams) float64 {

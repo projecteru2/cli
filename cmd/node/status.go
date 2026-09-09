@@ -21,13 +21,12 @@ type setNodeStatusOptions struct {
 }
 
 func (o *setNodeStatusOptions) run(ctx context.Context) error {
-	err := o.heartbeat(ctx)
 	if o.interval == 0 {
-		return err
+		return o.heartbeat(ctx)
 	}
 
 	logger := log.WithFunc("node.setNodeStatusOptions.run")
-	logger.Error(ctx, err, "heartbeat")
+	logger.Error(ctx, o.heartbeat(ctx), "heartbeat")
 	ticker := time.NewTicker(time.Duration(o.interval) * time.Second)
 	defer ticker.Stop()
 
