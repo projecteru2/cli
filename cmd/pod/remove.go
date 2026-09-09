@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"errors"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -34,14 +33,9 @@ func cmdPodRemove(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("pod name must be given")
-	}
-
 	o := &removePodOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argPod)[0],
 	}
 	return o.run(ctx)
 }

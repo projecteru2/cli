@@ -31,14 +31,9 @@ func cmdWorkloadGetStatus(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	ids, err := argIDs(cmd)
-	if err != nil {
-		return err
-	}
-
 	o := &getWorkloadsStatusOptions{
 		client: client,
-		ids:    ids,
+		ids:    cmd.StringArgs(argWorkload),
 	}
 	return o.run(ctx)
 }
@@ -83,14 +78,9 @@ func cmdWorkloadSetStatus(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	ids, err := argIDs(cmd)
-	if err != nil {
-		return err
-	}
-
 	o := &setWorkloadsStatusOptions{
 		client:    client,
-		ids:       ids,
+		ids:       cmd.StringArgs(argWorkload),
 		running:   cmd.Bool("running"),
 		healthy:   cmd.Bool("healthy"),
 		ttl:       cmd.Int64("ttl"),

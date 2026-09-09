@@ -119,7 +119,6 @@ func TestGenerateDeployOptionsErrors(t *testing.T) {
 		name string
 		args []string
 	}{
-		{name: "no spec", args: []string{"workload", "deploy", "--entry", "release"}},
 		{name: "unknown entry", args: []string{"workload", "deploy", "--entry", "nope", spec}},
 		{name: "bad memory", args: []string{"workload", "deploy", "--entry", "release", "--memory", "abc", spec}},
 		{name: "bad storage", args: []string{"workload", "deploy", "--entry", "release", "--storage", "abc", spec}},
@@ -140,6 +139,17 @@ func TestGenerateDeployOptionsErrors(t *testing.T) {
 				t.Fatalf("run: %v", err)
 			}
 		})
+	}
+}
+
+func TestDeployRequiresASpec(t *testing.T) {
+	c := Command()
+	lookupSubcommand(t, c, "deploy").Action = func(context.Context, *cli.Command) error {
+		t.Error("the action ran without a spec argument")
+		return nil
+	}
+	if err := c.Run(t.Context(), []string{"workload", "deploy", "--entry", "release"}); err == nil {
+		t.Error("got nil, want an error for a missing spec argument")
 	}
 }
 

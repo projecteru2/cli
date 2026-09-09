@@ -7,6 +7,7 @@ import (
 )
 
 const (
+	argPod       = "pod"
 	podArgsUsage = "pod name"
 
 	up   = "up"
@@ -32,7 +33,7 @@ func Command() *cli.Command {
 			{
 				Name:      "add",
 				Usage:     "add new pod",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodAdd),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -44,13 +45,13 @@ func Command() *cli.Command {
 			{
 				Name:      "remove",
 				Usage:     "remove pod",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodRemove),
 			},
 			{
 				Name:      "resource",
 				Usage:     "pod resource usage",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodResource),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -67,7 +68,7 @@ func Command() *cli.Command {
 			{
 				Name:      "capacity",
 				Usage:     "pod remained capacity",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodCapacity),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
@@ -103,7 +104,7 @@ func Command() *cli.Command {
 			{
 				Name:      "nodes",
 				Usage:     "list all nodes in one pod",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodListNodes),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -134,7 +135,7 @@ func Command() *cli.Command {
 			{
 				Name:      "networks",
 				Usage:     "list all networks in one pod",
-				ArgsUsage: podArgsUsage,
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdPodListNetworks),
 				Flags: []cli.Flag{
 					&cli.StringFlag{

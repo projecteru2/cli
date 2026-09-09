@@ -25,3 +25,8 @@ func ForceFlag(usage string) *cli.BoolFlag {
 		Aliases: []string{"f"},
 	}
 }
+
+// Positional declares one required positional argument, max -1 for an unlimited list.
+func Positional(name, usage string, max int) []cli.Argument {
+	return []cli.Argument{&cli.StringArgs{Name: name, UsageText: usage, Min: 1, Max: max}}
+}

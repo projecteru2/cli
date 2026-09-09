@@ -3,7 +3,6 @@ package pod
 import (
 	"context"
 	"crypto/rand"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -50,11 +49,6 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("pod name must be given")
-	}
-
 	resources, err := capacityResources(cmd)
 	if err != nil {
 		return err
@@ -62,7 +56,7 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 
 	o := &capacityPodOptions{
 		client:    client,
-		podname:   name,
+		podname:   cmd.StringArgs(argPod)[0],
 		nodenames: cmd.StringSlice("node"),
 		resources: resources,
 	}

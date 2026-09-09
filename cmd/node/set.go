@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 
 	"github.com/projecteru2/core/log"
 	resourcetypes "github.com/projecteru2/core/resource/types"
@@ -45,11 +44,6 @@ func cmdNodeSet(ctx context.Context, cmd *cli.Command) error {
 }
 
 func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
-	name := cmd.Args().First()
-	if name == "" {
-		return nil, errors.New("node name must be given")
-	}
-
 	cpumem, storage := collectResourceParams(cmd)
 	if cmd.IsSet("cpu") {
 		cpumem["cpu"] = cmd.String("cpu")
@@ -67,7 +61,7 @@ func generateSetNodeOptions(cmd *cli.Command) (*corepb.SetNodeOptions, error) {
 	}
 
 	return &corepb.SetNodeOptions{
-		Nodename:      name,
+		Nodename:      cmd.StringArgs(argNode)[0],
 		Resources:     resources,
 		Labels:        utils.SplitEquality(cmd.StringSlice(flagLabel)),
 		WorkloadsDown: cmd.Bool("mark-workloads-down"),

@@ -49,14 +49,9 @@ func cmdWorkloadControl(action string) cli.ActionFunc {
 			return err
 		}
 
-		ids, err := argIDs(cmd)
-		if err != nil {
-			return err
-		}
-
 		o := &controlWorkloadsOptions{
 			client: client,
-			ids:    ids,
+			ids:    cmd.StringArgs(argWorkload),
 			action: action,
 			force:  cmd.Bool(utils.FlagForce),
 		}

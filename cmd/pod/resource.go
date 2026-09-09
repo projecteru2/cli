@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -43,11 +42,6 @@ func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("pod name must be given")
-	}
-
 	keep, err := parseFilter(cmd.String("filter"))
 	if err != nil {
 		return err
@@ -55,7 +49,7 @@ func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
 
 	o := &resourcePodOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argPod)[0],
 		keep:   keep,
 		stream: cmd.Bool("stream"),
 	}

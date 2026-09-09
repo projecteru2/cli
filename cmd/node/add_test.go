@@ -82,14 +82,12 @@ func TestGenerateAddNodeOptionsRequiresEndpoint(t *testing.T) {
 
 func TestGenerateAddNodeOptionsWithoutPod(t *testing.T) {
 	c := Command()
-	lookupSubcommand(t, c, "add").Action = func(_ context.Context, cmd *cli.Command) error {
-		if _, err := generateAddNodeOptions(cmd); err == nil {
-			t.Error("got nil, want an error for node add without a pod")
-		}
+	lookupSubcommand(t, c, "add").Action = func(context.Context, *cli.Command) error {
+		t.Error("the action ran without a pod argument")
 		return nil
 	}
-	if err := c.Run(t.Context(), []string{"node", "add"}); err != nil {
-		t.Fatalf("run: %v", err)
+	if err := c.Run(t.Context(), []string{"node", "add"}); err == nil {
+		t.Error("got nil, want an error for node add without a pod")
 	}
 }
 
