@@ -58,7 +58,7 @@ func (o *statusOptions) run(ctx context.Context) error {
 		case !msg.Status.Healthy:
 			logger.Warnf(ctx, "[%s] %s on %s is unhealthy", coreutils.ShortID(msg.Id), msg.Workload.Name, msg.Workload.Nodename)
 		default:
-			logger.Infof(ctx, "[%s] %s back to life", coreutils.ShortID(msg.Workload.Id), msg.Workload.Name)
+			logger.Infof(ctx, "[%s] %s back to life", coreutils.ShortID(msg.Id), msg.Workload.Name)
 			for networkName, addrs := range msg.Workload.Publish {
 				logger.Infof(ctx, "[%s] published at %s bind %v", coreutils.ShortID(msg.Id), networkName, addrs)
 			}

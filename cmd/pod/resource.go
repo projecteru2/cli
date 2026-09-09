@@ -8,7 +8,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 
@@ -21,54 +20,8 @@ var filterExpr = regexp.MustCompile(`^\s*(?P<name>cpu|memory|storage|volume)\s*(
 type resourcePodOptions struct {
 	client corepb.CoreRPCClient
 	name   string
-	expr   string
+	keep   describe.NodeResourceFilter
 	stream bool
-}
-
-func (o *resourcePodOptions) filter(ctx context.Context, ch <-chan *corepb.NodeResource) (<-chan *corepb.NodeResource, error) {
-	if o.expr == "" {
-		return ch, nil
-	}
-
-	filter := match(o.expr)
-	if len(filter) == 0 {
-		return nil, fmt.Errorf("invalid filter %q, want one of cpu/memory/storage/volume with an operator and a value", o.expr)
-	}
-
-	var (
-		value   = filter["value"]
-		percent bool
-	)
-	if v, ok := strings.CutSuffix(value, "%"); ok {
-		value = v
-		percent = true
-	}
-
-	v, err := strconv.ParseFloat(value, 64)
-	if err != nil {
-		return nil, err
-	}
-	if percent {
-		v /= 100
-	}
-
-	rv := make(chan *corepb.NodeResource)
-	go func() {
-		defer close(rv)
-		logger := log.WithFunc("pod.resourcePodOptions.filter")
-		for nr := range ch {
-			l, err := attr(nr, filter["name"])
-			if err != nil {
-				logger.Errorf(ctx, err, "resource percent of node %s", nr.Name)
-				continue
-			}
-			if !compare(filter["op"], l, v) {
-				continue
-			}
-			rv <- nr
-		}
-	}()
-	return rv, nil
 }
 
 func (o *resourcePodOptions) run(ctx context.Context) error {
@@ -80,12 +33,7 @@ func (o *resourcePodOptions) run(ctx context.Context) error {
 	}
 
 	ch, wait := utils.StreamToChan(resp.Recv)
-	resChan, err := o.filter(ctx, ch)
-	if err != nil {
-		return err
-	}
-
-	describe.NodeResources(ctx, resChan, o.stream)
+	describe.NodeResources(ctx, ch, o.stream, o.keep)
 	return wait()
 }
 
@@ -100,13 +48,43 @@ func cmdPodResource(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("pod name must be given")
 	}
 
+	keep, err := parseFilter(cmd.String("filter"))
+	if err != nil {
+		return err
+	}
+
 	o := &resourcePodOptions{
 		client: client,
 		name:   name,
-		expr:   cmd.String("filter"),
+		keep:   keep,
 		stream: cmd.Bool("stream"),
 	}
 	return o.run(ctx)
+}
+
+func parseFilter(expr string) (describe.NodeResourceFilter, error) {
+	if expr == "" {
+		return nil, nil
+	}
+
+	filter := match(expr)
+	if len(filter) == 0 {
+		return nil, fmt.Errorf("invalid filter %q, want one of cpu/memory/storage/volume with an operator and a value", expr)
+	}
+
+	value, percent := strings.CutSuffix(filter["value"], "%")
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return nil, err
+	}
+	if percent {
+		v /= 100
+	}
+
+	name, op := filter["name"], filter["op"]
+	return func(cpumem, storage map[string]float64) bool {
+		return compare(op, attr(cpumem, storage, name), v)
+	}, nil
 }
 
 func match(s string) map[string]string {
@@ -137,21 +115,17 @@ func compare(operator string, left, right float64) bool {
 	}
 }
 
-func attr(nr *corepb.NodeResource, name string) (float64, error) {
-	cr, sr, err := describe.ToResourcePercent(nr)
-	if err != nil {
-		return 0, err
-	}
+func attr(cpumem, storage map[string]float64, name string) float64 {
 	switch name {
 	case flagCPU:
-		return cr[flagCPU], nil
+		return cpumem[flagCPU]
 	case flagMemory:
-		return cr[flagMemory], nil
+		return cpumem[flagMemory]
 	case flagStorage:
-		return sr[flagStorage], nil
+		return storage[flagStorage]
 	case "volume":
-		return sr["volumes"], nil
+		return storage["volumes"]
 	default:
-		return 0, nil
+		return 0
 	}
 }

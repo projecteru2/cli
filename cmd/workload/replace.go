@@ -38,6 +38,11 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	copies, err := utils.SplitFiles(cmd.StringSlice("copy"))
+	if err != nil {
+		return err
+	}
+
 	networkInherit := cmd.Bool("network-inherit")
 	if len(opts.Networks) > 0 {
 		log.WithFunc("workload.cmdWorkloadReplace").Warn(ctx, "network is not empty, so network-inherit is set to false")
@@ -46,7 +51,7 @@ func cmdWorkloadReplace(ctx context.Context, cmd *cli.Command) error {
 	o := &replaceWorkloadsOptions{
 		client:         client,
 		opts:           opts,
-		copies:         utils.SplitFiles(cmd.StringSlice("copy")),
+		copies:         copies,
 		labels:         utils.SplitEquality(cmd.StringSlice("label")),
 		networkInherit: networkInherit,
 	}

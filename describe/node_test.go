@@ -157,11 +157,31 @@ func TestNodeResources(t *testing.T) {
 			Format = tt.format
 			t.Cleanup(func() { Format = "" })
 
-			got := captureStdout(t, func() { NodeResources(t.Context(), ToChan(testNodeResources()...), false) })
+			got := captureStdout(t, func() { NodeResources(t.Context(), ToChan(testNodeResources()...), false, nil) })
 			if got != tt.want {
 				t.Errorf("got\n%s\nwant\n%s", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestNodeResourcesKeepsOnlyMatchingNodes(t *testing.T) {
+	resources := []*corepb.NodeResource{
+		{Name: "unparsable", ResourceUsage: "{"},
+		{Name: "idle", ResourceUsage: `{"cpumem":{"cpu":1}}`, ResourceCapacity: `{"cpumem":{"cpu":8}}`},
+		{Name: "busy", ResourceUsage: `{"cpumem":{"cpu":6}}`, ResourceCapacity: `{"cpumem":{"cpu":8}}`},
+	}
+	keep := func(cpumem, _ map[string]float64) bool { return cpumem["cpu"] > 0.5 }
+
+	want := `┌──────┬────────┬────────┬─────────┬────────┬───────┐
+│ NAME │ CPU    │ MEMORY │ STORAGE │ VOLUME │ DIFFS │
+├──────┼────────┼────────┼─────────┼────────┼───────┤
+│ busy │ 75.00% │ 0.00%  │ 0.00%   │ 0.00%  │       │
+└──────┴────────┴────────┴─────────┴────────┴───────┘
+`
+	got := captureStdout(t, func() { NodeResources(t.Context(), ToChan(resources...), false, keep) })
+	if got != want {
+		t.Errorf("got\n%s\nwant\n%s", got, want)
 	}
 }
 

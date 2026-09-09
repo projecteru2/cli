@@ -96,20 +96,26 @@ func ReadAllFiles(files []string) (map[string]*types.LinuxFile, error) {
 }
 
 // SplitFiles turns a list of src:dst strings into a map.
-func SplitFiles(files []string) map[string]string {
+func SplitFiles(files []string) (map[string]string, error) {
 	ret := map[string]string{}
 	for _, f := range files {
-		ps := strings.Split(f, ":")
-		if len(ps) < 2 {
-			continue
+		src, dst, ok := strings.Cut(f, ":")
+		if !ok || strings.Contains(dst, ":") {
+			return nil, fmt.Errorf("invalid file %q, want src:dst", f)
 		}
-		ret[ps[0]] = ps[1]
+		ret[src] = dst
 	}
-	return ret
+	return ret, nil
 }
 
-// GetSpecFromRemote fetches a spec over HTTP.
-func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
+func ReadSpecURI(ctx context.Context, uri string) ([]byte, error) {
+	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
+		return getSpecFromRemote(ctx, uri)
+	}
+	return os.ReadFile(uri) //nolint:gosec
+}
+
+func getSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, uri, nil)
 	if err != nil {
 		return nil, err
@@ -123,11 +129,4 @@ func GetSpecFromRemote(ctx context.Context, uri string) ([]byte, error) {
 		return nil, fmt.Errorf("fetch %s: %s", uri, resp.Status)
 	}
 	return io.ReadAll(resp.Body)
-}
-
-func ReadSpecURI(ctx context.Context, uri string) ([]byte, error) {
-	if strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://") {
-		return GetSpecFromRemote(ctx, uri)
-	}
-	return os.ReadFile(uri) //nolint:gosec
 }

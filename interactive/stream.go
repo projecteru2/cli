@@ -131,12 +131,11 @@ func attachTerminal(ctx context.Context, iStream Stream) func() {
 	ctx, cancel := context.WithCancel(ctx)
 
 	state, err := term.MakeRaw(stdinFd)
+	go pumpStdin(ctx, iStream)
 	if err != nil {
 		// stdin is a pipe or a file: no raw mode and no window size to report.
-		go pumpStdin(ctx, iStream)
 		return cancel
 	}
-	go pumpStdin(ctx, iStream)
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGWINCH)

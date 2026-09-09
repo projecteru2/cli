@@ -48,6 +48,11 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
+	name := cmd.Args().First()
+	if name == "" {
+		return errors.New("pod name must be given")
+	}
+
 	filter := strings.ToLower(cmd.String("filter"))
 	if filter != up && filter != down && filter != all {
 		return errors.New("filter should be one of up/down/all")
@@ -55,7 +60,7 @@ func cmdPodListNodes(ctx context.Context, cmd *cli.Command) error {
 
 	o := &listPodNodesOptions{
 		client:          client,
-		name:            cmd.Args().First(),
+		name:            name,
 		filter:          filter,
 		labels:          utils.SplitEquality(cmd.StringSlice("label")),
 		timeoutInSecond: int32(cmd.Int("timeout")), //nolint:gosec

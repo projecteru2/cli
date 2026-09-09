@@ -58,7 +58,7 @@ func cmdWorkloadControl(action string) cli.ActionFunc {
 			client: client,
 			ids:    ids,
 			action: action,
-			force:  cmd.Bool(flagForce),
+			force:  cmd.Bool(utils.FlagForce),
 		}
 		return o.run(ctx)
 	}

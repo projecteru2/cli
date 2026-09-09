@@ -128,17 +128,18 @@ func baseDeployOptions(ctx context.Context, cmd *cli.Command) (*corepb.DeployOpt
 }
 
 func ramOption(cmd *cli.Command, request, limit, shortcut string) (int64, int64, error) {
-	req, err := utils.ParseRAMInHuman(cmd.String(request))
-	if err != nil {
-		return 0, 0, err
-	}
-	lim, err := utils.ParseRAMInHuman(cmd.String(limit))
-	if err != nil {
-		return 0, 0, err
-	}
 	if cmd.IsSet(shortcut) {
-		both, err := utils.ParseRAMInHuman(cmd.String(shortcut))
+		both, err := resourcetypes.ParseRAMInHuman(cmd.String(shortcut))
 		return both, both, err
+	}
+
+	req, err := resourcetypes.ParseRAMInHuman(cmd.String(request))
+	if err != nil {
+		return 0, 0, err
+	}
+	lim, err := resourcetypes.ParseRAMInHuman(cmd.String(limit))
+	if err != nil {
+		return 0, 0, err
 	}
 	return req, lim, nil
 }

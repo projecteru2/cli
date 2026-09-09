@@ -5,7 +5,6 @@ import (
 	"slices"
 	"testing"
 
-	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 )
 
@@ -82,10 +81,8 @@ func TestCompare(t *testing.T) {
 }
 
 func TestAttr(t *testing.T) {
-	nr := &corepb.NodeResource{
-		ResourceUsage:    `{"cpumem":{"cpu":2,"memory":512},"resource-storage":{"storage":50,"volumes":{"/data":10}}}`,
-		ResourceCapacity: `{"cpumem":{"cpu":8,"memory":2048},"resource-storage":{"storage":200,"volumes":{"/data":40}}}`,
-	}
+	cpumem := map[string]float64{flagCPU: 0.25, flagMemory: 0.25}
+	storage := map[string]float64{flagStorage: 0.25, "volumes": 0.25}
 
 	tests := []struct {
 		name string
@@ -101,11 +98,7 @@ func TestAttr(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := attr(nr, tt.attr)
-			if err != nil {
-				t.Fatalf("attr: %v", err)
-			}
-			if got != tt.want {
+			if got := attr(cpumem, storage, tt.attr); got != tt.want {
 				t.Errorf("got %v, want %v", got, tt.want)
 			}
 		})

@@ -147,11 +147,11 @@ storage: 2048
 			workloads: []*corepb.Workload{
 				{Resources: `{"cpumem":{"cpu_request":1.5,"memory_request":1024},"resource-storage":{"storage_request":2048}}`},
 			},
-			want: `┌──────────┬────────┬─────────┐
-│ CPUS     │ MEMORY │ STORAGE │
-├──────────┼────────┼─────────┤
-│ 1.500000 │ 1024   │ 2048    │
-└──────────┴────────┴─────────┘
+			want: `┌──────┬────────┬─────────┐
+│ CPUS │ MEMORY │ STORAGE │
+├──────┼────────┼─────────┤
+│ 1.5  │ 1024   │ 2048    │
+└──────┴────────┴─────────┘
 `,
 		},
 	}

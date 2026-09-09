@@ -32,7 +32,6 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 	defer cancel()
 	stream, err := o.client.SendLargeFile(ctx)
 	if err != nil {
-		logger.Errorf(ctx, err, "send %s failed", o.dst)
 		return err
 	}
 
@@ -68,7 +67,6 @@ func (o *sendLargeWorkloadsOptions) run(ctx context.Context) error {
 			Owner: o.owners,
 			Chunk: chunk[:n],
 		}); err != nil {
-			logger.Errorf(ctx, err, "send %s failed", o.dst)
 			wg.Wait()
 			if errors.Is(err, io.EOF) {
 				err = nil
