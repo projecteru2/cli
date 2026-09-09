@@ -66,7 +66,7 @@ func (o *copyWorkloadsOptions) run(ctx context.Context) error {
 
 	for filename, content := range files {
 		storePath := filepath.Join(o.dir, filename)
-		f, err := os.OpenFile(storePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
+		f, err := os.OpenFile(storePath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600) //nolint:gosec
 		if err != nil {
 			if errors.Is(err, os.ErrExist) {
 				err = fmt.Errorf("%s already exists", storePath)
