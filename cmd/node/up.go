@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 
 	"github.com/projecteru2/core/log"
 	corepb "github.com/projecteru2/core/rpc/gen"
@@ -34,14 +33,9 @@ func cmdNodeSetUp(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("node name must be given")
-	}
-
 	o := &setNodeUpOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argNode)[0],
 	}
 	return o.run(ctx)
 }

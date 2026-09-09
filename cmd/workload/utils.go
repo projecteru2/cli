@@ -15,14 +15,6 @@ import (
 	"github.com/projecteru2/cli/types"
 )
 
-func argIDs(cmd *cli.Command) ([]string, error) {
-	ids := cmd.Args().Slice()
-	if len(ids) == 0 {
-		return nil, errors.New("workload id(s) should not be empty")
-	}
-	return ids, nil
-}
-
 func validateDeployFlags(cmd *cli.Command, keys ...string) error {
 	for _, key := range keys {
 		if cmd.String(key) == "" {
@@ -36,12 +28,7 @@ func validateDeployFlags(cmd *cli.Command, keys ...string) error {
 }
 
 func loadSpecs(ctx context.Context, cmd *cli.Command) (*types.Specs, error) {
-	specURI := cmd.Args().First()
-	if specURI == "" {
-		return nil, errors.New("a spec must be given")
-	}
-
-	data, err := utils.ReadSpecURI(ctx, specURI)
+	data, err := utils.ReadSpecURI(ctx, cmd.StringArgs(argSpec)[0])
 	if err != nil {
 		return nil, err
 	}

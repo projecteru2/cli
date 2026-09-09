@@ -50,11 +50,6 @@ func cmdWorkloadRealloc(ctx context.Context, cmd *cli.Command) error {
 }
 
 func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
-	id := cmd.Args().First()
-	if id == "" {
-		return nil, errors.New("workload id must be given")
-	}
-
 	memoryRequest, memoryLimit, err := ramOption(cmd, flagMemoryRequest, flagMemoryLimit, "memory")
 	if err != nil {
 		return nil, err
@@ -95,7 +90,7 @@ func generateReallocOptions(cmd *cli.Command) (*corepb.ReallocOptions, error) {
 	}
 
 	return &corepb.ReallocOptions{
-		Id:        id,
+		Id:        cmd.StringArgs(argWorkload)[0],
 		Resources: resources,
 	}, nil
 }

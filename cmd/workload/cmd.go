@@ -9,6 +9,9 @@ import (
 )
 
 const (
+	argSpec     = "spec"
+	argWorkload = "workload"
+
 	workloadArgsUsage = "workloadID(s)"
 	specFileURI       = "<spec file uri>"
 	copyArgsUsage     = "workloadID:path1,path2,...,pathn"
@@ -41,7 +44,7 @@ func Command() *cli.Command {
 			{
 				Name:      "get",
 				Usage:     "get workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadGet),
 			},
 			{
@@ -73,13 +76,13 @@ func Command() *cli.Command {
 			{
 				Name:      "get-status",
 				Usage:     "get workload status",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadGetStatus),
 			},
 			{
 				Name:      "set-status",
 				Usage:     "set workload status",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "running",
@@ -148,7 +151,7 @@ func Command() *cli.Command {
 			{
 				Name:      "stop",
 				Usage:     "stop workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStop)),
 				Flags: []cli.Flag{
 					utils.ForceFlag("force to stop"),
@@ -157,7 +160,7 @@ func Command() *cli.Command {
 			{
 				Name:      "start",
 				Usage:     "start workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStart)),
 				Flags: []cli.Flag{
 					utils.ForceFlag("force to start"),
@@ -166,7 +169,7 @@ func Command() *cli.Command {
 			{
 				Name:      "restart",
 				Usage:     "restart workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadRestart)),
 				Flags: []cli.Flag{
 					utils.ForceFlag("force to restart"),
@@ -175,7 +178,7 @@ func Command() *cli.Command {
 			{
 				Name:      "remove",
 				Usage:     "remove workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadRemove),
 				Flags: []cli.Flag{
 					utils.ForceFlag("force to remove"),
@@ -198,7 +201,7 @@ func Command() *cli.Command {
 			{
 				Name:      "send",
 				Usage:     "send file(s) to workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadSend),
 				Flags: []cli.Flag{
 					utils.FileFlag("copy local files into the workloads, repeatable"),
@@ -207,7 +210,7 @@ func Command() *cli.Command {
 			{
 				Name:      "sendlarge",
 				Usage:     "send single large file to workload(s)",
-				ArgsUsage: workloadArgsUsage,
+				Arguments: utils.Positional(argWorkload, workloadArgsUsage, -1),
 				Action:    utils.ExitCoder(cmdWorkloadSendLarge),
 				Flags: []cli.Flag{
 					utils.FileFlag("stream one local file into the workloads"),
@@ -228,7 +231,7 @@ func Command() *cli.Command {
 			{
 				Name:      "realloc",
 				Usage:     "realloc workload resource",
-				ArgsUsage: "workloadID",
+				Arguments: utils.Positional(argWorkload, "workloadID", 1),
 				Action:    utils.ExitCoder(cmdWorkloadRealloc),
 				Flags: []cli.Flag{
 					&cli.Float64Flag{
@@ -318,7 +321,7 @@ func Command() *cli.Command {
 			{
 				Name:      "replace",
 				Usage:     "replace workloads by params",
-				ArgsUsage: specFileURI,
+				Arguments: utils.Positional(argSpec, specFileURI, 1),
 				Action:    utils.ExitCoder(cmdWorkloadReplace),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -387,7 +390,7 @@ func Command() *cli.Command {
 			{
 				Name:      "deploy",
 				Usage:     "deploy workloads by params",
-				ArgsUsage: specFileURI,
+				Arguments: utils.Positional(argSpec, specFileURI, 1),
 				Action:    utils.ExitCoder(cmdWorkloadDeploy),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{

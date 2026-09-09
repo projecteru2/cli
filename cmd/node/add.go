@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -48,11 +47,6 @@ func cmdNodeAdd(ctx context.Context, cmd *cli.Command) error {
 }
 
 func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
-	podname := cmd.Args().First()
-	if podname == "" {
-		return nil, errors.New("podname must not be empty")
-	}
-
 	nodename := cmd.String("nodename")
 
 	endpoint := cmd.String("endpoint")
@@ -80,7 +74,7 @@ func generateAddNodeOptions(cmd *cli.Command) (*corepb.AddNodeOptions, error) {
 	return &corepb.AddNodeOptions{
 		Nodename:  nodename,
 		Endpoint:  endpoint,
-		Podname:   podname,
+		Podname:   cmd.StringArgs(argPod)[0],
 		Labels:    labels,
 		Resources: resources,
 		Test:      cmd.Bool("test"),

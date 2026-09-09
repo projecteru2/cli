@@ -50,14 +50,9 @@ func cmdNodeSetDown(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("node name must be given")
-	}
-
 	o := &setNodeDownOptions{
 		client:       client,
-		name:         name,
+		name:         cmd.StringArgs(argNode)[0],
 		check:        cmd.Bool("check"),
 		checkTimeout: cmd.Int("check-timeout"),
 	}

@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -55,17 +54,13 @@ func cmdNodeSetStatus(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("node name must be given")
-	}
 	if cmd.Int("interval") < 0 {
 		return fmt.Errorf("--interval must not be negative, got %d", cmd.Int("interval"))
 	}
 
 	o := &setNodeStatusOptions{
 		client:   client,
-		name:     name,
+		name:     cmd.StringArgs(argNode)[0],
 		ttl:      cmd.Int("ttl"),
 		interval: cmd.Int("interval"),
 	}

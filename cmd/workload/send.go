@@ -56,14 +56,9 @@ func cmdWorkloadSend(ctx context.Context, cmd *cli.Command) error {
 		return errors.New("files should not be empty")
 	}
 
-	ids, err := argIDs(cmd)
-	if err != nil {
-		return err
-	}
-
 	o := &sendWorkloadsOptions{
 		client:  client,
-		ids:     ids,
+		ids:     cmd.StringArgs(argWorkload),
 		content: files.Data,
 		modes:   files.Modes,
 		owners:  files.Owners,

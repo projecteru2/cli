@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -36,14 +35,9 @@ func cmdPodAdd(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("pod name must be given")
-	}
-
 	o := &addPodOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argPod)[0],
 		desc:   cmd.String("desc"),
 	}
 	return o.run(ctx)

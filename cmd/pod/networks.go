@@ -2,7 +2,6 @@ package pod
 
 import (
 	"context"
-	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -36,14 +35,9 @@ func cmdPodListNetworks(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("pod name must be given")
-	}
-
 	o := &listPodNetworksOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argPod)[0],
 		driver: cmd.String("driver"),
 	}
 	return o.run(ctx)

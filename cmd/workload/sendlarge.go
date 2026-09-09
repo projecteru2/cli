@@ -104,11 +104,6 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	ids, err := argIDs(cmd)
-	if err != nil {
-		return err
-	}
-
 	src, err := os.Open(spec.Src)
 	if err != nil {
 		return err
@@ -123,7 +118,7 @@ func cmdWorkloadSendLarge(ctx context.Context, cmd *cli.Command) error {
 	}
 	o := &sendLargeWorkloadsOptions{
 		client: client,
-		ids:    ids,
+		ids:    cmd.StringArgs(argWorkload),
 		dst:    spec.Dst,
 		src:    src,
 		size:   stat.Size(),

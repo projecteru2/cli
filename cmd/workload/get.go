@@ -31,14 +31,9 @@ func cmdWorkloadGet(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	ids, err := argIDs(cmd)
-	if err != nil {
-		return err
-	}
-
 	o := &getWorkloadsOptions{
 		client: client,
-		ids:    ids,
+		ids:    cmd.StringArgs(argWorkload),
 	}
 	return o.run(ctx)
 }

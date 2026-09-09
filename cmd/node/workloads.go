@@ -2,7 +2,6 @@ package node
 
 import (
 	"context"
-	"errors"
 
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
@@ -36,14 +35,9 @@ func cmdNodeListWorkloads(ctx context.Context, cmd *cli.Command) error {
 		return err
 	}
 
-	name := cmd.Args().First()
-	if name == "" {
-		return errors.New("node name must be given")
-	}
-
 	o := &listNodeWorkloadsOptions{
 		client: client,
-		name:   name,
+		name:   cmd.StringArgs(argNode)[0],
 		labels: utils.SplitEquality(cmd.StringSlice(flagLabel)),
 	}
 	return o.run(ctx)

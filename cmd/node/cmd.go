@@ -7,7 +7,10 @@ import (
 )
 
 const (
+	argNode       = "node"
+	argPod        = "pod"
 	nodeArgsUsage = "node name"
+	podArgsUsage  = "pod name"
 
 	flagLabel   = "label"
 	flagStorage = "storage"
@@ -22,13 +25,13 @@ func Command() *cli.Command {
 			{
 				Name:      "get",
 				Usage:     "get a node",
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeGet),
 			},
 			{
 				Name:      "remove",
 				Usage:     "remove a node",
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeRemove),
 			},
 			{
@@ -41,13 +44,13 @@ func Command() *cli.Command {
 					},
 				},
 				Aliases:   []string{"containers"},
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeListWorkloads),
 			},
 			{
 				Name:      "up",
 				Usage:     "set node up",
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeSetUp),
 			},
 			{
@@ -64,7 +67,7 @@ func Command() *cli.Command {
 						Value: 20,
 					},
 				},
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeSetDown),
 			},
 			{
@@ -82,7 +85,7 @@ func Command() *cli.Command {
 						Value: 0,
 					},
 				},
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeSetStatus),
 			},
 			{
@@ -93,7 +96,7 @@ func Command() *cli.Command {
 			{
 				Name:      "resource",
 				Usage:     "check node resource",
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:  "fix",
@@ -106,7 +109,7 @@ func Command() *cli.Command {
 				Name:      "set",
 				Aliases:   []string{"update"},
 				Usage:     "set node resource",
-				ArgsUsage: nodeArgsUsage,
+				Arguments: utils.Positional(argNode, nodeArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeSet),
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
@@ -177,7 +180,7 @@ func Command() *cli.Command {
 			{
 				Name:      "add",
 				Usage:     "add node",
-				ArgsUsage: "pod name",
+				Arguments: utils.Positional(argPod, podArgsUsage, 1),
 				Action:    utils.ExitCoder(cmdNodeAdd),
 				Flags: []cli.Flag{
 					&cli.StringFlag{
