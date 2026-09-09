@@ -89,17 +89,22 @@ type nodePercent struct {
 }
 
 func nodePercents(ctx context.Context, resources ...*corepb.NodeResource) []nodePercent {
-	logger := log.WithFunc("describe.nodePercents")
 	rv := make([]nodePercent, 0, len(resources))
 	for _, resource := range resources {
-		cr, sr, err := ToResourcePercent(resource)
-		if err != nil {
-			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
-			continue
+		if percent, ok := nodePercentOf(ctx, resource); ok {
+			rv = append(rv, percent)
 		}
-		rv = append(rv, nodePercent{resource, cr, sr})
 	}
 	return rv
+}
+
+func nodePercentOf(ctx context.Context, resource *corepb.NodeResource) (nodePercent, bool) {
+	cr, sr, err := ToResourcePercent(resource)
+	if err != nil {
+		log.WithFunc("describe.nodePercentOf").Errorf(ctx, err, "resource percent of node %s", resource.Name)
+		return nodePercent{}, false
+	}
+	return nodePercent{resource, cr, sr}, true
 }
 
 func nodePercentChan(ctx context.Context, resources <-chan *corepb.NodeResource, keep NodeResourceFilter) <-chan nodePercent {
@@ -107,10 +112,8 @@ func nodePercentChan(ctx context.Context, resources <-chan *corepb.NodeResource,
 	go func() {
 		defer close(rv)
 		for resource := range resources {
-			for _, percent := range nodePercents(ctx, resource) {
-				if keep == nil || keep(percent.cpumem, percent.storage) {
-					rv <- percent
-				}
+			if percent, ok := nodePercentOf(ctx, resource); ok && (keep == nil || keep(percent.cpumem, percent.storage)) {
+				rv <- percent
 			}
 		}
 	}()
