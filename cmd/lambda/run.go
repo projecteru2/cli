@@ -19,7 +19,6 @@ var newline = []byte{'\n'}
 type runLambdaOptions struct {
 	client          corepb.CoreRPCClient
 	opts            *corepb.RunAndWaitOptions
-	stdin           bool
 	printWorkloadID bool
 }
 
@@ -52,7 +51,7 @@ func (o *runLambdaOptions) lambda(ctx context.Context) (int, error) {
 		_ = iStream.Send(newline)
 	}()
 
-	exitCount, stdin := int(o.opts.GetDeployOptions().GetCount()), o.stdin
+	exitCount, stdin := int(o.opts.GetDeployOptions().GetCount()), o.opts.GetDeployOptions().GetOpenStdin()
 	if o.opts.Async {
 		exitCount, stdin = 0, false
 	}
@@ -73,7 +72,6 @@ func cmdLambdaRun(ctx context.Context, cmd *cli.Command) error {
 	o := &runLambdaOptions{
 		client:          client,
 		opts:            opts,
-		stdin:           cmd.Bool("stdin"),
 		printWorkloadID: cmd.Bool("workload-id"),
 	}
 	return o.run(ctx)
@@ -86,11 +84,11 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 
 	network := cmd.String("network")
 
-	memoryRequest, err := utils.ParseRAMInHuman(cmd.String("memory-request"))
+	memoryRequest, err := resourcetypes.ParseRAMInHuman(cmd.String("memory-request"))
 	if err != nil {
 		return nil, fmt.Errorf("parse memory-request: %w", err)
 	}
-	memoryLimit, err := utils.ParseRAMInHuman(cmd.String("memory"))
+	memoryLimit, err := resourcetypes.ParseRAMInHuman(cmd.String("memory"))
 	if err != nil {
 		return nil, fmt.Errorf("parse memory: %w", err)
 	}
@@ -111,11 +109,11 @@ func generateLambdaOptions(cmd *cli.Command) (*corepb.RunAndWaitOptions, error) 
 		"memory-request": memoryRequest,
 		"memory-limit":   memoryLimit,
 	}
-	storageRequest, err := utils.ParseRAMInHuman(cmd.String("storage-request"))
+	storageRequest, err := resourcetypes.ParseRAMInHuman(cmd.String("storage-request"))
 	if err != nil {
 		return nil, fmt.Errorf("parse storage-request: %w", err)
 	}
-	storageLimit, err := utils.ParseRAMInHuman(cmd.String("storage"))
+	storageLimit, err := resourcetypes.ParseRAMInHuman(cmd.String("storage"))
 	if err != nil {
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}

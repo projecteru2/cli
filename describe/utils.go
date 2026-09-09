@@ -37,42 +37,29 @@ func ToResourcePercent(resource *corepb.NodeResource) (cpumem, storage map[strin
 	storageCap := resCap[utils.ResourceStorage]
 	cr, sr := map[string]float64{}, map[string]float64{}
 	if cpumemUsage != nil && cpumemCap != nil {
-		cpuUsage := cpumemUsage.Float64("cpu")
-		cpuCap := cpumemCap.Float64("cpu")
-		memUsage := cpumemUsage.Float64("memory")
-		memCap := cpumemCap.Float64("memory")
-		cr["cpu"] = 0.0
-		cr["memory"] = 0.0
-		if cpuCap != 0 {
-			cr["cpu"] = cpuUsage / cpuCap
-		}
-		if memCap != 0 {
-			cr["memory"] = memUsage / memCap
-		}
+		cr["cpu"] = ratio(cpumemUsage.Float64("cpu"), cpumemCap.Float64("cpu"))
+		cr["memory"] = ratio(cpumemUsage.Float64("memory"), cpumemCap.Float64("memory"))
 	}
 	if storageUsage != nil && storageCap != nil {
-		stUsage := storageUsage.Float64("storage")
-		stCap := storageCap.Float64("storage")
-		volumesUsage := storageUsage.RawParams("volumes")
-		volumesCap := storageCap.RawParams("volumes")
-		sr["storage"] = 0.0
-		sr["volumes"] = 0.0
-		if stCap != 0 {
-			sr["storage"] = stUsage / stCap
-		}
-		vu := 0.0
-		vc := 0.0
-		for k := range volumesUsage {
-			vu += volumesUsage.Float64(k)
-		}
-		for k := range volumesCap {
-			vc += volumesCap.Float64(k)
-		}
-		if vc != 0 {
-			sr["volumes"] = vu / vc
-		}
+		sr["storage"] = ratio(storageUsage.Float64("storage"), storageCap.Float64("storage"))
+		sr["volumes"] = ratio(sumParams(storageUsage.RawParams("volumes")), sumParams(storageCap.RawParams("volumes")))
 	}
 	return cr, sr, nil
+}
+
+func ratio(usage, capacity float64) float64 {
+	if capacity == 0 {
+		return 0
+	}
+	return usage / capacity
+}
+
+func sumParams(params resourcetypes.RawParams) float64 {
+	sum := 0.0
+	for key := range params {
+		sum += params.Float64(key)
+	}
+	return sum
 }
 
 func isJSON() bool {
@@ -158,9 +145,7 @@ func pluginNames(resourceSets ...[]resourcetypes.Resources) []string {
 
 func unmarshalResources(encoded string) resourcetypes.Resources {
 	res := resourcetypes.Resources{}
-	if len(encoded) > 0 {
-		_ = json.Unmarshal([]byte(encoded), &res)
-	}
+	_ = json.Unmarshal([]byte(encoded), &res)
 	return res
 }
 
@@ -185,7 +170,7 @@ func describeOr[T any](v T, fallback func(T)) {
 	}
 }
 
-func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
+func describeChOr[T any](ch <-chan T, stream bool, render func(...T)) {
 	collect := func() []T {
 		items := []T{}
 		for t := range ch {
@@ -198,8 +183,12 @@ func describeChOr[T any](ch <-chan T, fallback func(<-chan T)) {
 		describeAsJSON(collect())
 	case isYAML():
 		describeAsYAML(collect())
+	case stream:
+		for t := range ch {
+			render(t)
+		}
 	default:
-		fallback(ch)
+		render(collect()...)
 	}
 }
 

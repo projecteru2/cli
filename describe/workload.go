@@ -48,7 +48,7 @@ func WorkloadStatuses(workloadStatuses ...*corepb.WorkloadStatus) {
 
 func describeStatistics(stat workloadStatistics) {
 	renderTable([]string{"CPUs", "Memory", "Storage"}, [][]string{
-		{fmt.Sprintf("%f", stat.CPUs)},
+		{strconv.FormatFloat(stat.CPUs, 'f', -1, 64)},
 		{strconv.FormatInt(stat.Memory, 10)},
 		{strconv.FormatInt(stat.Storage, 10)},
 	})
@@ -84,9 +84,7 @@ func workloadNetworks(workload *corepb.Workload) []string {
 		maps.Copy(addresses, workload.Status.Networks)
 	}
 	for name := range workload.Publish {
-		if _, ok := addresses[name]; !ok {
-			addresses[name] = ""
-		}
+		addresses[name] = ""
 	}
 
 	ns := []string{}

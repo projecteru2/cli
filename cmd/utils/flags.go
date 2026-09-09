@@ -17,3 +17,11 @@ func FileFlag(usage string) *cli.StringSliceFlag {
 		Usage: usage + ", src_path:dst_path[:mode[:uid:gid]]",
 	}
 }
+
+func ForceFlag(usage string) *cli.BoolFlag {
+	return &cli.BoolFlag{
+		Name:    FlagForce,
+		Usage:   usage,
+		Aliases: []string{"f"},
+	}
+}

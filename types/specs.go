@@ -8,13 +8,13 @@ import (
 
 // Specs is the deploy spec file of an application.
 type Specs struct {
-	Appname        string                `yaml:"appname,omitempty"`
-	Entrypoints    map[string]Entrypoint `yaml:"entrypoints,omitempty,flow"`
-	Volumes        []string              `yaml:"volumes,omitempty,flow"`
-	VolumesRequest []string              `yaml:"volumes_request,omitempty,flow"`
-	Labels         map[string]string     `yaml:"labels,omitempty,flow"`
-	DNS            []string              `yaml:"dns,omitempty,flow"`
-	ExtraHosts     []string              `yaml:"extra_hosts,omitempty,flow"`
+	Appname        string                `yaml:"appname"`
+	Entrypoints    map[string]Entrypoint `yaml:"entrypoints"`
+	Volumes        []string              `yaml:"volumes"`
+	VolumesRequest []string              `yaml:"volumes_request"`
+	Labels         map[string]string     `yaml:"labels"`
+	DNS            []string              `yaml:"dns"`
+	ExtraHosts     []string              `yaml:"extra_hosts"`
 }
 
 // Entrypoint accepts both the legacy `cmd` string and the current `commands` list.

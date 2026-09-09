@@ -11,7 +11,6 @@ import (
 	"strings"
 	"text/template"
 
-	resourcetypes "github.com/projecteru2/core/resource/types"
 	corepb "github.com/projecteru2/core/rpc/gen"
 	"github.com/urfave/cli/v3"
 )
@@ -27,11 +26,6 @@ func GetNetworks(network string) map[string]string {
 		networks[network] = ip
 	}
 	return networks
-}
-
-// ParseRAMInHuman parses a human-readable size ("100KB", "-1T") into bytes; the implementation lives with core's RawParams.
-func ParseRAMInHuman(ram string) (int64, error) {
-	return resourcetypes.ParseRAMInHuman(ram)
 }
 
 // ParseDeployStrategy maps a --deploy-strategy value onto the core enum.

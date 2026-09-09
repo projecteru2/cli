@@ -16,7 +16,6 @@ const (
 	flagEntry   = "entry"
 	flagNode    = "node"
 	flagPod     = "pod"
-	flagForce   = "force"
 	flagEnv     = "env"
 	flagImage   = "image"
 	flagNetwork = "network"
@@ -152,12 +151,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStop)),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:    flagForce,
-						Usage:   "force to stop",
-						Aliases: []string{"f"},
-						Value:   false,
-					},
+					utils.ForceFlag("force to stop"),
 				},
 			},
 			{
@@ -166,12 +160,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadStart)),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:    flagForce,
-						Usage:   "force to start",
-						Aliases: []string{"f"},
-						Value:   false,
-					},
+					utils.ForceFlag("force to start"),
 				},
 			},
 			{
@@ -180,12 +169,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadControl(corecluster.WorkloadRestart)),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:    flagForce,
-						Usage:   "force to restart",
-						Aliases: []string{"f"},
-						Value:   false,
-					},
+					utils.ForceFlag("force to restart"),
 				},
 			},
 			{
@@ -194,12 +178,7 @@ func Command() *cli.Command {
 				ArgsUsage: workloadArgsUsage,
 				Action:    utils.ExitCoder(cmdWorkloadRemove),
 				Flags: []cli.Flag{
-					&cli.BoolFlag{
-						Name:    flagForce,
-						Usage:   "force to remove",
-						Aliases: []string{"f"},
-						Value:   false,
-					},
+					utils.ForceFlag("force to remove"),
 				},
 			},
 			{
@@ -454,7 +433,6 @@ func Command() *cli.Command {
 					&cli.Float64Flag{
 						Name:  "cpu",
 						Usage: "shortcut for cpu-request/limit, set them equally to this value",
-						Value: 1.0,
 					},
 					&cli.StringFlag{
 						Name:  flagMemoryRequest,
@@ -469,7 +447,6 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "memory",
 						Usage: "shortcut for memory-request/limit, set them equally to this value",
-						Value: "512M",
 					},
 					&cli.StringFlag{
 						Name:  flagStorageRequest,

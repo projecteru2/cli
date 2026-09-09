@@ -13,22 +13,13 @@ import (
 )
 
 type removeImageOptions struct {
-	client    corepb.CoreRPCClient
-	images    []string
-	podname   string
-	nodenames []string
-	prune     bool
+	client corepb.CoreRPCClient
+	opts   *corepb.RemoveImageOptions
 }
 
 func (o *removeImageOptions) run(ctx context.Context) error {
 	logger := log.WithFunc("image.removeImageOptions.run")
-	opts := &corepb.RemoveImageOptions{
-		Images:    o.images,
-		Podname:   o.podname,
-		Nodenames: o.nodenames,
-		Prune:     o.prune,
-	}
-	resp, err := o.client.RemoveImage(ctx, opts)
+	resp, err := o.client.RemoveImage(ctx, o.opts)
 	if err != nil {
 		return err
 	}
@@ -57,11 +48,13 @@ func cmdImageRemove(ctx context.Context, cmd *cli.Command) error {
 	}
 
 	o := &removeImageOptions{
-		client:    client,
-		images:    images,
-		podname:   cmd.String(flagPod),
-		nodenames: cmd.StringSlice(flagNode),
-		prune:     cmd.Bool("prune"),
+		client: client,
+		opts: &corepb.RemoveImageOptions{
+			Images:    images,
+			Podname:   cmd.String(flagPod),
+			Nodenames: cmd.StringSlice(flagNode),
+			Prune:     cmd.Bool("prune"),
+		},
 	}
 	return o.run(ctx)
 }

@@ -38,7 +38,6 @@ func Command() *cli.Command {
 					&cli.StringFlag{
 						Name:  "desc",
 						Usage: "description of pod",
-						Value: "",
 					},
 				},
 			},
@@ -92,13 +91,11 @@ func Command() *cli.Command {
 					&cli.BoolFlag{
 						Name:  "cpu-bind",
 						Usage: "bind cpu or not",
-						Value: false,
 					},
 					&cli.StringSliceFlag{
-						Name:     "node",
-						Aliases:  []string{"n"},
-						Usage:    "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
-						Required: false,
+						Name:    "node",
+						Aliases: []string{"n"},
+						Usage:   "Specified the node(s) should join into the calculation. Could be specified multiple times with different names",
 					},
 					utils.ExtraResourcesFlag(),
 				},

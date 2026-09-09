@@ -70,12 +70,12 @@ func cmdPodCapacity(ctx context.Context, cmd *cli.Command) error {
 }
 
 func capacityResources(cmd *cli.Command) (map[string][]byte, error) {
-	memory, err := utils.ParseRAMInHuman(cmd.String(flagMemory))
+	memory, err := resourcetypes.ParseRAMInHuman(cmd.String(flagMemory))
 	if err != nil {
 		return nil, fmt.Errorf("parse memory: %w", err)
 	}
 
-	storage, err := utils.ParseRAMInHuman(cmd.String(flagStorage))
+	storage, err := resourcetypes.ParseRAMInHuman(cmd.String(flagStorage))
 	if err != nil {
 		return nil, fmt.Errorf("parse storage: %w", err)
 	}

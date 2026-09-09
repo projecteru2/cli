@@ -67,18 +67,26 @@ func TestReadAllFiles(t *testing.T) {
 
 func TestSplitFiles(t *testing.T) {
 	tests := []struct {
-		name  string
-		files []string
-		want  map[string]string
+		name    string
+		files   []string
+		want    map[string]string
+		wantErr bool
 	}{
 		{name: "empty", files: nil, want: map[string]string{}},
 		{name: "pairs", files: []string{"a:b", "c:d"}, want: map[string]string{"a": "b", "c": "d"}},
-		{name: "drops unpaired", files: []string{"a", "c:d"}, want: map[string]string{"c": "d"}},
+		{name: "rejects unpaired", files: []string{"a", "c:d"}, wantErr: true},
+		{name: "rejects a second colon", files: []string{"a:b:c"}, wantErr: true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := SplitFiles(tt.files)
+			got, err := SplitFiles(tt.files)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("got %v, wantErr %v", err, tt.wantErr)
+			}
+			if tt.wantErr {
+				return
+			}
 			if len(got) != len(tt.want) {
 				t.Fatalf("got %v, want %v", got, tt.want)
 			}

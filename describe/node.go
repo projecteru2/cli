@@ -11,6 +11,8 @@ import (
 	corepb "github.com/projecteru2/core/rpc/gen"
 )
 
+type NodeResourceFilter func(cpumem, storage map[string]float64) bool
+
 // Nodes describes nodes a command already holds.
 func Nodes(showInfo bool, nodes ...*corepb.Node) {
 	describeOr(nodes, func(all []*corepb.Node) { renderNodes(showInfo, all...) })
@@ -18,36 +20,21 @@ func Nodes(showInfo bool, nodes ...*corepb.Node) {
 
 // NodesStream describes nodes as they arrive, one table per node when stream is set.
 func NodesStream(nodes <-chan *corepb.Node, showInfo, stream bool) {
-	describeChOr(nodes, func(ch <-chan *corepb.Node) { describeNodes(ch, showInfo, stream) })
+	describeChOr(nodes, stream, func(all ...*corepb.Node) { renderNodes(showInfo, all...) })
 }
 
 // NodeResource describes one node's resource.
 func NodeResource(ctx context.Context, resource *corepb.NodeResource) {
-	describeOr(resource, func(r *corepb.NodeResource) { renderNodeResources(ctx, r) })
+	describeOr(resource, func(r *corepb.NodeResource) { renderNodeResources(nodePercents(ctx, r)...) })
 }
 
-func NodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
-	describeChOr(resources, func(ch <-chan *corepb.NodeResource) { describeNodeResources(ctx, ch, stream) })
+func NodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool, keep NodeResourceFilter) {
+	describeChOr(nodePercentChan(ctx, resources, keep), stream, renderNodeResources)
 }
 
 // NodeStatusMessage describes node status messages as json, yaml or log lines.
 func NodeStatusMessage(ctx context.Context, ms ...*corepb.NodeStatusStreamMessage) {
 	describeOr(ms, func(m []*corepb.NodeStatusStreamMessage) { describeNodeStatusMessage(ctx, m) })
-}
-
-func describeNodes(nodes <-chan *corepb.Node, showInfo, stream bool) {
-	if stream {
-		for node := range nodes {
-			renderNodes(showInfo, node)
-		}
-		return
-	}
-
-	all := []*corepb.Node{}
-	for node := range nodes {
-		all = append(all, node)
-	}
-	renderNodes(showInfo, all...)
 }
 
 func renderNodes(showInfo bool, nodes ...*corepb.Node) {
@@ -95,35 +82,50 @@ func nodePluginRows(capacity, usage resourcetypes.RawParams) []string {
 	return append(rows, parseAll(usage)...)
 }
 
-func describeNodeResources(ctx context.Context, resources <-chan *corepb.NodeResource, stream bool) {
-	if stream {
-		for resource := range resources {
-			renderNodeResources(ctx, resource)
-		}
-		return
-	}
-	all := []*corepb.NodeResource{}
-	for resource := range resources {
-		all = append(all, resource)
-	}
-	renderNodeResources(ctx, all...)
+type nodePercent struct {
+	*corepb.NodeResource
+	cpumem  map[string]float64
+	storage map[string]float64
 }
 
-func renderNodeResources(ctx context.Context, resources ...*corepb.NodeResource) {
-	logger := log.WithFunc("describe.renderNodeResources")
-	groups := make([][][]string, 0, len(resources))
+func nodePercents(ctx context.Context, resources ...*corepb.NodeResource) []nodePercent {
+	logger := log.WithFunc("describe.nodePercents")
+	rv := make([]nodePercent, 0, len(resources))
 	for _, resource := range resources {
 		cr, sr, err := ToResourcePercent(resource)
 		if err != nil {
 			logger.Errorf(ctx, err, "resource percent of node %s", resource.Name)
 			continue
 		}
+		rv = append(rv, nodePercent{resource, cr, sr})
+	}
+	return rv
+}
+
+func nodePercentChan(ctx context.Context, resources <-chan *corepb.NodeResource, keep NodeResourceFilter) <-chan nodePercent {
+	rv := make(chan nodePercent)
+	go func() {
+		defer close(rv)
+		for resource := range resources {
+			for _, percent := range nodePercents(ctx, resource) {
+				if keep == nil || keep(percent.cpumem, percent.storage) {
+					rv <- percent
+				}
+			}
+		}
+	}()
+	return rv
+}
+
+func renderNodeResources(resources ...nodePercent) {
+	groups := make([][][]string, 0, len(resources))
+	for _, resource := range resources {
 		groups = append(groups, [][]string{
 			{resource.Name},
-			{fmt.Sprintf("%.2f%%", cr["cpu"]*100)},
-			{fmt.Sprintf("%.2f%%", cr["memory"]*100)},
-			{fmt.Sprintf("%.2f%%", sr["storage"]*100)},
-			{fmt.Sprintf("%.2f%%", sr["volumes"]*100)},
+			{fmt.Sprintf("%.2f%%", resource.cpumem["cpu"]*100)},
+			{fmt.Sprintf("%.2f%%", resource.cpumem["memory"]*100)},
+			{fmt.Sprintf("%.2f%%", resource.storage["storage"]*100)},
+			{fmt.Sprintf("%.2f%%", resource.storage["volumes"]*100)},
 			{strings.Join(resource.Diffs, "\n")},
 		})
 	}

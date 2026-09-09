@@ -28,40 +28,6 @@ func TestGetNetworks(t *testing.T) {
 	}
 }
 
-func TestParseRAMInHuman(t *testing.T) {
-	tests := []struct {
-		name    string
-		ram     string
-		want    int64
-		wantErr bool
-	}{
-		{name: "empty", ram: "", want: 0},
-		{name: "bytes", ram: "1024", want: 1024},
-		{name: "kilobytes", ram: "100KB", want: 102400},
-		{name: "gigabytes", ram: "1G", want: 1 << 30},
-		{name: "negative", ram: "-10G", want: -(10 << 30)},
-		{name: "garbage", ram: "abc", wantErr: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseRAMInHuman(tt.ram)
-			if tt.wantErr {
-				if err == nil {
-					t.Fatalf("got %d, want an error", got)
-				}
-				return
-			}
-			if err != nil {
-				t.Fatalf("ParseRAMInHuman: %v", err)
-			}
-			if got != tt.want {
-				t.Errorf("got %d, want %d", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestSplitEquality(t *testing.T) {
 	tests := []struct {
 		name     string
